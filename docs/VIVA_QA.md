@@ -350,3 +350,49 @@ end reported last, so a status update from the far end briefly marked it UP. For
 milliseconds traffic could have been routed into a dead link. The fix tracks every port's state and
 treats a link as UP only when both ends are up. We confirmed it by replaying the exact event
 sequence in a unit test and by re-running the experiment, which then showed one DOWN and one UP.
+
+---
+
+## I. Monitoring and congestion
+
+### I1. How does the controller know a link is congested?
+
+Every 2 seconds it sends an OpenFlow port-statistics request to every switch. Each reply contains the
+byte counters for every port. The difference between two samples, divided by the time between them,
+gives each port's transmit rate; for each link the busier of its two directions is divided by the
+link's capacity. The result is logged as `[MONITOR] s1-s2=100% ...`. No traffic is inspected; only
+counters the switches already keep.
+
+### I2. Why give each content connection its own path instead of routing by destination?
+
+Destination-based rules apply to all traffic to a host. If the controller moved the route to srv1
+onto the slow path, every connection to srv1, including ones happily using the fast path, would move
+with it. Per-connection rules on each transit switch, matching the full TCP 5-tuple, let one new
+connection take the backup path while existing ones stay where they are.
+
+### I3. Why doesn't the controller move the background flood off the fast path too?
+
+The controller steers the content it manages. Background traffic represents other users and services
+and follows the plain shortest path. Moving it would also be pointless here: the flood is UDP at a fixed
+rate and would simply congest whichever path it was put on.
+
+### I4. What is the congestion rule exactly, and why those numbers?
+
+A link above 70% utilisation gets a 100 ms penalty added to its cost in Dijkstra. The fast path costs
+4 ms and the slow path 20 ms, so the penalty must exceed the 16 ms difference to flip the choice; 100 ms
+does that decisively. The 70% threshold leaves headroom: one content download alone uses about 50% of a
+20 Mbps link, so a single client does not push the next one off the fast path.
+
+### I5. In Run A the client reported 3/3 succeeded at 4.4 s. Why is that misleading?
+
+The client times only the attempt that succeeded. Request 1 actually failed twice (a 10 s timeout, then a
+connection cut after 64 KB) and succeeded only after the flood ended, roughly 25-30 s after it was
+requested. The CSV's attempts column records this. The fair comparison is downloads completed during the
+flood: 0 in Run A, 3 in Run B.
+
+### I6. What weakness did the congestion tests reveal?
+
+When the flood was sent from content servers, their once-per-second UDP load reports queued behind it and
+were dropped, so healthy servers were briefly marked DOWN. The reports share the data network with the
+traffic they describe. TCP downloads never caused this because TCP backs off; a UDP flood does not.
+Production systems use a separate management network or prioritise monitoring traffic.

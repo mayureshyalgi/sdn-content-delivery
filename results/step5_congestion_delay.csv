@@ -1,0 +1,4 @@
+timestamp,client,server,served_by,file,bytes,connect_ms,ttfb_ms,total_ms,throughput_mbps,status,attempts
+2026-10-08 00:06:28,h1,10.0.0.100,srv1,large.bin,5242880,18.0,33.3,4424.83,9.479,ok,3
+2026-10-08 00:07:00,h1,10.0.0.100,srv2,large.bin,5242880,19.29,41.54,4435.07,9.457,ok,1
+2026-10-08 00:07:05,h1,10.0.0.100,srv1,large.bin,5242880,10.42,24.86,4443.12,9.44,ok,1
