@@ -1,30 +1,10 @@
-[16:34:52] [srv1] listening on 0.0.0.0:9000, serving files from /home/mayuresh-yalgi/sdn-content-delivery/app/content
-[16:34:52] [srv1] sending load reports to 10.0.0.254:5555/udp every 1.0s
-[16:36:12] [srv1] connection from 10.0.0.2:48012 (active=1)
-[16:36:15] [srv1] sent large.bin (5242880 bytes) to 10.0.0.2:48012 in 3.476s
-[16:36:16] [srv1] connection from 10.0.0.2:48022 (active=1)
-[16:36:20] [srv1] sent large.bin (5242880 bytes) to 10.0.0.2:48022 in 3.470s
-[16:36:25] [srv1] connection from 10.0.0.2:33800 (active=1)
-[16:36:29] [srv1] sent large.bin (5242880 bytes) to 10.0.0.2:33800 in 3.474s
-[16:36:30] [srv1] connection from 10.0.0.2:50488 (active=1)
-[16:36:34] [srv1] sent large.bin (5242880 bytes) to 10.0.0.2:50488 in 3.839s
-[16:36:36] [srv1] connection from 10.0.0.3:43274 (active=1)
-[16:36:39] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:43274 in 3.481s
-[16:36:40] [srv1] connection from 10.0.0.3:53664 (active=1)
-[16:36:44] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:53664 in 3.473s
-[16:36:45] [srv1] connection from 10.0.0.3:53680 (active=1)
-[16:36:48] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:53680 in 3.466s
-[16:42:33] [srv1] connection from 10.0.0.1:40454 (active=1)
-[16:42:33] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:40454 in 0.498s
-[16:42:34] [srv1] connection from 10.0.0.1:40456 (active=1)
-[16:42:35] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:40456 in 0.498s
-[16:42:36] [srv1] connection from 10.0.0.1:40472 (active=1)
-[16:42:36] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:40472 in 0.498s
-[16:42:37] [srv1] connection from 10.0.0.1:40476 (active=1)
-[16:42:38] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:40476 in 0.498s
-[16:43:24] [srv1] connection from 10.0.0.1:52738 (active=1)
-[16:43:25] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:52738 in 0.497s
-[16:43:26] [srv1] connection from 10.0.0.1:52744 (active=1)
-[16:43:26] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:52744 in 0.497s
-[16:43:27] [srv1] connection from 10.0.0.1:52746 (active=1)
-[16:43:28] [srv1] sent medium.bin (1048576 bytes) to 10.0.0.1:52746 in 0.497s
+[23:29:44] [srv1] listening on 0.0.0.0:9000, serving files from /home/mayuresh-yalgi/sdn-content-delivery/app/content
+[23:29:44] [srv1] sending load reports to 10.0.0.254:5555/udp every 1.0s
+[23:30:28] [srv1] connection from 10.0.0.1:56608 (active=1)
+[23:30:32] [srv1] sent large.bin (5242880 bytes) to 10.0.0.1:56608 in 3.473s
+[23:30:33] [srv1] connection from 10.0.0.1:43578 (active=1)
+[23:30:37] [srv1] sent large.bin (5242880 bytes) to 10.0.0.1:43578 in 4.079s
+[23:30:37] [srv1] connection from 10.0.0.1:43592 (active=1)
+[23:30:40] [srv1] sent large.bin (5242880 bytes) to 10.0.0.1:43592 in 3.198s
+[23:30:42] [srv1] connection from 10.0.0.1:59066 (active=1)
+[23:30:45] [srv1] sent large.bin (5242880 bytes) to 10.0.0.1:59066 in 3.146s

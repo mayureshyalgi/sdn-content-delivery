@@ -61,6 +61,7 @@ class ContentLoadBalancer(app_manager.RyuApp):
 
         self.datapaths = {}
         self.link_up = [True] * len(cfg.LINKS)
+        self.ports_down = set()
         self.port_to_link = {}
         for i, (a, pa, b, pb, _d, _bw) in enumerate(cfg.LINKS):
             self.port_to_link[(a, pa)] = i
@@ -118,16 +119,24 @@ class ContentLoadBalancer(app_manager.RyuApp):
         msg = ev.msg
         dp = msg.datapath
         ofp = dp.ofproto
-        idx = self.port_to_link.get((dp.id, msg.desc.port_no))
+        key = (dp.id, msg.desc.port_no)
+        idx = self.port_to_link.get(key)
         if idx is None:
             return
         down = (msg.reason == ofp.OFPPR_DELETE
                 or bool(msg.desc.state & ofp.OFPPS_LINK_DOWN)
                 or bool(msg.desc.config & ofp.OFPPC_PORT_DOWN))
-        if self.link_up[idx] == (not down):
+        # A link is UP only if BOTH of its ends are up.
+        if down:
+            self.ports_down.add(key)
+        else:
+            self.ports_down.discard(key)
+        a, pa, b, pb, _d, _bw = cfg.LINKS[idx]
+        now_up = (a, pa) not in self.ports_down and (b, pb) not in self.ports_down
+        if self.link_up[idx] == now_up:
             return
-        self.link_up[idx] = not down
-        a, _pa, b, _pb, _d, _bw = cfg.LINKS[idx]
+        self.link_up[idx] = now_up
+        down = not now_up
         self.logger.info("[LINK] s%d-s%d is %s -> clearing dynamic rules to re-route",
                          a, b, "DOWN" if down else "UP")
         self.delete_flows(COOKIE_ROUTE)
