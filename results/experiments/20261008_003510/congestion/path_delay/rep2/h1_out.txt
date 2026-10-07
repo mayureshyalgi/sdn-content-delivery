@@ -1,0 +1,6 @@
+[h1] request 1 attempt 1 failed: timed out
+[h1] request 1 attempt 2 failed: connection closed after 65536/5242880 bytes
+[h1] #1 large.bin from srv1: 5242880 bytes, response 4420.52 ms, throughput 9.488 Mbps after 3 attempts, waited 42836.83 ms
+[h1] #2 large.bin from srv1: 5242880 bytes, response 4407.26 ms, throughput 9.517 Mbps
+[h1] #3 large.bin from srv1: 5242880 bytes, response 4408.51 ms, throughput 9.514 Mbps
+[h1] summary: 3/3 succeeded, avg response 4412.1 ms, avg throughput 9.51 Mbps, avg time to content 17217.6 ms

@@ -1,0 +1,6 @@
+[h1] #1 large.bin from srv1: 5242880 bytes, response 5197.37 ms, throughput 8.07 Mbps
+[h1] request 2 attempt 1 failed: connection closed after 1769472/5242880 bytes
+[h1] #2 large.bin from srv3: 5242880 bytes, response 4789.0 ms, throughput 8.758 Mbps after 2 attempts, waited 7392.29 ms
+[h1] #3 large.bin from srv3: 5242880 bytes, response 4468.32 ms, throughput 9.387 Mbps
+[h1] #4 large.bin from srv3: 5242880 bytes, response 4602.86 ms, throughput 9.112 Mbps
+[h1] summary: 4/4 succeeded, avg response 4764.4 ms, avg throughput 8.83 Mbps, avg time to content 5415.2 ms

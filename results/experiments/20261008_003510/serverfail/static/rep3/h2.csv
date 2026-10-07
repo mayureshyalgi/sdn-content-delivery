@@ -1,0 +1,5 @@
+timestamp,start_epoch,client,server,served_by,file,bytes,connect_ms,ttfb_ms,total_ms,throughput_mbps,status,attempts,time_to_content_ms
+2026-10-08 00:49:11,1791400751.312,h2,10.0.0.100,-,large.bin,0,,,,,failed: [Errno 111] Connection refused,3,9476.87
+2026-10-08 00:49:20,1791400760.79,h2,10.0.0.100,-,large.bin,0,,,,,failed: [Errno 111] Connection refused,3,2034.06
+2026-10-08 00:49:22,1791400762.824,h2,10.0.0.100,-,large.bin,0,,,,,failed: [Errno 111] Connection refused,3,2039.26
+2026-10-08 00:49:24,1791400764.864,h2,10.0.0.100,-,large.bin,0,,,,,failed: [Errno 111] Connection refused,3,2037.41

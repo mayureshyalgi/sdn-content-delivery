@@ -1,0 +1,15 @@
+timestamp,policy,path_policy,client,client_port,server,path,loads,link_util
+2026-10-08 00:32:43,least_loaded,congestion,h3,46014,srv1,s1-s2-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+2026-10-08 00:32:43,least_loaded,congestion,h1,57584,srv2,s1-s2-s4,srv1=UP(1) srv2=UP(1) srv3=UP(0),s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+2026-10-08 00:32:43,least_loaded,congestion,h2,51316,srv3,s1-s2-s4,srv1=UP(1) srv2=UP(1) srv3=UP(1),s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+2026-10-08 00:32:48,least_loaded,congestion,h3,46018,srv1,s1-s3-s4,srv1=UP(1) srv2=UP(1) srv3=UP(1),s1-s2=98% s2-s4=98% s1-s3=0% s3-s4=0%
+2026-10-08 00:32:49,least_loaded,congestion,h1,51486,srv2,s1-s3-s4,srv1=UP(1) srv2=UP(1) srv3=UP(1),s1-s2=98% s2-s4=98% s1-s3=11% s3-s4=11%
+2026-10-08 00:32:51,least_loaded,congestion,h2,33776,srv3,s1-s3-s4,srv1=UP(1) srv2=UP(1) srv3=UP(1),s1-s2=98% s2-s4=98% s1-s3=11% s3-s4=11%
+2026-10-08 00:32:51,least_loaded,congestion,h3,33298,srv1,s1-s2-s4,srv1=UP(2) srv2=UP(1) srv3=UP(1),s1-s2=43% s2-s4=43% s1-s3=70% s3-s4=70%
+2026-10-08 00:32:52,least_loaded,congestion,h3,33306,srv2,s1-s2-s4,srv1=DOWN srv2=UP(2) srv3=UP(1),s1-s2=43% s2-s4=43% s1-s3=70% s3-s4=70%
+2026-10-08 00:32:54,least_loaded,congestion,h1,51498,srv2,s1-s2-s4,srv1=DOWN srv2=UP(2) srv3=UP(1),s1-s2=0% s2-s4=0% s1-s3=98% s3-s4=98%
+2026-10-08 00:32:55,least_loaded,congestion,h2,33784,srv3,s1-s2-s4,srv1=DOWN srv2=UP(2) srv3=UP(1),s1-s2=34% s2-s4=34% s1-s3=64% s3-s4=64%
+2026-10-08 00:33:00,least_loaded,congestion,h2,36326,srv3,s1-s3-s4,srv1=DOWN srv2=UP(2) srv3=UP(1),s1-s2=98% s2-s4=98% s1-s3=0% s3-s4=0%
+2026-10-08 00:33:01,least_loaded,congestion,h3,57112,srv2,s1-s2-s4,srv1=DOWN srv2=UP(2) srv3=UP(1),s1-s2=69% s2-s4=69% s1-s3=24% s3-s4=24%
+2026-10-08 00:33:02,least_loaded,congestion,h1,34494,srv2,s1-s2-s4,srv1=DOWN srv2=UP(1) srv3=UP(1),s1-s2=69% s2-s4=69% s1-s3=24% s3-s4=24%
+2026-10-08 00:33:10,least_loaded,congestion,h3,35964,srv3,s1-s2-s4,srv1=DOWN srv2=UP(1) srv3=UP(1),s1-s2=49% s2-s4=49% s1-s3=0% s3-s4=0%

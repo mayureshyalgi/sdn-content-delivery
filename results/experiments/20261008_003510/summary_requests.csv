@@ -1,0 +1,190 @@
+scenario,config,lb_policy,path_policy,rep,client,request,start_epoch,served_by,status,attempts,total_ms,time_to_content_ms,throughput_mbps,bytes
+concurrent,static,static,congestion,1,h1,1,1791399920.363,srv1,ok,1,13188.96,13189.02,3.18,5242880
+concurrent,static,static,congestion,1,h1,2,1791399933.552,srv1,ok,1,13055.66,13055.7,3.213,5242880
+concurrent,static,static,congestion,1,h1,3,1791399946.608,srv1,ok,1,13282.89,13282.92,3.158,5242880
+concurrent,static,static,congestion,1,h2,1,1791399920.363,srv1,ok,1,12655.15,12655.2,3.314,5242880
+concurrent,static,static,congestion,1,h2,2,1791399933.019,srv1,ok,1,13702.95,13703.0,3.061,5242880
+concurrent,static,static,congestion,1,h2,3,1791399946.722,srv1,ok,1,13070.05,13070.08,3.209,5242880
+concurrent,static,static,congestion,1,h3,1,1791399920.364,srv1,ok,1,13122.08,13122.12,3.196,5242880
+concurrent,static,static,congestion,1,h3,2,1791399933.486,srv1,ok,1,12928.5,12928.54,3.244,5242880
+concurrent,static,static,congestion,1,h3,3,1791399946.415,srv1,ok,1,12975.44,12975.49,3.232,5242880
+concurrent,static,static,congestion,2,h1,1,1791399970.676,srv1,ok,1,13246.17,13246.21,3.166,5242880
+concurrent,static,static,congestion,2,h1,2,1791399983.922,srv1,ok,1,13065.93,13065.97,3.21,5242880
+concurrent,static,static,congestion,2,h1,3,1791399996.988,srv1,ok,1,12761.47,12761.52,3.287,5242880
+concurrent,static,static,congestion,2,h2,1,1791399970.679,srv1,ok,1,13169.85,13169.89,3.185,5242880
+concurrent,static,static,congestion,2,h2,2,1791399983.849,srv1,ok,1,12736.24,12736.28,3.293,5242880
+concurrent,static,static,congestion,2,h2,3,1791399996.585,srv1,ok,1,13683.8,13683.83,3.065,5242880
+concurrent,static,static,congestion,2,h3,1,1791399970.677,srv1,ok,1,12780.83,12780.9,3.282,5242880
+concurrent,static,static,congestion,2,h3,2,1791399983.458,srv1,ok,1,13641.54,13641.58,3.075,5242880
+concurrent,static,static,congestion,2,h3,3,1791399997.1,srv1,ok,1,13079.88,13079.92,3.207,5242880
+concurrent,static,static,congestion,3,h1,1,1791400021.061,srv1,ok,1,13103.41,13103.45,3.201,5242880
+concurrent,static,static,congestion,3,h1,2,1791400034.164,srv1,ok,1,13287.79,13287.82,3.157,5242880
+concurrent,static,static,congestion,3,h1,3,1791400047.452,srv1,ok,1,13120.6,13120.64,3.197,5242880
+concurrent,static,static,congestion,3,h2,1,1791400021.06,srv1,ok,1,12740.36,12740.41,3.292,5242880
+concurrent,static,static,congestion,3,h2,2,1791400033.801,srv1,ok,1,13108.68,13108.72,3.2,5242880
+concurrent,static,static,congestion,3,h2,3,1791400046.91,srv1,ok,1,13743.66,13743.71,3.052,5242880
+concurrent,static,static,congestion,3,h3,1,1791400021.06,srv1,ok,1,13222.14,13222.19,3.172,5242880
+concurrent,static,static,congestion,3,h3,2,1791400034.283,srv1,ok,1,13081.13,13081.17,3.206,5242880
+concurrent,static,static,congestion,3,h3,3,1791400047.364,srv1,ok,1,12815.33,12815.37,3.273,5242880
+concurrent,round_robin,round_robin,congestion,1,h1,1,1791400071.393,srv3,ok,1,7519.68,7519.75,5.578,5242880
+concurrent,round_robin,round_robin,congestion,1,h1,2,1791400078.913,srv3,ok,1,6480.14,6480.22,6.473,5242880
+concurrent,round_robin,round_robin,congestion,1,h1,3,1791400085.394,srv3,ok,1,4614.07,4614.1,9.09,5242880
+concurrent,round_robin,round_robin,congestion,1,h2,1,1791400071.391,srv2,ok,1,5836.31,5836.36,7.187,5242880
+concurrent,round_robin,round_robin,congestion,1,h2,2,1791400077.228,srv2,ok,1,4963.11,4963.18,8.451,5242880
+concurrent,round_robin,round_robin,congestion,1,h2,3,1791400082.192,srv2,ok,1,4432.61,4432.66,9.462,5242880
+concurrent,round_robin,round_robin,congestion,1,h3,1,1791400071.391,srv1,ok,1,5191.34,5191.39,8.079,5242880
+concurrent,round_robin,round_robin,congestion,1,h3,2,1791400076.584,srv1,ok,1,4926.12,4926.21,8.514,5242880
+concurrent,round_robin,round_robin,congestion,1,h3,3,1791400081.51,srv1,ok,1,4407.1,4407.15,9.517,5242880
+concurrent,round_robin,round_robin,congestion,2,h1,1,1791400096.514,srv1,ok,1,5184.13,5184.18,8.091,5242880
+concurrent,round_robin,round_robin,congestion,2,h1,2,1791400101.699,srv1,ok,1,4876.15,4876.19,8.602,5242880
+concurrent,round_robin,round_robin,congestion,2,h1,3,1791400106.575,srv1,ok,1,4408.8,4408.83,9.513,5242880
+concurrent,round_robin,round_robin,congestion,2,h2,1,1791400096.52,srv3,ok,1,7499.79,7499.83,5.593,5242880
+concurrent,round_robin,round_robin,congestion,2,h2,2,1791400104.02,srv3,ok,1,6428.56,6428.6,6.524,5242880
+concurrent,round_robin,round_robin,congestion,2,h2,3,1791400110.449,srv3,ok,1,4592.91,4592.95,9.132,5242880
+concurrent,round_robin,round_robin,congestion,2,h3,1,1791400096.515,srv2,ok,1,5829.97,5830.0,7.194,5242880
+concurrent,round_robin,round_robin,congestion,2,h3,2,1791400102.345,srv2,ok,1,4917.12,4917.16,8.53,5242880
+concurrent,round_robin,round_robin,congestion,2,h3,3,1791400107.263,srv2,ok,1,4431.58,4431.61,9.465,5242880
+concurrent,round_robin,round_robin,congestion,3,h1,1,1791400121.479,srv3,ok,1,7500.3,7500.34,5.592,5242880
+concurrent,round_robin,round_robin,congestion,3,h1,2,1791400128.979,srv3,ok,1,6495.79,6495.83,6.457,5242880
+concurrent,round_robin,round_robin,congestion,3,h1,3,1791400135.475,srv3,ok,1,4601.23,4601.26,9.116,5242880
+concurrent,round_robin,round_robin,congestion,3,h2,1,1791400121.477,srv1,ok,1,5193.53,5193.59,8.076,5242880
+concurrent,round_robin,round_robin,congestion,3,h2,2,1791400126.672,srv1,ok,1,4883.13,4883.17,8.589,5242880
+concurrent,round_robin,round_robin,congestion,3,h2,3,1791400131.555,srv1,ok,1,4461.2,4461.23,9.402,5242880
+concurrent,round_robin,round_robin,congestion,3,h3,1,1791400121.478,srv2,ok,1,5840.6,5840.64,7.181,5242880
+concurrent,round_robin,round_robin,congestion,3,h3,2,1791400127.319,srv2,ok,1,4915.61,4915.65,8.533,5242880
+concurrent,round_robin,round_robin,congestion,3,h3,3,1791400132.235,srv2,ok,1,4483.38,4483.42,9.355,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h1,1,1791400146.603,srv2,ok,1,6056.01,6056.05,6.926,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h1,2,1791400152.659,srv2,ok,1,5073.6,5073.64,8.267,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h1,3,1791400157.734,srv1,ok,1,4975.9,4975.96,8.429,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h2,1,1791400146.603,srv1,ok,1,6759.7,6759.74,6.205,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h2,2,1791400153.363,srv3,ok,1,7669.84,7669.87,5.469,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h2,3,1791400161.033,srv1,ok,1,5865.16,5865.24,7.151,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h3,1,1791400146.603,srv3,ok,1,6642.97,6643.02,6.314,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h3,2,1791400153.246,srv1,ok,1,5212.56,5212.6,8.047,5242880
+concurrent,least_loaded,least_loaded,congestion,1,h3,3,1791400158.459,srv2,ok,1,4441.89,4441.92,9.443,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h1,1,1791400177.837,srv2,ok,1,5827.98,5828.03,7.197,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h1,2,1791400183.666,srv2,ok,1,4765.09,4765.15,8.802,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h1,3,1791400188.431,srv2,ok,1,5701.59,5701.62,7.356,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h2,1,1791400177.837,srv1,ok,1,5195.19,5195.27,8.073,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h2,2,1791400183.033,srv1,ok,1,4728.0,4728.04,8.871,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h2,3,1791400187.761,srv1,ok,1,4871.62,4871.65,8.61,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h3,1,1791400177.837,srv3,ok,1,7719.44,7719.51,5.433,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h3,2,1791400185.557,srv3,ok,1,4684.77,4684.81,8.953,5242880
+concurrent,least_loaded,least_loaded,congestion,2,h3,3,1791400190.242,srv3,ok,1,4662.26,4662.3,8.996,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h1,1,1791400205.729,srv3,ok,1,7543.44,7543.64,5.56,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h1,2,1791400213.273,srv3,ok,1,6442.03,6442.11,6.511,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h1,3,1791400219.716,srv3,ok,1,4605.51,4605.56,9.107,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h2,1,1791400205.729,srv2,ok,1,5866.31,5866.41,7.15,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h2,2,1791400211.596,srv2,ok,1,4914.13,4914.21,8.535,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h2,3,1791400216.51,srv2,ok,1,4431.9,4431.95,9.464,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h3,1,1791400205.729,srv1,ok,1,5237.5,5237.61,8.008,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h3,2,1791400210.967,srv1,ok,1,4876.29,4876.41,8.601,5242880
+concurrent,least_loaded,least_loaded,congestion,3,h3,3,1791400215.844,srv1,ok,1,4408.96,4409.0,9.513,5242880
+congestion,path_delay,least_loaded,delay,1,h1,1,1791400237.526,srv1,ok,3,8760.04,39059.97,4.788,5242880
+congestion,path_delay,least_loaded,delay,1,h1,2,1791400276.587,srv1,ok,1,4408.6,4408.66,9.514,5242880
+congestion,path_delay,least_loaded,delay,1,h1,3,1791400280.996,srv1,ok,1,4406.5,4406.54,9.518,5242880
+congestion,path_delay,least_loaded,delay,2,h1,1,1791400303.114,srv1,ok,3,4420.52,42836.83,9.488,5242880
+congestion,path_delay,least_loaded,delay,2,h1,2,1791400345.951,srv1,ok,1,4407.26,4407.3,9.517,5242880
+congestion,path_delay,least_loaded,delay,2,h1,3,1791400350.359,srv1,ok,1,4408.51,4408.55,9.514,5242880
+congestion,path_delay,least_loaded,delay,3,h1,1,1791400368.175,srv1,ok,2,4420.29,40522.52,9.489,5242880
+congestion,path_delay,least_loaded,delay,3,h1,2,1791400408.698,srv1,ok,1,4767.99,4768.03,8.797,5242880
+congestion,path_delay,least_loaded,delay,3,h1,3,1791400413.466,srv1,ok,1,4406.07,4406.11,9.519,5242880
+congestion,path_congestion,least_loaded,congestion,1,h1,1,1791400435.616,srv1,ok,1,5395.64,5395.67,7.774,5242880
+congestion,path_congestion,least_loaded,congestion,1,h1,2,1791400441.012,srv1,ok,1,4506.45,4506.48,9.307,5242880
+congestion,path_congestion,least_loaded,congestion,1,h1,3,1791400445.519,srv1,ok,1,4508.84,4508.87,9.302,5242880
+congestion,path_congestion,least_loaded,congestion,2,h1,1,1791400488.18,srv1,ok,1,5438.23,5438.36,7.713,5242880
+congestion,path_congestion,least_loaded,congestion,2,h1,2,1791400493.62,srv1,ok,1,4511.92,4511.96,9.296,5242880
+congestion,path_congestion,least_loaded,congestion,2,h1,3,1791400498.132,srv1,ok,1,4513.37,4513.4,9.293,5242880
+congestion,path_congestion,least_loaded,congestion,3,h1,1,1791400540.436,srv1,ok,1,4618.98,4619.08,9.081,5242880
+congestion,path_congestion,least_loaded,congestion,3,h1,2,1791400545.056,srv1,ok,1,4631.49,4631.56,9.056,5242880
+congestion,path_congestion,least_loaded,congestion,3,h1,3,1791400549.688,srv1,ok,1,4511.08,4511.21,9.298,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,1,1791400585.938,srv1,ok,1,4418.13,4418.23,9.493,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,2,1791400590.356,srv2,ok,1,4471.84,4471.88,9.379,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,3,1791400594.829,srv1,ok,1,4512.23,4512.26,9.295,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,4,1791400599.341,srv1,ok,1,4510.69,4510.72,9.299,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,5,1791400603.852,srv1,ok,1,4444.41,4444.45,9.437,5242880
+linkfail,least_loaded,least_loaded,congestion,1,h1,6,1791400608.297,srv1,ok,1,4408.64,4408.69,9.514,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,1,1791400623.421,srv1,ok,1,4417.26,4417.37,9.495,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,2,1791400627.839,srv1,ok,1,4445.19,4445.28,9.436,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,3,1791400632.284,srv1,ok,1,4616.48,4616.59,9.086,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,4,1791400636.901,srv1,ok,1,4510.88,4510.91,9.298,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,5,1791400641.413,srv1,ok,1,4408.43,4408.46,9.514,5242880
+linkfail,least_loaded,least_loaded,congestion,2,h1,6,1791400645.821,srv1,ok,1,4406.98,4407.05,9.517,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,1,1791400661.051,srv1,ok,1,4415.24,4415.31,9.5,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,2,1791400665.467,srv2,ok,1,4469.69,4469.75,9.384,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,3,1791400669.937,srv1,ok,1,4515.0,4515.04,9.29,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,4,1791400674.452,srv1,ok,1,4515.59,4515.63,9.289,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,5,1791400678.968,srv1,ok,1,4429.11,4429.15,9.47,5242880
+linkfail,least_loaded,least_loaded,congestion,3,h1,6,1791400683.398,srv1,ok,1,4406.34,4406.38,9.519,5242880
+serverfail,static,static,congestion,1,h1,1,1791400698.553,-,failed: [Errno 111] Connection refused,3,,9384.82,,0
+serverfail,static,static,congestion,1,h1,2,1791400707.939,-,failed: [Errno 111] Connection refused,3,,2058.46,,0
+serverfail,static,static,congestion,1,h1,3,1791400709.997,-,failed: [Errno 111] Connection refused,3,,2059.53,,0
+serverfail,static,static,congestion,1,h1,4,1791400712.057,-,failed: [Errno 111] Connection refused,3,,2055.74,,0
+serverfail,static,static,congestion,1,h2,1,1791400698.552,-,failed: [Errno 111] Connection refused,3,,9458.79,,0
+serverfail,static,static,congestion,1,h2,2,1791400708.011,-,failed: [Errno 111] Connection refused,3,,2036.93,,0
+serverfail,static,static,congestion,1,h2,3,1791400710.048,-,failed: [Errno 111] Connection refused,3,,2032.88,,0
+serverfail,static,static,congestion,1,h2,4,1791400712.081,-,failed: [Errno 111] Connection refused,3,,2040.41,,0
+serverfail,static,static,congestion,1,h3,1,1791400698.553,-,failed: [Errno 111] Connection refused,3,,9407.6,,0
+serverfail,static,static,congestion,1,h3,2,1791400707.961,-,failed: [Errno 111] Connection refused,3,,2038.45,,0
+serverfail,static,static,congestion,1,h3,3,1791400709.999,-,failed: [Errno 111] Connection refused,3,,2057.44,,0
+serverfail,static,static,congestion,1,h3,4,1791400712.058,-,failed: [Errno 111] Connection refused,3,,2060.09,,0
+serverfail,static,static,congestion,2,h1,1,1791400724.883,-,failed: [Errno 111] Connection refused,3,,9566.39,,0
+serverfail,static,static,congestion,2,h1,2,1791400734.45,-,failed: [Errno 111] Connection refused,3,,2032.79,,0
+serverfail,static,static,congestion,2,h1,3,1791400736.483,-,failed: [Errno 111] Connection refused,3,,2036.8,,0
+serverfail,static,static,congestion,2,h1,4,1791400738.52,-,failed: [Errno 111] Connection refused,3,,2043.72,,0
+serverfail,static,static,congestion,2,h2,1,1791400724.884,-,failed: [Errno 111] Connection refused,3,,9512.07,,0
+serverfail,static,static,congestion,2,h2,2,1791400734.397,-,failed: [Errno 111] Connection refused,3,,2044.75,,0
+serverfail,static,static,congestion,2,h2,3,1791400736.442,-,failed: [Errno 111] Connection refused,3,,2051.7,,0
+serverfail,static,static,congestion,2,h2,4,1791400738.495,-,failed: [Errno 111] Connection refused,3,,2054.18,,0
+serverfail,static,static,congestion,2,h3,1,1791400724.889,-,failed: [Errno 111] Connection refused,3,,9557.89,,0
+serverfail,static,static,congestion,2,h3,2,1791400734.447,-,failed: [Errno 111] Connection refused,3,,2033.7,,0
+serverfail,static,static,congestion,2,h3,3,1791400736.481,-,failed: [Errno 111] Connection refused,3,,2038.57,,0
+serverfail,static,static,congestion,2,h3,4,1791400738.52,-,failed: [Errno 111] Connection refused,3,,2043.75,,0
+serverfail,static,static,congestion,3,h1,1,1791400751.312,-,failed: [Errno 111] Connection refused,3,,9410.69,,0
+serverfail,static,static,congestion,3,h1,2,1791400760.725,-,failed: [Errno 111] Connection refused,3,,2057.47,,0
+serverfail,static,static,congestion,3,h1,3,1791400762.783,-,failed: [Errno 111] Connection refused,3,,2050.41,,0
+serverfail,static,static,congestion,3,h1,4,1791400764.834,-,failed: [Errno 111] Connection refused,3,,2049.0,,0
+serverfail,static,static,congestion,3,h2,1,1791400751.312,-,failed: [Errno 111] Connection refused,3,,9476.87,,0
+serverfail,static,static,congestion,3,h2,2,1791400760.79,-,failed: [Errno 111] Connection refused,3,,2034.06,,0
+serverfail,static,static,congestion,3,h2,3,1791400762.824,-,failed: [Errno 111] Connection refused,3,,2039.26,,0
+serverfail,static,static,congestion,3,h2,4,1791400764.864,-,failed: [Errno 111] Connection refused,3,,2037.41,,0
+serverfail,static,static,congestion,3,h3,1,1791400751.313,-,failed: [Errno 111] Connection refused,3,,9518.76,,0
+serverfail,static,static,congestion,3,h3,2,1791400760.832,-,failed: [Errno 111] Connection refused,3,,2033.65,,0
+serverfail,static,static,congestion,3,h3,3,1791400762.866,-,failed: [Errno 111] Connection refused,3,,2044.52,,0
+serverfail,static,static,congestion,3,h3,4,1791400764.911,-,failed: [Errno 111] Connection refused,3,,2042.45,,0
+serverfail,least_loaded,least_loaded,congestion,1,h1,1,1791400777.727,srv3,ok,1,7530.02,7530.06,5.57,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h1,2,1791400785.258,srv3,ok,1,4599.25,4599.29,9.12,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h1,3,1791400789.857,srv3,ok,1,4512.38,4512.42,9.295,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h1,4,1791400794.37,srv3,ok,1,4610.34,4610.38,9.098,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h2,1,1791400777.725,srv2,ok,1,5830.75,5830.79,7.193,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h2,2,1791400783.556,srv2,ok,1,4630.53,4630.57,9.058,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h2,3,1791400788.187,srv2,ok,1,8807.07,8807.11,4.762,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h2,4,1791400796.994,srv2,ok,1,8736.71,8736.74,4.801,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h3,1,1791400777.725,srv1,ok,1,5189.47,5189.51,8.082,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h3,2,1791400782.915,srv2,ok,3,9483.03,13144.18,4.423,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h3,3,1791400796.059,srv2,ok,1,8778.24,8778.28,4.778,5242880
+serverfail,least_loaded,least_loaded,congestion,1,h3,4,1791400804.838,srv3,ok,1,4487.48,4487.52,9.347,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h1,1,1791400819.987,srv1,ok,1,5194.37,5194.44,8.075,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h1,2,1791400825.183,srv3,ok,2,4665.34,7323.06,8.99,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h1,3,1791400832.506,srv3,ok,1,4466.73,4466.77,9.39,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h1,4,1791400836.973,srv2,ok,1,8330.2,8330.24,5.035,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h2,1,1791400819.988,srv2,ok,1,5834.99,5835.09,7.188,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h2,2,1791400825.823,srv2,ok,1,4674.65,4674.69,8.972,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h2,3,1791400830.498,srv2,ok,1,9054.34,9054.38,4.632,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h2,4,1791400839.553,srv2,ok,1,8450.93,8450.96,4.963,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h3,1,1791400819.988,srv3,ok,1,7501.45,7501.51,5.591,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h3,2,1791400827.49,srv2,ok,2,8358.23,9388.01,5.018,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h3,3,1791400836.878,srv3,ok,1,4662.3,4662.34,8.996,5242880
+serverfail,least_loaded,least_loaded,congestion,2,h3,4,1791400841.54,srv3,ok,1,4510.1,4510.13,9.3,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h1,1,1791400858.792,srv1,ok,1,5197.37,5197.42,8.07,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h1,2,1791400863.99,srv3,ok,2,4789.0,7392.29,8.758,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h1,3,1791400871.382,srv3,ok,1,4468.32,4468.36,9.387,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h1,4,1791400875.851,srv3,ok,1,4602.86,4602.9,9.112,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h2,1,1791400858.792,srv2,ok,1,5830.27,5830.32,7.194,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h2,2,1791400864.622,srv2,ok,1,5689.11,5689.15,7.373,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h2,3,1791400870.312,srv2,ok,1,8770.65,8770.68,4.782,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h2,4,1791400879.083,srv2,ok,1,8548.26,8548.3,4.907,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h3,1,1791400858.792,srv3,ok,1,7995.2,7995.24,5.246,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h3,2,1791400866.787,srv2,ok,2,9397.43,10409.52,4.463,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h3,3,1791400877.197,srv2,ok,1,8694.68,8694.71,4.824,5242880
+serverfail,least_loaded,least_loaded,congestion,3,h3,4,1791400885.892,srv3,ok,1,4467.74,4467.78,9.388,5242880

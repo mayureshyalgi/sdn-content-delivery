@@ -1,0 +1,5 @@
+[00:48:43] [srv1] listening on 0.0.0.0:9000, serving files from /home/mayuresh-yalgi/sdn-content-delivery/app/content
+[00:48:43] [srv1] sending load reports to 10.0.0.254:5555/udp every 1.0s
+[00:48:44] [srv1] connection from 10.0.0.1:38312 (active=1)
+[00:48:44] [srv1] connection from 10.0.0.2:35682 (active=2)
+[00:48:44] [srv1] connection from 10.0.0.3:46378 (active=3)

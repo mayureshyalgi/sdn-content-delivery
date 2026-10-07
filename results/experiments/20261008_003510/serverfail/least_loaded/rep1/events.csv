@@ -1,0 +1,3 @@
+epoch,t_s,event
+1791400777.674,0.01,clients started
+1791400783.682,6.02,srv1 killed

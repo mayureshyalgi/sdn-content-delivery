@@ -1,0 +1,5 @@
+timestamp,policy,path_policy,client,client_port,server,path,loads,link_util
+2026-10-08 00:42:48,least_loaded,delay,h1,52270,srv1,s1-s2-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+2026-10-08 00:43:24,least_loaded,delay,h1,39882,srv1,s1-s2-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=75% s2-s4=74% s1-s3=0% s3-s4=0%
+2026-10-08 00:43:28,least_loaded,delay,h1,39896,srv1,s1-s2-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=49% s2-s4=49% s1-s3=0% s3-s4=0%
+2026-10-08 00:43:33,least_loaded,delay,h1,39870,srv1,s1-s2-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=40% s2-s4=40% s1-s3=0% s3-s4=0%

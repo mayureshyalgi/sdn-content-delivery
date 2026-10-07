@@ -1,0 +1,9 @@
+scenario,config,requests,completed,failed_requests,extra_attempts,mean_throughput_mbps,mean_time_to_content_ms,max_time_to_content_ms,mean_response_ms
+concurrent,static,27,27,0,0,3.197,13124.9,13743.7,13124.8
+concurrent,round_robin,27,27,0,0,8.048,5367.2,7519.8,5367.2
+concurrent,least_loaded,27,27,0,0,7.814,5525.2,7719.5,5525.2
+congestion,path_delay,9,9,0,5,8.905,16580.5,42836.8,4934.0
+congestion,path_congestion,9,9,0,0,8.902,4737.4,5438.4,4737.3
+linkfail,least_loaded,18,18,0,0,9.401,4462.4,4616.6,4462.3
+serverfail,static,36,0,36,108,,,,
+serverfail,least_loaded,36,36,0,6,7.088,6731.0,13144.2,6426.4

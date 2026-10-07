@@ -1,0 +1,40 @@
+loading app controller/lb_controller.py
+loading app ryu.controller.ofp_handler
+instantiating app controller/lb_controller.py of ContentLoadBalancer
+[START] policy=least_loaded  path_policy=congestion  VIP=10.0.0.100:9000  reports on 10.0.0.254:5555/udp
+instantiating app ryu.controller.ofp_handler of OFPHandler
+[SWITCH] s4 connected
+[SWITCH] s2 connected
+[SWITCH] s1 connected
+[SWITCH] s3 connected
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[STATUS] srv1=DOWN srv2=DOWN srv3=DOWN
+[HEALTH] srv1 is UP (load reports received)
+[HEALTH] srv2 is UP (load reports received)
+[HEALTH] srv3 is UP (load reports received)
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=40% s2-s4=40% s1-s3=0% s3-s4=0%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[LB] h1:34556 -> srv1 via s1-s3-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(0) srv3=UP(0))
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=39% s3-s4=39%
+[STATUS] srv1=UP(1) srv2=UP(0) srv3=UP(0)
+[LB] h1:41614 -> srv1 via s1-s3-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(0) srv3=UP(0))
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=46% s3-s4=46%
+[STATUS] srv1=UP(1) srv2=UP(0) srv3=UP(0)
+[LB] h1:41626 -> srv1 via s1-s3-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(0) srv3=UP(0))
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=46% s3-s4=46%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=42% s3-s4=41%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+[STATUS] srv1=UP(0) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+[LINK] s1-s2 is DOWN -> clearing dynamic rules to re-route
+[LINK] s1-s3 is DOWN -> clearing dynamic rules to re-route
+[LINK] s2-s4 is DOWN -> clearing dynamic rules to re-route
+[LINK] s3-s4 is DOWN -> clearing dynamic rules to re-route

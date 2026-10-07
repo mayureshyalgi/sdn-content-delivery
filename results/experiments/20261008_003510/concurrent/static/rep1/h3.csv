@@ -1,0 +1,4 @@
+timestamp,start_epoch,client,server,served_by,file,bytes,connect_ms,ttfb_ms,total_ms,throughput_mbps,status,attempts,time_to_content_ms
+2026-10-08 00:35:20,1791399920.364,h3,10.0.0.100,srv1,large.bin,5242880,19.68,53.61,13122.08,3.196,ok,1,13122.12
+2026-10-08 00:35:33,1791399933.486,h3,10.0.0.100,srv1,large.bin,5242880,67.6,80.12,12928.5,3.244,ok,1,12928.54
+2026-10-08 00:35:46,1791399946.415,h3,10.0.0.100,srv1,large.bin,5242880,308.2,320.8,12975.44,3.232,ok,1,12975.49

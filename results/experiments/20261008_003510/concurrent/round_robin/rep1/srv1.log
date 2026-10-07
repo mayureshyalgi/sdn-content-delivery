@@ -1,0 +1,8 @@
+[00:37:49] [srv1] listening on 0.0.0.0:9000, serving files from /home/mayuresh-yalgi/sdn-content-delivery/app/content
+[00:37:49] [srv1] sending load reports to 10.0.0.254:5555/udp every 1.0s
+[00:37:51] [srv1] connection from 10.0.0.3:59116 (active=1)
+[00:37:55] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:59116 in 4.088s
+[00:37:56] [srv1] connection from 10.0.0.3:59128 (active=1)
+[00:38:00] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:59128 in 3.371s
+[00:38:01] [srv1] connection from 10.0.0.3:54446 (active=1)
+[00:38:04] [srv1] sent large.bin (5242880 bytes) to 10.0.0.3:54446 in 3.469s

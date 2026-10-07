@@ -1,0 +1,4 @@
+timestamp,policy,path_policy,client,client_port,server,path,loads,link_util
+2026-10-08 00:45:40,least_loaded,congestion,h1,50000,srv1,s1-s3-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=100% s2-s4=100% s1-s3=0% s3-s4=0%
+2026-10-08 00:45:45,least_loaded,congestion,h1,50008,srv1,s1-s3-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=94% s2-s4=94% s1-s3=47% s3-s4=47%
+2026-10-08 00:45:49,least_loaded,congestion,h1,36662,srv1,s1-s3-s4,srv1=UP(1) srv2=UP(0) srv3=UP(0),s1-s2=93% s2-s4=93% s1-s3=46% s3-s4=46%

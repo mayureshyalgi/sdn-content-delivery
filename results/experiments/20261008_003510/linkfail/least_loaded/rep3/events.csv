@@ -1,0 +1,4 @@
+epoch,t_s,event
+1791400660.993,0.0,h1 started
+1791400666.995,6.0,link s1-s2 down
+1791400678.996,18.01,link s1-s2 up

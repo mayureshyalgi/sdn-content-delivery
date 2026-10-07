@@ -1,0 +1,4 @@
+[h2] #1 large.bin from srv2: 5242880 bytes, response 5866.31 ms, throughput 7.15 Mbps
+[h2] #2 large.bin from srv2: 5242880 bytes, response 4914.13 ms, throughput 8.535 Mbps
+[h2] #3 large.bin from srv2: 5242880 bytes, response 4431.9 ms, throughput 9.464 Mbps
+[h2] summary: 3/3 succeeded, avg response 5070.8 ms, avg throughput 8.38 Mbps, avg time to content 5070.9 ms

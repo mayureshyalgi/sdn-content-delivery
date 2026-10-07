@@ -1,0 +1,47 @@
+loading app controller/lb_controller.py
+loading app ryu.controller.ofp_handler
+instantiating app controller/lb_controller.py of ContentLoadBalancer
+[START] policy=least_loaded  path_policy=congestion  VIP=10.0.0.100:9000  reports on 10.0.0.254:5555/udp
+instantiating app ryu.controller.ofp_handler of OFPHandler
+[SWITCH] s4 connected
+[SWITCH] s1 connected
+[SWITCH] s3 connected
+[SWITCH] s2 connected
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[STATUS] srv1=DOWN srv2=DOWN srv3=DOWN
+[HEALTH] srv1 is UP (load reports received)
+[HEALTH] srv2 is UP (load reports received)
+[HEALTH] srv3 is UP (load reports received)
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[LB] h1:42468 -> srv1 via s1-s2-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(0) srv3=UP(0))
+[LB] h2:58994 -> srv2 via s1-s2-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(1) srv3=UP(0))
+[LB] h3:34424 -> srv3 via s1-s2-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(1) srv3=UP(1))
+[STATUS] srv1=UP(1) srv2=UP(1) srv3=UP(1)
+[MONITOR] s1-s2=92% s2-s4=92% s1-s3=0% s3-s4=0%
+[LB] h1:42472 -> srv1 via s1-s3-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(1) srv3=UP(1))
+[LB] h2:58996 -> srv2 via s1-s3-s4  (policy=least_loaded | srv1=UP(1) srv2=UP(1) srv3=UP(1))
+[STATUS] srv1=UP(1) srv2=UP(1) srv3=UP(1)
+[LB] h3:34434 -> srv1 via s1-s3-s4  (policy=least_loaded | srv1=UP(2) srv2=UP(1) srv3=UP(1))
+[LB] h1:42486 -> srv3 via s1-s3-s4  (policy=least_loaded | srv1=UP(2) srv2=UP(1) srv3=UP(1))
+[MONITOR] s1-s2=97% s2-s4=97% s1-s3=15% s3-s4=16%
+[LB] h3:34450 -> srv2 via s1-s2-s4  (policy=least_loaded | srv1=UP(2) srv2=UP(2) srv3=UP(1))
+[HEALTH] srv1 is DOWN (no report for 3s)
+[LB] h2:45218 -> srv2 via s1-s2-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[MONITOR] s1-s2=1% s2-s4=1% s1-s3=91% s3-s4=91%
+[STATUS] srv1=DOWN srv2=UP(2) srv3=UP(0)
+[LB] h1:50400 -> srv3 via s1-s2-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[MONITOR] s1-s2=82% s2-s4=82% s1-s3=14% s3-s4=14%
+[LB] h3:56068 -> srv3 via s1-s3-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[STATUS] srv1=DOWN srv2=UP(1) srv3=UP(1)
+[LB] h1:50416 -> srv2 via s1-s3-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[LB] h2:46016 -> srv2 via s1-s3-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[MONITOR] s1-s2=74% s2-s4=74% s1-s3=20% s3-s4=20%
+[LB] h3:60666 -> srv3 via s1-s2-s4  (policy=least_loaded | srv1=DOWN srv2=UP(2) srv3=UP(1))
+[STATUS] srv1=DOWN srv2=UP(2) srv3=UP(0)
+[MONITOR] s1-s2=8% s2-s4=8% s1-s3=88% s3-s4=88%
+[STATUS] srv1=DOWN srv2=UP(1) srv3=UP(0)
+[MONITOR] s1-s2=49% s2-s4=49% s1-s3=49% s3-s4=49%
+[LINK] s1-s2 is DOWN -> clearing dynamic rules to re-route
+[LINK] s1-s3 is DOWN -> clearing dynamic rules to re-route
+[LINK] s2-s4 is DOWN -> clearing dynamic rules to re-route
+[LINK] s3-s4 is DOWN -> clearing dynamic rules to re-route

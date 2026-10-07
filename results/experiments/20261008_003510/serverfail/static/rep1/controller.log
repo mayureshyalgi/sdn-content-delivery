@@ -1,0 +1,62 @@
+loading app controller/lb_controller.py
+loading app ryu.controller.ofp_handler
+instantiating app controller/lb_controller.py of ContentLoadBalancer
+[START] policy=static  path_policy=congestion  VIP=10.0.0.100:9000  reports on 10.0.0.254:5555/udp
+instantiating app ryu.controller.ofp_handler of OFPHandler
+[SWITCH] s4 connected
+[SWITCH] s2 connected
+[SWITCH] s1 connected
+[SWITCH] s3 connected
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[STATUS] srv1=DOWN srv2=DOWN srv3=DOWN
+[HEALTH] srv1 is UP (load reports received)
+[HEALTH] srv2 is UP (load reports received)
+[HEALTH] srv3 is UP (load reports received)
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[LB] h2:35532 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(1) srv2=UP(0) srv3=UP(0))
+[LB] h1:54854 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(2) srv2=UP(0) srv3=UP(0))
+[LB] h3:48356 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(3) srv2=UP(0) srv3=UP(0))
+[STATUS] srv1=UP(3) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=45% s2-s4=45% s1-s3=0% s3-s4=0%
+[STATUS] srv1=UP(3) srv2=UP(0) srv3=UP(0)
+[MONITOR] s1-s2=49% s2-s4=49% s1-s3=0% s3-s4=0%
+[LB] h1:48396 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(4) srv2=UP(0) srv3=UP(0))
+[LB] h3:42152 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(5) srv2=UP(0) srv3=UP(0))
+[LB] h2:40066 -> srv1 via s1-s2-s4  (policy=static | srv1=UP(6) srv2=UP(0) srv3=UP(0))
+[HEALTH] srv1 is DOWN (no report for 3s)
+[LB] h1:48402 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:48416 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:42158 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:42166 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:40072 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:40074 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:48432 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:42172 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:40088 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37424 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60634 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37432 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60642 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52866 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52874 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[MONITOR] s1-s2=0% s2-s4=0% s1-s3=0% s3-s4=0%
+[STATUS] srv1=DOWN srv2=UP(0) srv3=UP(0)
+[LB] h1:37448 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60652 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52876 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37464 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60654 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37468 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60664 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52888 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52900 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60670 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37476 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52910 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h1:37482 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h3:60682 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LB] h2:52926 -> srv1 via s1-s2-s4  (policy=static | srv1=DOWN srv2=UP(0) srv3=UP(0))
+[LINK] s1-s2 is DOWN -> clearing dynamic rules to re-route
+[LINK] s1-s3 is DOWN -> clearing dynamic rules to re-route
+[LINK] s2-s4 is DOWN -> clearing dynamic rules to re-route
+[LINK] s3-s4 is DOWN -> clearing dynamic rules to re-route

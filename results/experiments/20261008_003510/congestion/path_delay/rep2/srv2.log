@@ -1,0 +1,2 @@
+[00:41:34] [srv2] listening on 0.0.0.0:9000, serving files from /home/mayuresh-yalgi/sdn-content-delivery/app/content
+[00:41:34] [srv2] sending load reports to 10.0.0.254:5555/udp every 1.0s
