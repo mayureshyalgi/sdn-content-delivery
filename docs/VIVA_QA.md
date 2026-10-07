@@ -315,3 +315,38 @@ application and the SDN network.
 Ryu is Python-based, supports OpenFlow 1.3 (which is needed for `set_field` address rewriting), and
 is well documented for the kind of per-flow control this project requires. ONOS would have been
 heavier to deploy for a single-machine emulation.
+
+---
+
+## H. Link failure and rerouting
+
+### H1. How do you know a transfer survived the failure mid-flight?
+
+The controller log shows connection 43578 began before `[LINK] s1-s2 is DOWN`. Its rewrite rules on
+s1 were reinstalled after the cut, outputting to `s1-eth5` (the backup path), and its return rule
+counted 5,148,034 bytes against 5,367,050 for a complete transfer. The missing ~219 KB crossed the
+fast path before the cut, on a rule the controller then deleted; the rest crossed the backup path.
+The download still completed, only ~18 ms slower than an undisturbed one.
+
+### H2. Why did throughput barely change on the slow path when latency quadrupled?
+
+The bottleneck is srv1's 10 Mbps link, not the path. TCP keeps enough data in flight to fill the
+pipe over the longer round trip: the bandwidth-delay product at 10 Mbps and ~55 ms is about 69 KB,
+well inside Linux's default window. Higher latency hurts small requests and TCP's ramp-up, which is
+why downloads took ~2-3% longer, but not steady-state throughput.
+
+### H3. Why was the first ping after the cut 390 ms?
+
+Cutting the link made the controller delete all dynamic rules so that nothing kept pointing at the
+dead link. The next packet therefore matched only the table-miss rule, went to the controller,
+waited for a new path to be computed and installed, and was then forwarded. Every later ping hit
+the new rules directly and took about 55 ms.
+
+### H4. Describe a bug you found and fixed.
+
+One `link s1 s2 down` produced `DOWN`, `UP`, `DOWN` in the controller log. A link has two ends,
+each reported separately by its own switch, and the controller set the link's state from whichever
+end reported last, so a status update from the far end briefly marked it UP. For those
+milliseconds traffic could have been routed into a dead link. The fix tracks every port's state and
+treats a link as UP only when both ends are up. We confirmed it by replaying the exact event
+sequence in a unit test and by re-running the experiment, which then showed one DOWN and one UP.
