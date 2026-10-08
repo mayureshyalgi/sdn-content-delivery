@@ -2,15 +2,15 @@
 """
 SDN Content Delivery Project - Mininet Topology
 
-                 +---- s2 ----+        fast path  (2 ms per link)
+                 +---- s2 ----+        fast path  (2 ms per link, 20 Mbps)
    h1 -+         |            |         +- srv1  (1 ms)
    h2 -+-- s1 ---+            +-- s4 ---+- srv2  (5 ms)
    h3 -+         |            |         +- srv3  (10 ms)
-                 +---- s3 ----+        slow path (10 ms per link)
+                 +---- s3 ----+        slow path (10 ms per link, 20 Mbps)
    clients                                servers
 
-Run (with the Ryu controller already running in another terminal):
-    sudo python3 topo.py
+Run from the project folder (with the Ryu controller already running):
+    sudo python3 topology/topo.py
 """
 
 from mininet.net import Mininet
@@ -27,6 +27,9 @@ CONTROLLER_IP = "127.0.0.1"
 CONTROLLER_PORT = 6653
 LINK_BW = 10                # Mbps, host links (clients and servers)
 CORE_BW = 20                # Mbps, switch-to-switch links
+GEN_BW = 100                # Mbps, background-traffic hosts (gen, sink)
+# Core links are faster than host links so that each server's own link is the
+# bottleneck: spreading clients over several servers then really helps.
 
 CLIENTS = {                 # name: (IP, MAC)
     "h1": ("10.0.0.1", "00:00:00:00:00:01"),
@@ -42,10 +45,10 @@ SERVERS = {                 # name: (IP, MAC, delay to s4)
 
 # ---------------------------------------------------------------
 # Port map (fixed so the controller always knows which port is which)
-#   s1: 1=h1  2=h2  3=h3  4=s2  5=s3
+#   s1: 1=h1  2=h2  3=h3  4=s2  5=s3  6=sink
 #   s2: 1=s1  2=s4
 #   s3: 1=s1  2=s4
-#   s4: 1=srv1  2=srv2  3=srv3  4=s2  5=s3
+#   s4: 1=srv1  2=srv2  3=srv3  4=s2  5=s3  6=gen
 # ---------------------------------------------------------------
 
 
@@ -66,6 +69,13 @@ class ContentTopo(Topo):
         for port, (name, (ip, mac, delay)) in enumerate(SERVERS.items(), start=1):
             host = self.addHost(name, ip=ip + "/24", mac=mac)
             self.addLink(host, s4, port2=port, bw=LINK_BW, delay=delay)
+
+        # Background-traffic hosts (not content servers). gen floods sink across
+        # the core so that congestion can be created without touching any server.
+        sink = self.addHost("sink", ip="10.0.0.21/24", mac="00:00:00:00:00:21")
+        gen = self.addHost("gen", ip="10.0.0.22/24", mac="00:00:00:00:00:22")
+        self.addLink(sink, s1, port2=6, bw=GEN_BW, delay="1ms")
+        self.addLink(gen, s4, port2=6, bw=GEN_BW, delay="1ms")
 
         # Fast path: s1 -> s2 -> s4
         self.addLink(s1, s2, port1=4, port2=1, bw=CORE_BW, delay="2ms")
@@ -88,7 +98,7 @@ def run():
                       ip=CONTROLLER_IP, port=CONTROLLER_PORT)
 
     net.start()
-    info("\n*** Network is up. Clients: h1 h2 h3 | Servers: srv1 srv2 srv3\n")
+    info("\n*** Network is up. Clients: h1 h2 h3 | Servers: srv1 srv2 srv3 | Traffic: gen sink\n")
     info("*** Give the controller a few seconds before testing.\n\n")
     CLI(net)
     net.stop()
