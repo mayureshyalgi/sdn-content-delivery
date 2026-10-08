@@ -8,6 +8,9 @@ Requests files from a content server and measures:
   - total response time (until the last byte arrives)
   - throughput         (Mbps)
 
+  - time to content   (from asking to having the file, INCLUDING failed attempts
+                        and the pauses between retries: what a user actually waits)
+
 Results are printed and can be appended to a CSV file for later graphs.
 
 Usage (inside Mininet, from the project folder):
@@ -23,9 +26,9 @@ import time
 
 from protocol import DEFAULT_PORT, send_line, recv_line, recv_exact
 
-CSV_FIELDS = ["timestamp", "client", "server", "served_by", "file", "bytes",
+CSV_FIELDS = ["timestamp", "start_epoch", "client", "server", "served_by", "file", "bytes",
               "connect_ms", "ttfb_ms", "total_ms", "throughput_mbps",
-              "status", "attempts"]
+              "status", "attempts", "time_to_content_ms"]
 
 
 def open_connection(server, port, timeout):
@@ -114,10 +117,13 @@ def main():
             print(f"{args.server}: no reply ({e})")
         return
 
-    successes, times, rates = 0, [], []
+    successes, times, rates, waits = 0, [], [], []
 
     for i in range(1, args.count + 1):
-        row = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"), "client": args.name,
+        request_start = time.time()
+        t_request = time.perf_counter()
+        row = {"timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+               "start_epoch": round(request_start, 3), "client": args.name,
                "server": args.server, "file": args.file}
 
         for attempt in range(1, args.retries + 2):
@@ -134,13 +140,18 @@ def main():
                 if attempt <= args.retries:
                     time.sleep(1)
 
+        row["time_to_content_ms"] = round((time.perf_counter() - t_request) * 1000, 2)
+
         if row["status"] == "ok":
             successes += 1
+            waits.append(row["time_to_content_ms"])
             times.append(row["total_ms"])
             rates.append(row["throughput_mbps"])
+            retried = f" after {row['attempts']} attempts, waited {row['time_to_content_ms']} ms" \
+                if row["attempts"] > 1 else ""
             print(f"[{args.name}] #{i} {args.file} from {row['served_by']}: "
                   f"{row['bytes']} bytes, response {row['total_ms']} ms, "
-                  f"throughput {row['throughput_mbps']} Mbps")
+                  f"throughput {row['throughput_mbps']} Mbps{retried}")
 
         if args.csv:
             append_csv(args.csv, row)
@@ -150,7 +161,8 @@ def main():
     print(f"[{args.name}] summary: {successes}/{args.count} succeeded", end="")
     if times:
         print(f", avg response {sum(times)/len(times):.1f} ms, "
-              f"avg throughput {sum(rates)/len(rates):.2f} Mbps")
+              f"avg throughput {sum(rates)/len(rates):.2f} Mbps, "
+              f"avg time to content {sum(waits)/len(waits):.1f} ms")
     else:
         print()
 

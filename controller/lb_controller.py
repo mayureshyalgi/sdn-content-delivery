@@ -72,7 +72,8 @@ UTIL_THRESHOLD = 0.7         # a link above 70% utilisation counts as congested
 CONGESTION_PENALTY_MS = 100  # extra path cost for crossing a congested link
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DECISIONS_CSV = os.path.join(PROJECT_DIR, "results", "lb_decisions.csv")
+DECISIONS_CSV = os.environ.get("LB_DECISIONS_CSV",
+                               os.path.join(PROJECT_DIR, "results", "lb_decisions.csv"))
 
 
 class ContentLoadBalancer(app_manager.RyuApp):
