@@ -77,8 +77,8 @@ def bar_pair(ax, rows, scenario, configs, field, ylabel, title, scale=1.0, fmt="
     ax.set_xticklabels([LABELS[c] for c in configs])
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    for b, m in zip(bars, means):
-        ax.annotate(fmt.format(m), (b.get_x() + b.get_width() / 2, m),
+    for b, m, e in zip(bars, means, errs):
+        ax.annotate(fmt.format(m), (b.get_x() + b.get_width() / 2, m + e),
                     xytext=(0, 4), textcoords="offset points", ha="center", fontsize=9)
 
 
