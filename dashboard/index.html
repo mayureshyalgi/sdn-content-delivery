@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDN content delivery demo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='11' width='10' height='10' rx='2' fill='%2314202B'/><rect x='19' y='3' width='10' height='10' rx='2' fill='%232a78d6'/><rect x='19' y='19' width='10' height='10' rx='2' fill='%23eb6834'/><path d='M13 16h3M16 8v16M16 8h3M16 24h3' stroke='%2314202B' stroke-width='2' fill='none'/></svg>">
+<style>
+:root{
+  --bg:#EDF0F3; --panel:#FFFFFF; --soft:#F4F6F8; --ink:#14202B; --muted:#56636F; --faint:#8794A0;
+  --line:#D2D9E0; --line2:#E5E9ED;
+  --srv1:#2a78d6; --srv2:#eb6834; --srv3:#1baf7a;
+  --slow:#4a3aa7;
+  --down:#C42F2F; --downbg:#FBE4E2; --ok:#1E7A55; --okbg:#DDF1E7; --warn:#9A6400; --warnbg:#FFF1D6;
+  --linkidle:#A5B0BB;
+  --sans:"Ubuntu","Segoe UI","Cantarell","Noto Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"Ubuntu Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
+button,select,input{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1500px;margin:0 auto;padding:16px 20px 48px}
+.hidden{display:none !important}
+:focus-visible{outline:2px solid var(--srv1);outline-offset:2px}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin-bottom:14px}
+.brand h1{font-size:24px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.01em}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:14px;white-space:nowrap}
+.chip b{font-weight:600}
+.status{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--faint);flex:none}
+.status.live .dot{background:var(--ok)}
+.status.off .dot{background:var(--down)}
+.status.busy .dot{background:var(--warn)}
+.tabs{display:flex;gap:4px;background:var(--line2);padding:3px;border-radius:8px}
+.tabs button{border:0;background:transparent;padding:5px 14px;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+
+.banner{border-radius:6px;padding:9px 14px;margin-bottom:14px;font-size:14px}
+.banner.sim{background:var(--warnbg);border:1px solid #EBC57A}
+.banner code{font-family:var(--mono);background:rgba(255,255,255,.7);padding:0 4px;border-radius:3px}
+
+/* layout */
+.grid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 370px;align-items:start}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.span2{grid-column:1/-1}
+@media (max-width:1100px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.panel h2{font-size:16px;margin:0;font-weight:700}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.ph .sub{color:var(--muted);font-size:13px}
+
+/* topology */
+.topo{padding:14px 16px 0;display:flex;flex-direction:column}
+.topo svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:20px;vertical-align:middle;margin-right:6px;border-top:4px solid}
+.now{margin:6px -16px 0;padding:11px 16px;border-top:1px solid var(--line);background:var(--soft);border-radius:0 0 8px 8px;font-size:15px;min-height:64px}
+.now .why{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.lbl{font:600 12.5px var(--sans);fill:var(--muted)}
+.halo{paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}
+@keyframes march{to{stroke-dashoffset:-20}}
+.flood{animation:march .8s linear infinite}
+@media (prefers-reduced-motion:reduce){.flood{animation:none}}
+
+/* controls */
+.controls{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden}
+.cgroup{padding:12px 16px;border-top:1px solid var(--line2)}
+.cgroup:first-child{border-top:0}
+.cgroup h3{font-size:14px;margin:0 0 8px;font-weight:700}
+.scen{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-top:1px dashed var(--line2);align-items:center}
+.scen:first-of-type{border-top:0;padding-top:0}
+.scen b{font-size:14px}
+.scen span{grid-column:1;color:var(--muted);font-size:12.5px;line-height:1.35}
+.scen button{grid-row:1/3;grid-column:2}
+.running{background:var(--warnbg);border:1px solid #EBC57A;border-radius:6px;padding:8px 10px;font-size:13.5px;margin-bottom:8px}
+.running b{display:block}
+.running .show{color:var(--muted);display:block;margin-top:3px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row + .row{margin-top:7px}
+.row .lab{flex:1;min-width:120px;font-size:14px}
+.row .lab small{color:var(--muted);font-size:12.5px;margin-left:4px}
+select,input[type=number]{border:1px solid var(--line);border-radius:5px;padding:4px 6px;background:#fff;min-width:0}
+input[type=number]{width:58px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:5px;padding:4px 12px;cursor:pointer;font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
+.btn.danger{background:#fff;color:var(--down);border-color:#E6B3AF}
+.btn.restore{background:#fff;color:var(--ok);border-color:#A9D5C1}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:not(:disabled):hover{filter:brightness(1.12)}
+.btn.ghost:not(:disabled):hover,.btn.danger:not(:disabled):hover,.btn.restore:not(:disabled):hover{background:var(--soft);filter:none}
+.pill{font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.down{background:var(--downbg);color:var(--down)}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+
+/* server cards */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.25fr);gap:14px}
+@media (max-width:1300px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards .sumcard{grid-column:1/-1}}
+@media (max-width:700px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;border-top:4px solid var(--c)}
+.card.isdown{border-top-color:var(--down)}
+.card .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .name{font-weight:700;font-size:16px}
+.card .ip{color:var(--muted);font-size:13px;margin-left:6px;font-weight:400}
+.card .big{font-size:28px;font-weight:700;line-height:1.1;margin-top:6px}
+.card .big small{font-size:13px;color:var(--muted);font-weight:600;margin-left:4px}
+.card .meta{display:flex;flex-wrap:wrap;gap:2px 14px;color:var(--muted);font-size:13px;margin-top:4px}
+.card .meta b{color:var(--ink);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+.stat .v{font-size:22px;font-weight:700;line-height:1.15}
+.stat .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
+.stat .k{font-size:12.5px;color:var(--muted)}
+
+/* charts */
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart h3{font-size:14px;font-weight:700;margin:4px 0 0}
+.chart .key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted);margin:2px 0 4px}
+.chart .key i{display:inline-block;width:14px;vertical-align:middle;margin-right:5px;border-top:3px solid}
+.chart .key .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:5px 8px;border-radius:5px;white-space:nowrap;z-index:5;transform:translate(-50%,-110%)}
+.chartcol{display:flex;flex-direction:column;gap:6px}
+
+/* events */
+.log{max-height:640px;overflow-y:auto;margin:0 -16px -14px;padding:0 16px 10px}
+.ev{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--line2);font-size:13px}
+.ev:first-child{border-top:0}
+.ev time{color:var(--faint);font-family:var(--mono);font-size:12.5px}
+.ev .t{font-family:var(--mono);font-size:12.5px;word-break:break-word}
+.ev.action .t{font-family:var(--sans);font-weight:600;font-size:13px}
+.ev.scenario .t{font-family:var(--sans);font-weight:700;font-size:13px}
+.ev.link .t,.ev.error .t,.ev.warn .t{color:var(--down)}
+.ev.health .t{color:var(--ok)}
+.ev.health.isdown .t{color:var(--down)}
+.ev.decision .t{color:var(--muted)}
+.filter{display:flex;gap:10px;font-size:12.5px;color:var(--muted)}
+.filter label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.sq{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.empty{color:var(--muted);padding:12px 0;font-size:14px}
+
+/* results */
+.rgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.rgrid{grid-template-columns:minmax(0,1fr)}}
+.res h2{font-size:17px}
+.res .claim{font-size:15px;margin:2px 0 10px}
+.res .claim b{font-size:20px}
+.bars{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;align-items:center;font-size:13.5px}
+.bars .track{height:22px;background:var(--soft);border-radius:4px;position:relative}
+.bars .fill{height:100%;border-radius:4px;min-width:2px}
+.bars .val{position:absolute;left:8px;top:2px;font-weight:600;font-size:13px}
+.bars .val.out{color:var(--ink)}
+.res .metric{font-size:12.5px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.gallery a{display:block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);text-decoration:none;font-size:13px}
+.gallery img{width:100%;height:auto;display:block;border-radius:4px;margin-bottom:6px}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:6px;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.18);z-index:20;max-width:90vw}
+.toast.bad{background:var(--down)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>SDN content delivery</h1>
+      <p>Clients ask one virtual address. The controller picks the server and the path for every connection.</p>
+    </div>
+    <div class="chips">
+      <span class="chip status" id="status"><span class="dot"></span><span id="statusText">Connecting…</span></span>
+      <span class="chip">Server policy <b id="cLb">–</b></span>
+      <span class="chip">Path policy <b id="cPath">–</b></span>
+      <span class="chip">VIP <b id="cVip" class="num">–</b></span>
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="live">Live demo</button>
+        <button role="tab" aria-selected="false" data-tab="results">Results</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner sim hidden" id="simBanner">Simulated network for rehearsal: the controls and behaviour match the real system, but the numbers are rough estimates. For the demo, run <code>sudo python3 dashboard/demo.py</code>.</div>
+
+  <!-- ===================== LIVE ===================== -->
+  <main id="tab-live">
+    <div class="grid">
+     <div class="col">
+      <section class="panel topo" aria-labelledby="h-net">
+        <div class="ph">
+          <h2 id="h-net">Network</h2>
+          <div class="legend">
+            <span><i style="border-color:var(--linkidle)"></i>Link, thicker = busier</span>
+            <span><i style="border-color:var(--down)"></i>Congested (≥70%) or down</span>
+            <span><i style="border-color:var(--srv1);border-top-width:3px"></i>Live connection, coloured by server</span>
+          </div>
+        </div>
+        <svg id="topo" viewBox="0 0 900 410" role="img" aria-label="Network topology with live link load and connections"></svg>
+        <div class="now" id="now" aria-live="polite">Waiting for the first request.</div>
+      </section>
+      <section class="cards" id="cards" aria-label="Content servers"></section>
+
+      <section class="panel" aria-labelledby="h-charts">
+        <div class="ph"><h2 id="h-charts">Over time</h2><span class="sub" id="chartSub"></span></div>
+        <div class="chartcol">
+          <div class="chart" id="utilChart">
+            <h3>Link use measured by the controller</h3>
+            <div class="key"><span><i style="border-color:var(--ink)"></i>Fast path, via s2</span><span><i style="border-color:var(--slow)"></i>Slow path, via s3</span><span><i style="border-color:var(--down);border-top-style:dashed;border-top-width:2px"></i>70% congestion threshold</span></div>
+            <svg id="utilSvg" viewBox="0 0 760 170" role="img" aria-label="Link utilisation over time"></svg>
+          </div>
+          <div class="chart" id="reqChart">
+            <h3>Time to get each file (s), including retries</h3>
+            <div class="key" id="reqKey"></div>
+            <svg id="reqSvg" viewBox="0 0 760 190" role="img" aria-label="Time to content per request"></svg>
+          </div>
+        </div>
+      </section>
+
+
+     </div>
+     <div class="col">
+      <aside class="panel controls" aria-label="Demo controls">
+        <div class="cgroup">
+          <h3>Scenarios</h3>
+          <div id="running" class="running hidden"></div>
+          <div id="scenarios"></div>
+        </div>
+        <div class="cgroup">
+          <h3>Send requests to the VIP</h3>
+          <div class="row">
+            <select id="rqClient" aria-label="Client"><option value="h1">h1</option><option value="h2">h2</option><option value="h3">h3</option><option value="all">all three</option></select>
+            <input id="rqCount" type="number" min="1" max="50" value="3" aria-label="Number of requests">
+            <span>×</span>
+            <select id="rqFile" aria-label="File"><option value="large.bin">large.bin (5 MB)</option><option value="medium.bin" selected>medium.bin (1 MB)</option><option value="small.bin">small.bin (10 KB)</option></select>
+            <button class="btn" id="rqSend">Send</button>
+          </div>
+          <div class="note" id="clientProgress"></div>
+        </div>
+        <div class="cgroup">
+          <h3>Servers</h3>
+          <div id="srvCtl"></div>
+        </div>
+        <div class="cgroup">
+          <h3>Links</h3>
+          <div id="linkCtl"></div>
+        </div>
+        <div class="cgroup">
+          <h3>Congestion</h3>
+          <div class="row">
+            <span class="lab">UDP flood gen → sink <small id="floodState">off</small></span>
+            <input id="floodMbps" type="number" min="1" max="100" value="25" aria-label="Flood rate in Mbps"><span>Mbps</span>
+            <button class="btn ghost" id="floodBtn">Start</button>
+          </div>
+          <p class="note">Background traffic, not a content server. It follows the shortest path, s4–s2–s1.</p>
+        </div>
+        <div class="cgroup">
+          <h3>Controller policy</h3>
+          <div class="row">
+            <select id="polLb" aria-label="Server policy"><option value="least_loaded">least_loaded</option><option value="round_robin">round_robin</option><option value="static">static (always srv1)</option></select>
+            <select id="polPath" aria-label="Path policy"><option value="congestion">congestion-aware</option><option value="delay">delay only</option></select>
+            <button class="btn ghost" id="polApply">Apply</button>
+          </div>
+          <p class="note">Applying restarts the controller (about 5–10 s). Wait for downloads to finish first.</p>
+        </div>
+        <div class="cgroup">
+          <div class="row">
+            <button class="btn ghost" id="resetBtn">Reset network</button>
+            <button class="btn ghost" id="clearBtn">Clear charts</button>
+          </div>
+          <p class="note">Reset brings every link up, restarts stopped servers and stops the flood.</p>
+        </div>
+      </aside>
+      <section class="panel" aria-labelledby="h-log">
+        <div class="ph">
+          <h2 id="h-log">Controller and events</h2>
+          <div class="filter"><label><input type="checkbox" id="showDec" checked> decisions</label></div>
+        </div>
+        <div class="log" id="log"></div>
+      </section>
+
+     </div>
+
+      <section class="panel span2" aria-labelledby="h-dec">
+        <div class="ph"><h2 id="h-dec">Latest controller decisions</h2><span class="sub">One row per new TCP connection to the VIP, with what the controller saw at that moment.</span></div>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Time</th><th>Client</th><th>Server</th><th>Path</th><th>Server loads</th><th>Link use</th></tr></thead>
+          <tbody id="decRows"></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===================== RESULTS ===================== -->
+  <main id="tab-results" class="hidden">
+    <div class="panel" style="margin-bottom:14px">
+      <div class="ph"><h2>Measured results</h2><span class="sub" id="resSub"></span></div>
+      <p class="note" style="margin:0">From the automated experiment runner (<code>tests/run_experiments.py</code>). Each configuration ran under identical conditions; only the controller policy changed.</p>
+    </div>
+    <div class="rgrid" id="resCards"></div>
+    <div class="panel" style="margin-top:14px">
+      <div class="ph"><h2>Graphs</h2><span class="sub">From <code>tests/make_graphs.py</code>. Click to open full size.</span></div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </main>
+</div>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SRV = {srv1:"var(--srv1)", srv2:"var(--srv2)", srv3:"var(--srv3)"};
+const colorOf = s => SRV[s] || "var(--faint)";
+let S = null;            // latest state
+let busyAction = false;
+
+// ---------- small helpers ----------
+function el(tag, attrs, parent, text){
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  if (parent) parent.appendChild(n);
+  return n;
+}
+const clock = t => new Date(t*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+function toast(msg, bad){
+  const t = $("toast"); t.textContent = msg; t.classList.toggle("bad", !!bad); t.classList.remove("hidden");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hidden"), bad ? 5000 : 2200);
+}
+async function act(body, okMsg){
+  if (busyAction) return;
+  busyAction = true;
+  try {
+    const r = await fetch("/api/action", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const d = await r.json();
+    if (d.ok) toast(okMsg || d.message); else toast(d.message || "That didn't work", true);
+  } catch(e){ toast("The dashboard server isn't reachable", true); }
+  busyAction = false;
+  refresh();
+}
+
+// ---------- topology ----------
+const POS = {
+  h1:[70,95], h2:[70,195], h3:[70,295], sink:[175,380],
+  s1:[255,195], s2:[450,70], s3:[450,320], s4:[645,195],
+  srv1:[830,95], srv2:[830,195], srv3:[830,295], gen:[725,380]
+};
+const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["sink","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"],["gen","s4"]];
+
+function offsetLine(p, q, off){
+  const dx = q[0]-p[0], dy = q[1]-p[1], L = Math.hypot(dx,dy) || 1;
+  const nx = -dy/L*off, ny = dx/L*off;
+  return [[p[0]+nx,p[1]+ny],[q[0]+nx,q[1]+ny]];
+}
+function polyPoints(nodes, off){
+  // nodes: list of names; offset every segment sideways by off px and join at corners
+  const pts = [];
+  for (let i=0;i<nodes.length-1;i++){
+    const [a,b] = offsetLine(POS[nodes[i]], POS[nodes[i+1]], off);
+    if (i === 0) pts.push(a);
+    else { const prev = pts[pts.length-1]; pts[pts.length-1] = [(prev[0]+a[0])/2,(prev[1]+a[1])/2]; }
+    pts.push(b);
+  }
+  return pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+}
+
+function drawTopology(){
+  const svg = $("topo"); svg.innerHTML = "";
+  const thr = S.util_threshold;
+  const srvAlive = Object.fromEntries(S.servers.map(s => [s.name, s]));
+  const gLinks = el("g",{},svg), gFlood = el("g",{},svg), gConn = el("g",{},svg), gNodes = el("g",{},svg), gLbl = el("g",{},svg);
+
+  // host links
+  for (const [h, sw] of HOSTLINK){
+    const [x1,y1] = POS[h], [x2,y2] = POS[sw];
+    const s = srvAlive[h];
+    const dead = s && !s.process;
+    el("line",{x1,y1,x2,y2,stroke: dead ? "var(--down)" : "var(--line)","stroke-width":2,"stroke-dasharray": dead ? "6 5" : null},gLinks);
+  }
+  // switch links: width and colour from utilisation
+  for (const l of S.links){
+    const a = "s"+l.a, b = "s"+l.b, [x1,y1] = POS[a], [x2,y2] = POS[b];
+    const hot = l.up && l.util >= thr;
+    const w = l.up ? 4 + 12*Math.min(1, l.util) : 3;
+    el("line",{x1,y1,x2,y2,stroke: !l.up || hot ? "var(--down)" : "var(--linkidle)","stroke-width":w,"stroke-linecap":"round","stroke-dasharray": l.up ? null : "9 7", opacity: l.up ? (hot ? .9 : .55 + .45*Math.min(1,l.util)) : 1},gLinks);
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    let nx = -(y2-y1), ny = x2-x1; const L = Math.hypot(nx,ny); nx/=L; ny/=L;
+    if (nx*(mx-450) + ny*(my-195) < 0){ nx=-nx; ny=-ny; }
+    const tx = mx + nx*24, ty = my + ny*24 + 4;
+    const txt = !l.up ? "DOWN" : `${Math.round(l.util*100)}%  ·  ${l.delay_ms} ms`;
+    el("text",{class:"lbl halo num",x:tx,y:ty,"text-anchor":"middle",style: (!l.up || hot) ? "fill:var(--down)" : null},gLbl,txt);
+  }
+  // flood path: gen -> s4 -> (shortest) -> s1 -> sink
+  if (S.flood.on){
+    const fast = S.links.find(l=>l.a===1&&l.b===2).up && S.links.find(l=>l.a===2&&l.b===4).up;
+    const nodes = ["gen","s4", fast ? "s2" : "s3", "s1","sink"];
+    el("polyline",{points:polyPoints(nodes, 0),fill:"none",stroke:"var(--ink)","stroke-width":2.5,"stroke-dasharray":"7 5",class:"flood",opacity:.75},gFlood);
+  }
+  // live connections, each in its server's colour, spread sideways so they don't overlap
+  const conns = (S.connections || []).filter(c => c.path && c.path.length);
+  conns.forEach((c, i) => {
+    const off = (i - (conns.length-1)/2) * 5;
+    const nodes = [c.client, ...c.path.map(d => "s"+d), c.server];
+    const pl = el("polyline",{points:polyPoints(nodes, off),fill:"none",stroke:colorOf(c.server),"stroke-width":3,"stroke-linejoin":"round","stroke-linecap":"round",opacity:.9},gConn);
+    el("title",{},pl,`${c.client}:${c.port} → ${c.server} via ${c.path.map(d=>"s"+d).join("-")}`);
+  });
+
+  // switches
+  for (const n of ["s1","s2","s3","s4"]){
+    const [x,y] = POS[n];
+    el("rect",{x:x-27,y:y-18,width:54,height:36,rx:7,fill:"var(--ink)"},gNodes);
+    el("text",{x,y:y+5,"text-anchor":"middle","font-size":15,"font-weight":700,fill:"#fff"},gNodes,n);
+  }
+  const vipl = el("text",{class:"lbl halo",x:POS.s1[0]+24,y:POS.s1[1]+45,"text-anchor":"middle"},gLbl,"VIP rewrite");
+  el("title",{},vipl,`s1 rewrites ${S.vip} to the chosen server's address, and back on replies`);
+  // clients
+  const busy = S.clients || {};
+  for (const h of ["h1","h2","h3"]){
+    const [x,y] = POS[h], b = busy[h] && busy[h].busy;
+    el("circle",{cx:x,cy:y,r:21,fill:"#fff",stroke:"var(--ink)","stroke-width": b ? 3.5 : 2},gNodes);
+    el("text",{x,y:y+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"var(--ink)"},gNodes,h);
+    el("text",{class:"lbl halo num",x,y:y+38,"text-anchor":"middle"},gLbl, b ? `${busy[h].done}/${busy[h].total} done` : `10.0.0.${h[1]}`);
+  }
+  // servers
+  for (const s of S.servers){
+    const [x,y] = POS[s.name], up = s.alive;
+    el("rect",{x:x-30,y:y-21,width:60,height:42,rx:6,fill: up ? colorOf(s.name) : "#fff",stroke: up ? colorOf(s.name) : "var(--down)","stroke-width":2.5,"stroke-dasharray": up ? null : "5 4"},gNodes);
+    el("text",{x,y:y+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill: up ? "#fff" : "var(--down)"},gNodes,s.name);
+    const sub = !s.process ? "✕ process stopped" : !up ? "! not reporting" : `${s.active} active`;
+    el("text",{class:"lbl halo",x,y:y+38,"text-anchor":"middle",style: up ? null : "fill:var(--down)"},gLbl,sub);
+  }
+  // background hosts
+  for (const n of ["gen","sink"]){
+    const [x,y] = POS[n];
+    el("rect",{x:x-23,y:y-13,width:46,height:26,rx:13,fill: S.flood.on ? "var(--ink)" : "#fff",stroke:"var(--faint)","stroke-width":1.5},gNodes);
+    el("text",{x,y:y+4.5,"text-anchor":"middle","font-size":12.5,"font-weight":600,fill: S.flood.on ? "#fff" : "var(--muted)"},gNodes,n);
+  }
+  if (S.flood.on) el("text",{class:"lbl halo",x:450,y:398,"text-anchor":"middle",style:"fill:var(--ink)"},gLbl,`UDP flood ${S.flood.mbps} Mbps (background traffic)`);
+}
+
+function renderNow(){
+  const d = (S.decisions || [])[0];
+  const box = $("now");
+  if (!S.controller_online){ box.innerHTML = S.restarting ? "<b>Controller restarting…</b><span class='why'>Switches reconnect and servers re-report within a few seconds.</span>" : "<b>The controller is not responding.</b><span class='why'>Check the terminal running demo.py.</span>"; return; }
+  if (!d){ box.innerHTML = "Waiting for the first request.<span class='why'>Send requests or run a scenario on the right.</span>"; return; }
+  const age = S.now - d.t;
+  const ago = age < 2 ? "just now" : age < 120 ? `${Math.round(age)} s ago` : `at ${clock(d.t)}`;
+  let why;
+  if (d.policy === "static") why = "Static policy: every connection goes to srv1, whatever its state.";
+  else if (d.policy === "round_robin") why = `Round robin: the next live server in turn. Loads were ${d.loads}.`;
+  else why = `Least loaded: fewest active connections among live servers, ties to the closest. Loads were ${d.loads}.`;
+  const path = String(d.path||"");
+  if (path.includes("s3")) why += d.path_policy === "congestion" ? ` Path via s3 because the fast path was congested or down (${d.link_util}).` : ` Path via s3 because the fast path was down.`;
+  else if (d.path_policy === "delay" && /s1-s2=(\d+)%/.test(d.link_util||"") && +RegExp.$1 >= 70) why += ` Path policy is delay-only, so it used the fast path even at ${RegExp.$1}% load.`;
+  box.innerHTML = `<b>${esc(d.client)}</b> → <b style="color:${colorOf(d.server)}">${esc(d.server)}</b> via <b>${esc(path)}</b> <span style="color:var(--muted)">${esc(ago)}</span><span class="why">${esc(why)}</span>`;
+}
+
+// ---------- controls ----------
+function renderControls(){
+  const sc = S.scenario, running = sc && !sc.done;
+  const r = $("running");
+  if (running){
+    const info = S.scenarios[sc.name];
+    r.innerHTML = `<b>${esc(sc.title)} · ${sc.elapsed.toFixed(0)} s</b>${esc(sc.step)}<span class="show">Watch for: ${esc(info.show)}</span><div class="row" style="margin-top:6px"><button class="btn danger" data-act="stopsc">Stop scenario</button></div>`;
+    r.classList.remove("hidden");
+  } else r.classList.add("hidden");
+  const lock = running || S.restarting || !S.controller_online;
+  if (!$("scenarios").dataset.built){
+    $("scenarios").innerHTML = Object.entries(S.scenarios).map(([k,v]) =>
+      `<div class="scen"><b>${esc(v.title)}</b><span>${esc(v.text)}</span><button class="btn" data-sc="${k}">Run</button></div>`).join("");
+    $("scenarios").dataset.built = 1;
+  }
+  document.querySelectorAll("[data-sc]").forEach(b => b.disabled = lock);
+
+  $("srvCtl").innerHTML = S.servers.map(s => {
+    const st = !s.process ? `<span class="pill down">✕ stopped</span>` : s.alive ? `<span class="pill ok">✓ up</span>` : `<span class="pill warn">! not reporting</span>`;
+    return `<div class="row"><span class="lab"><b>${s.name}</b> ${st}</span>${s.process ? `<button class="btn danger" data-srv="${s.name}" data-op="stop" ${S.restarting?"disabled":""}>Kill</button>` : `<button class="btn restore" data-srv="${s.name}" data-op="start">Restart</button>`}</div>`;
+  }).join("");
+  $("linkCtl").innerHTML = S.links.map(l => {
+    const name = `s${l.a}–s${l.b}`, kind = l.delay_ms <= 2 ? "fast" : "slow";
+    return `<div class="row"><span class="lab"><b>${name}</b> <small>${kind}, ${l.delay_ms} ms</small> ${l.up ? `<span class="pill ok">✓ up</span>` : `<span class="pill down">✕ down</span>`}</span>${l.up ? `<button class="btn danger" data-link="${l.a},${l.b}" data-op="down">Cut</button>` : `<button class="btn restore" data-link="${l.a},${l.b}" data-op="up">Restore</button>`}</div>`;
+  }).join("");
+  $("floodState").textContent = S.flood.on ? `running, ${S.flood.mbps} Mbps` : "off";
+  $("floodState").style.color = S.flood.on ? "var(--down)" : "";
+  const fb = $("floodBtn"); fb.textContent = S.flood.on ? "Stop" : "Start"; fb.className = S.flood.on ? "btn danger" : "btn ghost";
+  $("rqSend").disabled = S.restarting || !S.controller_online;
+  $("polApply").disabled = S.restarting;
+  if (document.activeElement !== $("polLb") && document.activeElement !== $("polPath") && !renderControls.touched){
+    $("polLb").value = S.lb_policy; $("polPath").value = S.path_policy;
+  }
+  const busy = Object.entries(S.clients || {}).filter(([,v]) => v.busy).map(([k,v]) => `${k} ${v.done}/${v.total}`);
+  $("clientProgress").textContent = busy.length ? `Downloading: ${busy.join(", ")}` : "";
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t || t.disabled) return;
+  if (t.dataset.sc) act({action:"scenario", name:t.dataset.sc}, "Scenario started");
+  else if (t.dataset.act === "stopsc") act({action:"scenario_stop"});
+  else if (t.dataset.srv) act({action:"server", name:t.dataset.srv, op:t.dataset.op});
+  else if (t.dataset.link){ const [a,b] = t.dataset.link.split(","); act({action:"link", a:"s"+a, b:"s"+b, op:t.dataset.op}); }
+  else if (t.dataset.tab) showTab(t.dataset.tab);
+});
+$("rqSend").onclick = () => act({action:"request", client:$("rqClient").value, file:$("rqFile").value, count:+$("rqCount").value || 1});
+$("floodBtn").onclick = () => act({action:"flood", op: S && S.flood.on ? "stop" : "start", mbps:+$("floodMbps").value || 25});
+$("polApply").onclick = () => { renderControls.touched = false; act({action:"policy", lb:$("polLb").value, path:$("polPath").value}); };
+["polLb","polPath"].forEach(id => $(id).onchange = () => renderControls.touched = true);
+$("resetBtn").onclick = () => act({action:"reset"});
+$("clearBtn").onclick = () => act({action:"clear"}, "Charts cleared");
+
+// ---------- server cards + summary ----------
+function renderCards(){
+  const sm = S.summary || {};
+  const perServer = {};
+  for (const r of S.requests || []) if (r.status === "ok") { const p = perServer[r.served_by] ||= {n:0, mbps:0}; p.n++; p.mbps += r.mbps || 0; }
+  const cards = S.servers.map(s => {
+    const p = perServer[s.name];
+    const state = !s.process ? `<span class="pill down">✕ process stopped</span>` : s.alive ? `<span class="pill ok">✓ up</span>` : `<span class="pill warn">! not reporting</span>`;
+    const age = s.last_report_age == null ? "never" : s.last_report_age < 1.5 ? "just now" : `${s.last_report_age.toFixed(0)} s ago`;
+    return `<div class="card ${s.alive ? "" : "isdown"}" style="--c:${colorOf(s.name)}">
+      <div class="top"><span class="name">${s.name}<span class="ip num">${s.ip}</span></span>${state}</div>
+      <div class="big num">${s.alive ? s.active : "–"}<small>active connections</small></div>
+      <div class="meta num"><span>last report <b>${age}</b></span><span>link <b>${s.delay_ms} ms</b></span>
+      <span>served <b>${p ? p.n : 0}</b>${p ? `, avg <b>${(p.mbps/p.n).toFixed(1)} Mbps</b>` : ""}</span></div></div>`;
+  }).join("");
+  const v = (x, unit) => x == null ? "–" : `${x}<small>${unit}</small>`;
+  const summary = `<div class="card sumcard" style="--c:var(--ink)">
+    <div class="top"><span class="name">Requests on the charts</span></div>
+    <div class="stats" style="margin-top:6px">
+      <div class="stat"><div class="v num">${sm.ok ?? 0}<small>of ${sm.total ?? 0} ok</small></div><div class="k">${sm.failed ? `<span style="color:var(--down)">✕ ${sm.failed} failed</span>` : "none failed"}${sm.retries ? `, ${sm.retries} retries` : ""}</div></div>
+      <div class="stat"><div class="v num">${v(sm.avg_mbps, "Mbps")}</div><div class="k">average throughput</div></div>
+      <div class="stat"><div class="v num">${v(sm.avg_ttc_ms != null ? (sm.avg_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">average time to get a file</div></div>
+      <div class="stat"><div class="v num">${v(sm.max_ttc_ms != null ? (sm.max_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">worst wait</div></div>
+    </div></div>`;
+  $("cards").innerHTML = cards + summary;
+}
+
+// ---------- charts ----------
+const CW = 760, PADL = 40, PADR = 10;
+function timeDomain(){
+  const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 180);
+  return [Math.min(t0, t1 - 60), t1];
+}
+function xScale(t, d){ return PADL + (t - d[0]) / (d[1]-d[0]) * (CW - PADL - PADR); }
+function axisX(svg, d, H, B){
+  const span = d[1]-d[0], step = span > 120 ? 30 : 15;
+  for (let s = 0; s <= span; s += step){
+    const t = d[1] - s, x = xScale(t, d);
+    if (x < PADL) break;
+    el("text",{x,y:H-B+14,"text-anchor":"middle","font-size":11,fill:"var(--faint)",class:"num"},svg, s === 0 ? "now" : `−${s}s`);
+  }
+}
+function eventMarks(svg, d, top, bottom, labels){
+  const marks = (S.events || []).filter(e => e.mark && e.t >= d[0]);
+  const rowsEnd = [-1e9, -1e9, -1e9];          // right edge of the last label in each row
+  for (const e of marks){
+    const x = xScale(e.t, d);
+    el("line",{x1:x,x2:x,y1:top,y2:bottom,stroke:"var(--ink)","stroke-width":1,"stroke-dasharray":"2 3",opacity:.55},svg);
+    if (!labels) continue;
+    const w = e.mark.length * 6.3 + 6, right = x + w > CW - PADR;
+    const x0 = right ? x - w : x, x1 = right ? x : x + w;
+    const row = rowsEnd.findIndex(end => end < x0);
+    if (row < 0) continue;                     // no room: the line still shows, the log has the detail
+    rowsEnd[row] = x1;
+    el("text",{x: right ? x-3 : x+3,y:top+10+row*13,"text-anchor": right ? "end" : "start","font-size":11,"font-weight":600,fill:"var(--ink)",class:"halo"},svg,e.mark);
+  }
+}
+function hover(container, svg, items){   // items: [{x,y,text}] in viewBox units
+  const tip = container.querySelector(".tip") || container.appendChild(Object.assign(document.createElement("div"),{className:"tip hidden"}));
+  svg.onmousemove = ev => {
+    const r = svg.getBoundingClientRect(), k = CW / r.width;
+    const mx = (ev.clientX - r.left) * k, my = (ev.clientY - r.top) * k;
+    let best = null, bd = 18*k;
+    for (const it of items){ const dd = Math.hypot(it.x-mx, (it.y==null?my:it.y)-my) ; if (dd < bd){ bd = dd; best = it; } }
+    if (!best){ tip.classList.add("hidden"); return; }
+    tip.textContent = best.text; tip.classList.remove("hidden");
+    tip.style.left = (best.x / k + svg.offsetLeft) + "px";
+    tip.style.top = ((best.y ?? my) / k + svg.offsetTop) + "px";
+  };
+  svg.onmouseleave = () => tip.classList.add("hidden");
+}
+
+function drawUtil(){
+  const svg = $("utilSvg"); svg.innerHTML = "";
+  const H = 170, B = 20, T = 8, d = timeDomain(), y = u => T + (H-T-B) * (1 - Math.min(1, u));
+  for (const f of [0, .5, 1]){
+    el("line",{x1:PADL,x2:CW-PADR,y1:y(f),y2:y(f),stroke:"var(--line2)"},svg);
+    el("text",{x:PADL-6,y:y(f)+4,"text-anchor":"end","font-size":11,fill:"var(--faint)"},svg,`${f*100}%`);
+  }
+  el("line",{x1:PADL,x2:CW-PADR,y1:y(S.util_threshold),y2:y(S.util_threshold),stroke:"var(--down)","stroke-dasharray":"5 4","stroke-width":1.5},svg);
+  eventMarks(svg, d, T, H-B, true);
+  const hist = (S.util_history || []).filter(h => h.t >= d[0]);
+  const series = [
+    {name:"Fast path", color:"var(--ink)", f:h => (h.u[0]==null||h.u[1]==null) ? null : Math.max(h.u[0],h.u[1])},
+    {name:"Slow path", color:"var(--slow)", f:h => (h.u[2]==null||h.u[3]==null) ? null : Math.max(h.u[2],h.u[3])},
+  ];
+  const items = [];
+  for (const s of series){
+    let seg = [];
+    const flush = () => { if (seg.length > 1) el("polyline",{points:seg.join(" "),fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round"},svg); seg = []; };
+    for (const h of hist){
+      const v = s.f(h);
+      if (v == null){ flush(); continue; }
+      const px = xScale(h.t, d), py = y(v);
+      seg.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      items.push({x:px, y:py, text:`${s.name}: ${Math.round(v*100)}% at ${clock(h.t)}`});
+    }
+    flush();
+    const last = [...hist].reverse().find(h => s.f(h) != null);
+    if (last){ const px = xScale(last.t,d), py = y(s.f(last)); el("circle",{cx:px,cy:py,r:3.5,fill:s.color,stroke:"#fff","stroke-width":2},svg); }
+    else if (hist.length) el("text",{x:CW-PADR,y: s.name==="Fast path" ? y(0)-6 : y(0)-20,"text-anchor":"end","font-size":11.5,"font-weight":600,fill:"var(--down)"},svg,`${s.name} down`);
+  }
+  axisX(svg, d, H, B);
+  hover($("utilChart"), svg, items);
+}
+
+function drawRequests(){
+  const svg = $("reqSvg"); svg.innerHTML = "";
+  const H = 190, B = 20, T = 8, d = timeDomain();
+  const rows = (S.requests || []).filter(r => r.end >= d[0]);
+  const maxS = Math.max(5, ...rows.map(r => (r.ttc_ms||0)/1000)) * 1.12;
+  const step = maxS > 40 ? 10 : maxS > 16 ? 5 : maxS > 8 ? 2 : 1;
+  const y = s => T + (H-T-B) * (1 - s/maxS);
+  for (let s = 0; s <= maxS; s += step){
+    el("line",{x1:PADL,x2:CW-PADR,y1:y(s),y2:y(s),stroke:"var(--line2)"},svg);
+    el("text",{x:PADL-6,y:y(s)+4,"text-anchor":"end","font-size":11,fill:"var(--faint)",class:"num"},svg,`${s}`);
+  }
+  eventMarks(svg, d, T, H-B, false);
+  const items = [];
+  for (const r of rows){
+    const px = xScale(r.end, d), py = y((r.ttc_ms||0)/1000);
+    const text = `${r.client} ${r.file}: ${r.status === "ok" ? `${r.served_by}, ${(r.ttc_ms/1000).toFixed(1)} s, ${r.mbps} Mbps${r.attempts>1?`, ${r.attempts} attempts`:""}` : `failed after ${r.attempts} attempts (${r.error.replace("failed: ","")})`}`;
+    if (r.status === "ok"){
+      el("circle",{cx:px,cy:py,r:5.5,fill:colorOf(r.served_by),stroke:"#fff","stroke-width":2},svg);
+      if (r.attempts > 1) el("circle",{cx:px,cy:py,r:9,fill:"none",stroke:"var(--ink)","stroke-width":1.2},svg);
+    } else {
+      const s = 6;
+      el("path",{d:`M${px-s},${py-s}L${px+s},${py+s}M${px-s},${py+s}L${px+s},${py-s}`,stroke:"var(--down)","stroke-width":2.5,"stroke-linecap":"round"},svg);
+    }
+    items.push({x:px, y:py, text});
+  }
+  if (!rows.length) el("text",{x:(PADL+CW)/2,y:H/2,"text-anchor":"middle","font-size":13,fill:"var(--muted)"},svg,"No finished requests yet");
+  axisX(svg, d, H, B);
+  hover($("reqChart"), svg, items);
+  $("reqKey").innerHTML = S.servers.map(s => `<span><span class="sw" style="background:${colorOf(s.name)}"></span>${s.name}</span>`).join("") +
+    `<span><span class="sw" style="background:#fff;border:1.5px solid var(--ink)"></span>ring = needed a retry</span><span style="color:var(--down)">✕ = failed</span>`;
+  $("chartSub").textContent = `dotted lines mark your actions · since ${clock(Math.max(S.chart_since, d[0]))}`;
+}
+
+// ---------- event log + decisions ----------
+function renderLog(){
+  const showDec = $("showDec").checked;
+  const evs = (S.events || []).filter(e => showDec || e.kind !== "decision").slice(-80).reverse();
+  const box = $("log"), atTop = box.scrollTop < 10;
+  box.innerHTML = evs.map(e => `<div class="ev ${e.kind} ${/DOWN|killed/.test(e.text) ? "isdown" : ""}"><time>${clock(e.t)}</time><span class="t">${esc(e.text)}</span></div>`).join("") || `<div class="empty">Nothing yet.</div>`;
+  if (atTop) box.scrollTop = 0;
+}
+$("showDec").onchange = () => S && renderLog();
+function renderDecisions(){
+  const rows = S.decisions || [];
+  $("decRows").innerHTML = rows.length ? rows.slice(0,10).map(d => `<tr>
+    <td class="num">${clock(d.t)}</td><td>${esc(d.client)}:${esc(d.port)}</td>
+    <td><span class="sq" style="background:${colorOf(d.server)}"></span><b>${esc(d.server)}</b></td>
+    <td><b>${esc(d.path)}</b></td><td class="mono">${esc(d.loads)}</td><td class="mono">${esc(d.link_util)}</td></tr>`).join("")
+    : `<tr><td colspan="6" class="empty">No decisions yet.</td></tr>`;
+}
+
+// ---------- header ----------
+function renderHeader(){
+  const st = $("status"); st.className = "chip status " + (S.restarting ? "busy" : S.controller_online ? "live" : "off");
+  $("statusText").textContent = S.restarting ? "Controller restarting" : S.controller_online ? (S.mode === "sim" ? "Simulation running" : "Controller live") : "Controller offline";
+  $("cLb").textContent = S.lb_policy; $("cPath").textContent = S.path_policy; $("cVip").textContent = S.vip;
+  $("simBanner").classList.toggle("hidden", S.mode !== "sim");
+}
+
+async function refresh(){
+  try {
+    const r = await fetch("/api/state", {cache:"no-store"});
+    S = await r.json();
+  } catch(e){
+    const st = $("status"); st.className = "chip status off"; $("statusText").textContent = "Dashboard server stopped";
+    return;
+  }
+  renderHeader();
+  if (!$("tab-live").classList.contains("hidden")){
+    drawTopology(); renderNow(); renderControls(); renderCards(); drawUtil(); drawRequests(); renderLog(); renderDecisions();
+  }
+}
+
+// ---------- results tab ----------
+let resultsLoaded = false;
+function showTab(name){
+  document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  $("tab-live").classList.toggle("hidden", name !== "live");
+  $("tab-results").classList.toggle("hidden", name !== "results");
+  if (name === "results" && !resultsLoaded) loadResults();
+  if (name === "live") refresh();
+}
+function bars(rows, field, fmt, colorFn, best){
+  const vals = rows.map(r => r[field]).filter(v => v != null);
+  const max = Math.max(...vals, 1e-9);
+  return `<div class="bars">` + rows.map(r => {
+    const v = r[field], w = v == null ? 0 : 100 * v / max;
+    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val ${w < 35 ? "out" : ""}" style="${w >= 35 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`;
+  }).join("") + `</div>`;
+}
+async function loadResults(){
+  let R;
+  try { R = await (await fetch("/api/results")).json(); } catch(e){ R = {}; }
+  resultsLoaded = true;
+  if (!R.rows){ $("resCards").innerHTML = `<div class="panel empty">No experiment results found. Run <code>sudo python3 tests/run_experiments.py</code>, then <code>python3 tests/make_graphs.py</code>.</div>`; return; }
+  $("resSub").textContent = `Batch ${R.batch}${R.reps ? ` · ${R.reps} repetitions per configuration` : ""}`;
+  const get = (sc, cfg) => { const r = R.rows.find(x => x.scenario === sc && x.config === cfg); if (!r) return null;
+    const n = k => r[k] === "" || r[k] == null ? null : +r[k];
+    return {label: cfg, req:n("requests"), ok:n("completed"), failed:n("failed_requests"), extra:n("extra_attempts"), mbps:n("mean_throughput_mbps"), ttc:n("mean_time_to_content_ms"), maxttc:n("max_time_to_content_ms")}; };
+  const pol = c => ({static:"var(--faint)", round_robin:"var(--slow)", least_loaded:"var(--srv1)", path_delay:"var(--faint)", path_congestion:"var(--srv1)"}[c.label] || "var(--ink)");
+  const cards = [];
+
+  const conc = ["static","round_robin","least_loaded"].map(c => get("concurrent", c)).filter(Boolean);
+  if (conc.length){
+    const s = conc.find(r => r.label==="static"), l = conc.find(r => r.label==="least_loaded");
+    cards.push(`<section class="panel res"><h2>Three clients at the same moment</h2>
+      <p class="claim">${s && l && s.mbps ? `<b>${(l.mbps/s.mbps).toFixed(1)}×</b> throughput with least loaded vs static` : ""}</p>
+      <div class="metric">Mean throughput per download (Mbps, higher is better)</div>${bars(conc,"mbps",v=>v.toFixed(2)+" Mbps",pol)}
+      <div class="metric">Mean time to get a 5 MB file (s, lower is better)</div>${bars(conc,"ttc",v=>(v/1000).toFixed(1)+" s",pol)}</section>`);
+  }
+  const cong = ["path_delay","path_congestion"].map(c => get("congestion", c)).filter(Boolean);
+  if (cong.length){
+    const a = cong.find(r=>r.label==="path_delay"), b = cong.find(r=>r.label==="path_congestion");
+    cong.forEach(r => r.label = r.label === "path_delay" ? "delay only" : "congestion-aware");
+    cards.push(`<section class="panel res"><h2>25 Mbps flood on the fast path</h2>
+      <p class="claim">${a && b && b.maxttc ? `<b>${(a.maxttc/b.maxttc).toFixed(1)}×</b> shorter worst wait with congestion-aware paths` : ""}</p>
+      <div class="metric">Worst time to get a file (s, lower is better)</div>${bars(cong,"maxttc",v=>(v/1000).toFixed(1)+" s",r=>r.label==="delay only"?"var(--faint)":"var(--srv1)")}
+      <div class="metric">Failed attempts that had to be retried</div>${bars(cong,"extra",v=>String(v),r=>r.label==="delay only"?"var(--faint)":"var(--srv1)")}</section>`);
+  }
+  const sf = ["static","least_loaded"].map(c => get("serverfail", c)).filter(Boolean);
+  if (sf.length){
+    sf.forEach(r => r.pct = r.req ? 100*r.ok/r.req : 0);
+    cards.push(`<section class="panel res"><h2>A server is killed mid-run</h2>
+      <p class="claim">${sf.map(r => `${r.label}: <b>${r.ok}/${r.req}</b> completed`).join(" · ")}</p>
+      <div class="metric">Downloads completed (%)</div>${bars(sf,"pct",v=>v.toFixed(0)+"%",pol)}
+      <p class="note">Static keeps sending clients to the dead srv1; least loaded stops within 3 s, when the load reports stop.</p></section>`);
+  }
+  const lf = get("linkfail","least_loaded");
+  if (lf){
+    cards.push(`<section class="panel res"><h2>Fast-path link cut and restored</h2>
+      <p class="claim"><b>${lf.ok}/${lf.req}</b> downloads completed, <b>${lf.extra}</b> retries</p>
+      <div class="stats"><div class="stat"><div class="v num">${lf.mbps?.toFixed(2)}<small>Mbps</small></div><div class="k">mean throughput</div></div>
+      <div class="stat"><div class="v num">${(lf.maxttc/1000).toFixed(1)}<small>s</small></div><div class="k">worst time to get a file</div></div></div>
+      <p class="note">The controller sees the port go down, clears its rules and reinstalls every connection over s3, including transfers in progress.</p></section>`);
+  }
+  $("resCards").innerHTML = cards.join("");
+  const nice = f => f.split("/").pop().replace(/\.png$/,"").replace(/^\d+[ab]?_/,"").replace(/_/g," ");
+  $("gallery").innerHTML = (R.graphs||[]).map(g => `<a href="/${g}" target="_blank" rel="noopener"><img src="/${g}" alt="${esc(nice(g))}" loading="lazy">${esc(nice(g))}</a>`).join("") || `<div class="empty">No graphs yet. Run <code>python3 tests/make_graphs.py</code>.</div>`;
+}
+
+refresh();
+setInterval(() => { if (!$("tab-live").classList.contains("hidden")) refresh(); }, 1000);
+</script>
+</body>
+</html>

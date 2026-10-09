@@ -74,6 +74,9 @@ CONGESTION_PENALTY_MS = 100  # extra path cost for crossing a congested link
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DECISIONS_CSV = os.environ.get("LB_DECISIONS_CSV",
                                os.path.join(PROJECT_DIR, "results", "lb_decisions.csv"))
+# Optional: a JSON snapshot of the controller's view, rewritten every second, for the
+# demo dashboard (dashboard/demo.py sets this). Unset means no snapshot is written.
+STATE_JSON = os.environ.get("LB_STATE_JSON", "").strip()
 
 
 class ContentLoadBalancer(app_manager.RyuApp):
@@ -390,6 +393,49 @@ class ContentLoadBalancer(app_manager.RyuApp):
                                      cfg.host_name(ip), DEAD_AFTER)
             if ticks % STATUS_EVERY == 0:
                 self.logger.info("[STATUS] %s", self._load_summary())
+            if STATE_JSON:
+                self._write_state()
+
+    def _write_state(self):
+        """Write the controller's current view to STATE_JSON (used by the demo dashboard)."""
+        try:
+            now = time.time()
+            servers = []
+            for ip, st in self.servers.items():
+                servers.append({
+                    "name": cfg.host_name(ip), "ip": ip, "alive": bool(st["alive"]),
+                    "active": int(st["active"]), "pending": int(st["pending"]),
+                    "last_report_age": round(now - st["last"], 1) if st["last"] else None,
+                    "delay_ms": cfg.SERVER_DELAY_MS.get(ip),
+                })
+            links = []
+            for i, (a, pa, b, pb, delay, bw) in enumerate(cfg.LINKS):
+                links.append({
+                    "a": a, "b": b, "delay_ms": delay, "bw_mbps": bw, "up": self.link_up[i],
+                    "util": round(self.link_util[i], 3),
+                    "mbps": round(max(self.port_bps.get((a, pa), 0.0),
+                                      self.port_bps.get((b, pb), 0.0)) / 1e6, 2),
+                })
+            conns = []
+            for (c_ip, c_port), v in self.assignments.items():
+                installed = v.get("installed", v["time"])
+                if now - installed <= VIP_IDLE + 5:
+                    conns.append({"client": cfg.host_name(c_ip), "port": c_port,
+                                  "server": cfg.host_name(v["server"]),
+                                  "path": v.get("path", []), "age": round(now - v["time"], 1),
+                                  "installed_age": round(now - installed, 1)})
+            state = {
+                "time": now, "policy": self.policy, "path_policy": self.path_policy,
+                "vip": cfg.VIP, "switches": sorted(self.datapaths.keys()),
+                "util_threshold": UTIL_THRESHOLD, "servers": servers, "links": links,
+                "connections": sorted(conns, key=lambda c: c["age"])[:30],
+            }
+            tmp = STATE_JSON + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(state, f)
+            os.replace(tmp, STATE_JSON)
+        except Exception as e:  # a snapshot problem must never stop the controller
+            self.logger.debug("state snapshot failed: %s", e)
 
     def _load_summary(self):
         parts = []
@@ -545,6 +591,11 @@ class ContentLoadBalancer(app_manager.RyuApp):
                        parser.OFPActionSetField(ipv4_src=cfg.VIP),
                        parser.OFPActionOutput(c_port)],
                       idle=VIP_IDLE, cookie=COOKIE_VIP)
+        # Remember the path in use (it changes when rules are reinstalled after a link change)
+        entry = self.assignments.get((client_ip, client_port))
+        if entry is not None:
+            entry["path"] = [dpid for dpid, _p in path]
+            entry["installed"] = time.time()
         return path
 
     def _forget_old_assignments(self, max_age=600):
