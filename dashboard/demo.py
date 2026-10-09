@@ -86,6 +86,52 @@ def route_name(path):
     return "-".join(f"s{d}" for d in path)
 
 
+# ---- names for switch ports and IP addresses (for the flow-table view) -------
+HOST_NAMES = {ip: h[0] for ip, h in cfg.HOSTS.items()}
+HOST_NAMES[cfg.VIP] = "VIP"
+HOST_NAMES[cfg.CTRL_IP] = "controller"
+PORT_NAMES = {d: {} for d in (1, 2, 3, 4)}
+for _ip, (_n, _mac, _d, _p) in cfg.HOSTS.items():
+    PORT_NAMES[_d][_p] = _n
+for _a, _pa, _b, _pb, _dl, _bw in cfg.LINKS:
+    PORT_NAMES[_a][_pa] = f"s{_b}"
+    PORT_NAMES[_b][_pb] = f"s{_a}"
+
+
+def port_toward(dpid, name):
+    """Port on switch dpid that leads to a neighbour switch or attached host."""
+    for port, n in PORT_NAMES[dpid].items():
+        if n == name:
+            return port
+    return None
+
+
+FLOW_STATS = {"cookie", "duration", "table", "n_packets", "n_bytes", "idle_timeout", "hard_timeout",
+              "idle_age", "hard_age", "priority", "reset_counts", "send_flow_rem", "importance"}
+
+
+def parse_flow(line):
+    """One line of `ovs-ofctl -O OpenFlow13 dump-flows` -> dict."""
+    left, actions = line.strip().split(" actions=", 1)
+    rule = {"cookie": "0x0", "priority": 32768, "table": 0, "duration": 0.0, "n_packets": 0,
+            "n_bytes": 0, "idle_timeout": 0, "match": [], "actions": actions.strip()}
+    for tok in left.replace(", ", ",").split(","):
+        tok = tok.strip()
+        if not tok:
+            continue
+        key, _, val = tok.partition("=")
+        if val and key in FLOW_STATS:
+            if key in ("priority", "table", "n_packets", "n_bytes", "idle_timeout"):
+                rule[key] = int(num(val, 0))
+            elif key == "duration":
+                rule[key] = num(val.rstrip("s"), 0.0)
+            else:
+                rule[key] = val
+        else:
+            rule["match"].append(tok)
+    return rule
+
+
 def latest_results_batch():
     """Newest experiment batch with a summary, for the Results tab."""
     base = os.path.join(PROJECT, "results", "experiments")
@@ -645,6 +691,14 @@ class LiveBackend(Backend):
                 out["clients"][c] = {"busy": False}
         return out
 
+    def flows(self, dpid):
+        """The switch's real OpenFlow table."""
+        res = subprocess.run(["ovs-ofctl", "-O", "OpenFlow13", "dump-flows", f"s{dpid}"],
+                             capture_output=True, text=True, timeout=4)
+        if res.returncode != 0:
+            raise RuntimeError(res.stderr.strip() or "ovs-ofctl failed")
+        return [parse_flow(l) for l in res.stdout.splitlines() if " actions=" in l]
+
     def shutdown(self):
         print("\nStopping everything ...")
         for j in self.client_jobs:
@@ -704,6 +758,8 @@ class SimBackend(Backend):
         self.flood_mbps = 0
         self.jobs = []      # client batches
         self.dls = []       # active downloads
+        self.ended = deque(maxlen=60)   # finished connections, for rules waiting to idle out
+        self.flood_since = t
         self.rows = []      # finished requests
         self.rr = 0
         self.restart_until = 0
@@ -769,6 +825,7 @@ class SimBackend(Backend):
         with self.lock:
             if on and not self.flood_mbps:
                 self.flood_mbps = max(1, min(100, int(mbps)))
+                self.flood_since = now()
                 self.event("action", f"UDP flood started: gen → sink, {self.flood_mbps} Mbps",
                            f"flood {self.flood_mbps}M")
             elif not on and self.flood_mbps:
@@ -866,8 +923,14 @@ class SimBackend(Backend):
                          "port": port, "left": FILES[job["file"]] * 8 / 1e6, "rate": 0.0,
                          "begin": now(), "congestion_aware": aware, "starved": 0.0})
 
+    def _ended(self, d):
+        rec = self._conn_records_one(d)
+        rec["end"] = now()
+        self.ended.append(rec)
+
     def _fail(self, d, why):
         if d in self.dls:
+            self._ended(d)
             self.dls.remove(d)
         self._attempt_failed(d["job"], why)
 
@@ -965,6 +1028,8 @@ class SimBackend(Backend):
                 self._fail(d, "timed out")
                 continue
             if d["left"] <= 0:
+                d["left"] = 0
+                self._ended(d)
                 self.dls.remove(d)
                 el = t - d["begin"]
                 size = FILES[d["job"]["file"]]
@@ -1007,7 +1072,8 @@ class SimBackend(Backend):
                              "mbps": round(self.util[(a, b)] * bw, 2)}
                             for a, _pa, b, _pb, d, bw in cfg.LINKS]
             out["connections"] = [{"client": d["client"], "port": d["port"], "server": d["server"],
-                                   "path": d["path"], "age": round(t - d["begin"], 1)} for d in self.dls]
+                                   "path": d["path"], "age": round(t - d["begin"], 1),
+                                   "mbps": round(d["rate"], 2), "active": True} for d in self.dls]
             out["flood"] = {"on": bool(self.flood_mbps), "mbps": self.flood_mbps}
             out["requests"] = [r for r in self.rows if r["end"] >= out["chart_since"]]
             out["summary"] = summarize(out["requests"])
@@ -1017,6 +1083,64 @@ class SimBackend(Backend):
                 out["clients"][c] = ({"busy": True, "done": sum(j["done"] for j in jobs),
                                       "total": sum(j["count"] for j in jobs)} if jobs else {"busy": False})
         return out
+
+    def flows(self, dpid):
+        """Build the rules the real controller would have installed for the current model state."""
+        t = now()
+        rules = [
+            {"cookie": "0x0", "priority": 0, "match": [], "actions": "CONTROLLER:65535",
+             "idle_timeout": 0, "duration": t - self.started, "n_packets": int((t - self.started) * 3.2)},
+            {"cookie": "0x0", "priority": 1, "match": ["ipv6"], "actions": "drop",
+             "idle_timeout": 0, "duration": t - self.started, "n_packets": int((t - self.started) * 0.4)},
+        ]
+        with self.lock:
+            if self.flood_mbps:                      # background traffic: destination route to sink
+                p = self._path(4, 1, False)
+                if p and dpid in p:
+                    nxt = p[p.index(dpid) + 1] if dpid != 1 else None
+                    out = port_toward(dpid, f"s{nxt}") if nxt else port_toward(1, "sink")
+                    rules.append({"cookie": "0x1", "priority": 10, "match": ["ip", "nw_dst=10.0.0.21"],
+                                  "actions": f"output:{out}", "idle_timeout": 60,
+                                  "duration": t - self.flood_since,
+                                  "n_packets": int((t - self.flood_since) * self.flood_mbps * 1e6 / 8 / 1470)})
+            conns = [dict(c, live=True) for c in self._conn_records()] + \
+                    [dict(c, live=False) for c in self.ended if t - c["end"] < 15]
+        for c in conns:
+            path, cip = c["path"], f"10.0.0.{c['client'][1]}"
+            sip = f"10.0.0.1{c['server'][-1]}"
+            data_pk = int(c["bytes"] / 1448)
+            ack_pk = data_pk // 2 + 3
+            base = {"cookie": "0x2", "idle_timeout": 15, "duration": t - c["begin"]}
+            fwd = ["tcp", f"nw_src={cip}", f"nw_dst={sip}", f"tp_src={c['port']}", "tp_dst=9000"]
+            rev = ["tcp", f"nw_src={sip}", f"nw_dst={cip}", "tp_src=9000", f"tp_dst={c['port']}"]
+            if dpid == 1:
+                out = port_toward(1, f"s{path[1]}")
+                rules.append(dict(base, priority=30, n_packets=ack_pk,
+                                  match=["tcp", f"nw_src={cip}", f"nw_dst={VIP}", f"tp_src={c['port']}", "tp_dst=9000"],
+                                  actions=f"set_field:00:00:00:00:00:1{c['server'][-1]}->eth_dst,"
+                                          f"set_field:{sip}->ip_dst,output:{out}"))
+                rules.append(dict(base, priority=30, n_packets=data_pk, match=rev,
+                                  actions=f"set_field:00:00:00:00:00:64->eth_src,set_field:{VIP}->ip_src,"
+                                          f"output:{port_toward(1, c['client'])}"))
+            elif dpid in path:
+                i = path.index(dpid)
+                ahead = c["server"] if i == len(path) - 1 else f"s{path[i + 1]}"
+                rules.append(dict(base, priority=20, n_packets=ack_pk, match=fwd,
+                                  actions=f"output:{port_toward(dpid, ahead)}"))
+                rules.append(dict(base, priority=20, n_packets=data_pk, match=rev,
+                                  actions=f"output:{port_toward(dpid, f's{path[i - 1]}')}"))
+        for r in rules:
+            r.setdefault("table", 0)
+            r["duration"] = round(r["duration"], 3)
+            r.setdefault("n_bytes", r["n_packets"] * (1514 if r["n_packets"] > 50 else 66))
+        return sorted(rules, key=lambda r: -r["priority"])
+
+    def _conn_records_one(self, d):
+        return {"client": d["client"], "port": d["port"], "server": d["server"], "path": list(d["path"]),
+                "begin": d["begin"], "bytes": max(0.0, FILES[d["job"]["file"]] - d["left"] * 1e6 / 8)}
+
+    def _conn_records(self):
+        return [self._conn_records_one(d) for d in self.dls]
 
     def shutdown(self):
         pass
@@ -1033,6 +1157,18 @@ def make_handler(backend):
                 self.send_file(os.path.join(HERE, "index.html"), "text/html; charset=utf-8")
             elif path == "/api/state":
                 self.send_json(backend.state())
+            elif path == "/api/flows":
+                qs = dict(p.split("=", 1) for p in self.path.partition("?")[2].split("&") if "=" in p)
+                try:
+                    dpid = int(qs.get("sw", "1"))
+                    if dpid not in PORT_NAMES:
+                        raise ValueError("unknown switch")
+                    data = {"switch": dpid, "rules": backend.flows(dpid), "error": None}
+                except Exception as e:
+                    data = {"switch": qs.get("sw"), "rules": [], "error": str(e)}
+                data.update(ports={str(k): v for k, v in PORT_NAMES.get(data["switch"], {}).items()},
+                            hosts=HOST_NAMES, time=now())
+                self.send_json(data)
             elif path == "/api/results":
                 self.send_json(latest_results_batch() or {})
             elif path.startswith("/results/experiments/") and path.endswith(".png"):
@@ -1120,6 +1256,25 @@ def run_action(b, body):
     raise ValueError(f"unknown action {a!r}")
 
 
+def lan_addresses():
+    """IPv4 addresses of this machine other than loopback (the VM's address for the Mac)."""
+    try:
+        out = subprocess.run(["hostname", "-I"], capture_output=True, text=True, timeout=3).stdout
+        ips = [a for a in out.split() if "." in a and not a.startswith("127.")]
+    except (OSError, subprocess.TimeoutExpired):
+        ips = []
+    if not ips:
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("192.0.2.1", 9))      # no packet is sent; this only picks the outgoing interface
+            ips = [s.getsockname()[0]]
+            s.close()
+        except OSError:
+            ips = ["<VM IP>"]
+    return ips
+
+
 def default_ryu():
     import pwd
     user = os.environ.get("SUDO_USER") or os.environ.get("USER", "")
@@ -1160,8 +1315,15 @@ def main():
 
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(backend))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    shown = "localhost" if args.host in ("127.0.0.1", "0.0.0.0") else args.host
-    print(f"\n  Dashboard ({backend.mode}): http://{shown}:{args.port}\n")
+    print(f"\n  Dashboard ({backend.mode}): http://localhost:{args.port}")
+    if args.host == "0.0.0.0":
+        for ip in lan_addresses():
+            print(f"  From another computer (e.g. your Mac): http://{ip}:{args.port}")
+    elif args.host not in ("127.0.0.1", "localhost"):
+        print(f"  Also at http://{args.host}:{args.port}")
+    else:
+        print("  To open it from your Mac instead, restart with  --host 0.0.0.0")
+    print()
 
     try:
         if backend.mode == "live" and not args.no_cli and sys.stdin.isatty():

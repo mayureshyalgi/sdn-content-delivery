@@ -4,27 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SDN content delivery demo</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='11' width='10' height='10' rx='2' fill='%2314202B'/><rect x='19' y='3' width='10' height='10' rx='2' fill='%232a78d6'/><rect x='19' y='19' width='10' height='10' rx='2' fill='%23eb6834'/><path d='M13 16h3M16 8v16M16 8h3M16 24h3' stroke='%2314202B' stroke-width='2' fill='none'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230D1520'/><rect x='12' y='3' width='8' height='6' rx='1.5' fill='%23F2B33D'/><rect x='4' y='19' width='8' height='8' rx='2' fill='%234C95EE'/><rect x='20' y='19' width='8' height='8' rx='2' fill='%2323BF86'/><path d='M16 9v6M8 19l8-4 8 4' stroke='%23F2B33D' stroke-width='1.6' fill='none'/></svg>">
 <style>
 :root{
   --bg:#EDF0F3; --panel:#FFFFFF; --soft:#F4F6F8; --ink:#14202B; --muted:#56636F; --faint:#8794A0;
   --line:#D2D9E0; --line2:#E5E9ED;
-  --srv1:#2a78d6; --srv2:#eb6834; --srv3:#1baf7a;
-  --slow:#4a3aa7;
+  --srv1:#2a78d6; --srv2:#eb6834; --srv3:#1baf7a; --slow:#4a3aa7; --ctl:#B67C00;
   --down:#C42F2F; --downbg:#FBE4E2; --ok:#1E7A55; --okbg:#DDF1E7; --warn:#9A6400; --warnbg:#FFF1D6;
-  --linkidle:#A5B0BB;
+  /* the stage is dark so moving packets read clearly on a projector */
+  --st-bg:#0D1520; --st-panel:#16212E; --st-line:#2B3A4C; --st-ink:#E8EEF5; --st-muted:#93A3B5;
   --sans:"Ubuntu","Segoe UI","Cantarell","Noto Sans","Helvetica Neue",Arial,sans-serif;
   --mono:"Ubuntu Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans)}
 button,select,input{font:inherit;color:inherit}
+code{font-family:var(--mono);font-size:.92em}
 .num{font-variant-numeric:tabular-nums}
-.wrap{max-width:1500px;margin:0 auto;padding:16px 20px 48px}
+.wrap{max-width:1560px;margin:0 auto;padding:16px 20px 48px}
 .hidden{display:none !important}
 :focus-visible{outline:2px solid var(--srv1);outline-offset:2px}
 
-/* header */
 header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin-bottom:14px}
 .brand h1{font-size:24px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-.01em}
 .brand p{margin:3px 0 0;color:var(--muted);font-size:14px}
@@ -33,18 +33,13 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .chip b{font-weight:600}
 .status{display:inline-flex;align-items:center;gap:7px;font-weight:600}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--faint);flex:none}
-.status.live .dot{background:var(--ok)}
-.status.off .dot{background:var(--down)}
-.status.busy .dot{background:var(--warn)}
+.status.live .dot{background:var(--ok)} .status.off .dot{background:var(--down)} .status.busy .dot{background:var(--warn)}
 .tabs{display:flex;gap:4px;background:var(--line2);padding:3px;border-radius:8px}
 .tabs button{border:0;background:transparent;padding:5px 14px;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.banner{border-radius:6px;padding:9px 14px;margin-bottom:14px;font-size:14px;background:var(--warnbg);border:1px solid #EBC57A}
+.banner code{background:rgba(255,255,255,.7);padding:0 4px;border-radius:3px}
 
-.banner{border-radius:6px;padding:9px 14px;margin-bottom:14px;font-size:14px}
-.banner.sim{background:var(--warnbg);border:1px solid #EBC57A}
-.banner code{font-family:var(--mono);background:rgba(255,255,255,.7);padding:0 4px;border-radius:3px}
-
-/* layout */
 .grid{display:grid;gap:14px;grid-template-columns:minmax(0,1fr) 370px;align-items:start}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 .span2{grid-column:1/-1}
@@ -54,21 +49,34 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .ph .sub{color:var(--muted);font-size:13px}
 
-/* topology */
-.topo{padding:14px 16px 0;display:flex;flex-direction:column}
-.topo svg{width:100%;height:auto;display:block}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
-.legend i{display:inline-block;width:20px;vertical-align:middle;margin-right:6px;border-top:4px solid}
-.now{margin:6px -16px 0;padding:11px 16px;border-top:1px solid var(--line);background:var(--soft);border-radius:0 0 8px 8px;font-size:15px;min-height:64px}
-.now .why{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
-.lbl{font:600 12.5px var(--sans);fill:var(--muted)}
-.halo{paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}
-@keyframes march{to{stroke-dashoffset:-20}}
-.flood{animation:march .8s linear infinite}
-@media (prefers-reduced-motion:reduce){.flood{animation:none}}
+/* ---------- stage ---------- */
+.stage{background:var(--st-bg);border-radius:10px;overflow:hidden;color:var(--st-ink);border:1px solid #05090E}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px 0;flex-wrap:wrap}
+.stage-top h2{font-size:16px;margin:0;font-weight:700;color:var(--st-ink)}
+.stage-top .hint{font-size:12.5px;color:var(--st-muted)}
+.canvas-wrap{position:relative}
+#stage{display:block;width:100%;height:auto;cursor:default}
+.ticker{position:absolute;left:14px;top:6px;display:flex;flex-direction:column;gap:4px;pointer-events:none;max-width:36%}
+.tick{font-size:12.5px;background:rgba(22,33,46,.88);border:1px solid var(--st-line);border-left:3px solid var(--st-muted);padding:3px 8px;border-radius:4px;color:var(--st-ink);transition:opacity 1s}
+.tick.link,.tick.error,.tick.warn,.tick.bad{border-left-color:#FF5A52}
+.tick.health{border-left-color:#3DDC97} .tick.health.bad{border-left-color:#FF5A52}
+.tick.action{border-left-color:#E8EEF5} .tick.scenario{border-left-color:#F2B33D}
+.stip{position:absolute;pointer-events:none;background:#E8EEF5;color:#0D1520;font-size:12.5px;line-height:1.35;padding:6px 9px;border-radius:5px;white-space:pre;z-index:5;transform:translate(-50%,calc(-100% - 12px));box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.skey{display:flex;flex-wrap:wrap;gap:6px 18px;padding:8px 16px 10px;font-size:12.5px;color:var(--st-muted);border-top:1px solid var(--st-line)}
+.skey span{display:inline-flex;align-items:center;gap:6px}
+.skey i{display:inline-block;flex:none}
+.k-data{width:8px;height:8px;border-radius:50%;background:linear-gradient(90deg,#4C95EE 0 33%,#F0743F 33% 66%,#23BF86 66%)}
+.k-rep{width:8px;height:8px;background:#C9D6E3;transform:rotate(45deg)}
+.k-ctl{width:8px;height:8px;background:#F2B33D}
+.k-flood{width:14px;height:0;border-top:3px dotted #A3B1C2}
+.k-hot{width:18px;height:0;border-top:4px solid #FF5A52;box-shadow:0 0 6px #FF5A52}
+.k-chan{width:18px;height:0;border-top:2px dashed #7C6A3B}
+.now{padding:10px 16px 12px;background:var(--st-panel);font-size:15px;min-height:62px;border-top:1px solid var(--st-line)}
+.now b{color:#fff}
+.now .why{display:block;color:var(--st-muted);font-size:13.5px;margin-top:2px}
 
-/* controls */
-.controls{display:flex;flex-direction:column;gap:0;padding:0;overflow:hidden}
+/* ---------- controls ---------- */
+.controls{padding:0;overflow:hidden}
 .cgroup{padding:12px 16px;border-top:1px solid var(--line2)}
 .cgroup:first-child{border-top:0}
 .cgroup h3{font-size:14px;margin:0 0 8px;font-weight:700}
@@ -94,12 +102,10 @@ input[type=number]{width:58px}
 .btn:not(:disabled):hover{filter:brightness(1.12)}
 .btn.ghost:not(:disabled):hover,.btn.danger:not(:disabled):hover,.btn.restore:not(:disabled):hover{background:var(--soft);filter:none}
 .pill{font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
-.pill.ok{background:var(--okbg);color:var(--ok)}
-.pill.down{background:var(--downbg);color:var(--down)}
-.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill.ok{background:var(--okbg);color:var(--ok)} .pill.down{background:var(--downbg);color:var(--down)} .pill.warn{background:var(--warnbg);color:var(--warn)}
 .note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
 
-/* server cards */
+/* ---------- cards ---------- */
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.25fr);gap:14px}
 @media (max-width:1300px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.cards .sumcard{grid-column:1/-1}}
 @media (max-width:700px){.cards{grid-template-columns:minmax(0,1fr)}}
@@ -117,7 +123,7 @@ input[type=number]{width:58px}
 .stat .v small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
 .stat .k{font-size:12.5px;color:var(--muted)}
 
-/* charts */
+/* ---------- charts ---------- */
 .chart{position:relative}
 .chart svg{width:100%;height:auto;display:block;overflow:visible}
 .chart h3{font-size:14px;font-weight:700;margin:4px 0 0}
@@ -126,8 +132,9 @@ input[type=number]{width:58px}
 .chart .key .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12.5px;padding:5px 8px;border-radius:5px;white-space:nowrap;z-index:5;transform:translate(-50%,-110%)}
 .chartcol{display:flex;flex-direction:column;gap:6px}
+.halo{paint-order:stroke;stroke:var(--panel);stroke-width:5px;stroke-linejoin:round}
 
-/* events */
+/* ---------- log ---------- */
 .log{max-height:640px;overflow-y:auto;margin:0 -16px -14px;padding:0 16px 10px}
 .ev{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--line2);font-size:13px}
 .ev:first-child{border-top:0}
@@ -136,32 +143,46 @@ input[type=number]{width:58px}
 .ev.action .t{font-family:var(--sans);font-weight:600;font-size:13px}
 .ev.scenario .t{font-family:var(--sans);font-weight:700;font-size:13px}
 .ev.link .t,.ev.error .t,.ev.warn .t{color:var(--down)}
-.ev.health .t{color:var(--ok)}
-.ev.health.isdown .t{color:var(--down)}
+.ev.health .t{color:var(--ok)} .ev.health.isdown .t{color:var(--down)}
 .ev.decision .t{color:var(--muted)}
 .filter{display:flex;gap:10px;font-size:12.5px;color:var(--muted)}
 .filter label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
 
-/* tables */
+/* ---------- tables ---------- */
 .tablewrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line2);white-space:nowrap;vertical-align:top}
+td.r,th.r{text-align:right}
 td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+td.wrapc{white-space:normal;min-width:240px;max-width:360px}
+td.wrapm{white-space:normal;word-break:break-all;min-width:170px;max-width:300px}
 .sq{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .empty{color:var(--muted);padding:12px 0;font-size:14px}
 
-/* results */
+/* ---------- flow tables ---------- */
+.swtabs{display:flex;gap:4px;background:var(--line2);padding:3px;border-radius:7px}
+.swtabs button{border:0;background:transparent;padding:3px 14px;border-radius:5px;cursor:pointer;font-weight:700;color:var(--muted);font-family:var(--mono)}
+.swtabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.kind{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:4px;background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.kind.nat{background:#FFF1D6;color:var(--warn);border-color:#EBC57A}
+.kind.path{background:#E5EEFB;color:#1D5CAB;border-color:#B7CDEE}
+.kind.route{background:#E9E6F7;color:var(--slow);border-color:#CBC4EC}
+.kind.miss{background:#F4F6F8}
+@keyframes fresh{from{background:#FFE7A8}to{background:transparent}}
+tr.fresh td{animation:fresh 4s ease-out}
+.flowmeta{font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.flowmeta b{color:var(--ink)}
+
+/* ---------- results ---------- */
 .rgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @media (max-width:900px){.rgrid{grid-template-columns:minmax(0,1fr)}}
-.res h2{font-size:17px}
 .res .claim{font-size:15px;margin:2px 0 10px}
 .res .claim b{font-size:20px}
 .bars{display:grid;grid-template-columns:130px 1fr;gap:6px 10px;align-items:center;font-size:13.5px}
 .bars .track{height:22px;background:var(--soft);border-radius:4px;position:relative}
 .bars .fill{height:100%;border-radius:4px;min-width:2px}
 .bars .val{position:absolute;left:8px;top:2px;font-weight:600;font-size:13px}
-.bars .val.out{color:var(--ink)}
 .res .metric{font-size:12.5px;color:var(--muted);margin:10px 0 4px;font-weight:600}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
 .gallery a{display:block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);text-decoration:none;font-size:13px}
@@ -190,24 +211,33 @@ td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
     </div>
   </header>
 
-  <div class="banner sim hidden" id="simBanner">Simulated network for rehearsal: the controls and behaviour match the real system, but the numbers are rough estimates. For the demo, run <code>sudo python3 dashboard/demo.py</code>.</div>
+  <div class="banner hidden" id="simBanner">Simulated network for rehearsal: the controls and behaviour match the real system, but the numbers are rough estimates. For the demo, run <code>sudo python3 dashboard/demo.py</code> in the VM.</div>
 
   <!-- ===================== LIVE ===================== -->
   <main id="tab-live">
     <div class="grid">
      <div class="col">
-      <section class="panel topo" aria-labelledby="h-net">
-        <div class="ph">
-          <h2 id="h-net">Network</h2>
-          <div class="legend">
-            <span><i style="border-color:var(--linkidle)"></i>Link, thicker = busier</span>
-            <span><i style="border-color:var(--down)"></i>Congested (≥70%) or down</span>
-            <span><i style="border-color:var(--srv1);border-top-width:3px"></i>Live connection, coloured by server</span>
-          </div>
+      <section class="stage" aria-labelledby="h-stage">
+        <div class="stage-top">
+          <h2 id="h-stage">Network, live</h2>
+          <span class="hint">Hover a node or link for details</span>
         </div>
-        <svg id="topo" viewBox="0 0 900 410" role="img" aria-label="Network topology with live link load and connections"></svg>
+        <div class="canvas-wrap" id="stageWrap">
+          <canvas id="stage" role="img" aria-label="Animated network: controller, switches, clients, servers, live connections and traffic"></canvas>
+          <div class="ticker" id="ticker" aria-hidden="true"></div>
+          <div class="stip hidden" id="stip"></div>
+        </div>
+        <div class="skey">
+          <span><i class="k-data"></i>Data packets, coloured by the server sending them</span>
+          <span><i class="k-rep"></i>Server load report (UDP, every second)</span>
+          <span><i class="k-ctl"></i>PACKET_IN / FLOW_MOD (controller decision)</span>
+          <span><i class="k-chan"></i>OpenFlow control channel</span>
+          <span><i class="k-flood"></i>UDP flood</span>
+          <span><i class="k-hot"></i>Link ≥70% busy or down</span>
+        </div>
         <div class="now" id="now" aria-live="polite">Waiting for the first request.</div>
       </section>
+
       <section class="cards" id="cards" aria-label="Content servers"></section>
 
       <section class="panel" aria-labelledby="h-charts">
@@ -225,9 +255,8 @@ td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
           </div>
         </div>
       </section>
-
-
      </div>
+
      <div class="col">
       <aside class="panel controls" aria-label="Demo controls">
         <div class="cgroup">
@@ -246,14 +275,8 @@ td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
           </div>
           <div class="note" id="clientProgress"></div>
         </div>
-        <div class="cgroup">
-          <h3>Servers</h3>
-          <div id="srvCtl"></div>
-        </div>
-        <div class="cgroup">
-          <h3>Links</h3>
-          <div id="linkCtl"></div>
-        </div>
+        <div class="cgroup"><h3>Servers</h3><div id="srvCtl"></div></div>
+        <div class="cgroup"><h3>Links</h3><div id="linkCtl"></div></div>
         <div class="cgroup">
           <h3>Congestion</h3>
           <div class="row">
@@ -280,6 +303,7 @@ td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
           <p class="note">Reset brings every link up, restarts stopped servers and stops the flood.</p>
         </div>
       </aside>
+
       <section class="panel" aria-labelledby="h-log">
         <div class="ph">
           <h2 id="h-log">Controller and events</h2>
@@ -287,8 +311,21 @@ td.mono{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
         </div>
         <div class="log" id="log"></div>
       </section>
-
      </div>
+
+      <section class="panel span2" aria-labelledby="h-flows">
+        <div class="ph">
+          <h2 id="h-flows">OpenFlow rules installed by the controller</h2>
+          <div class="swtabs" role="tablist" aria-label="Switch">
+            <button data-sw="1" aria-selected="true">s1</button><button data-sw="2" aria-selected="false">s2</button><button data-sw="3" aria-selected="false">s3</button><button data-sw="4" aria-selected="false">s4</button>
+          </div>
+        </div>
+        <p class="flowmeta" id="flowMeta">Loading…</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th class="r">Priority</th><th>Type</th><th>What it does</th><th>Match</th><th>Actions</th><th class="r">Packets</th><th class="r">Age</th><th class="r">Idle timeout</th></tr></thead>
+          <tbody id="flowRows"></tbody>
+        </table></div>
+      </section>
 
       <section class="panel span2" aria-labelledby="h-dec">
         <div class="ph"><h2 id="h-dec">Latest controller decisions</h2><span class="sub">One row per new TCP connection to the VIP, with what the controller saw at that moment.</span></div>
@@ -321,10 +358,9 @@ const NS = "http://www.w3.org/2000/svg";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const SRV = {srv1:"var(--srv1)", srv2:"var(--srv2)", srv3:"var(--srv3)"};
 const colorOf = s => SRV[s] || "var(--faint)";
-let S = null;            // latest state
-let busyAction = false;
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let S = null, busyAction = false;
 
-// ---------- small helpers ----------
 function el(tag, attrs, parent, text){
   const n = document.createElementNS(NS, tag);
   for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
@@ -349,104 +385,445 @@ async function act(body, okMsg){
   refresh();
 }
 
-// ---------- topology ----------
+/* =====================================================================
+   NETWORK STAGE (canvas)
+   ===================================================================== */
+const W = 1000, H = 540;
+const C = { // stage colours (dark background)
+  bg:"#0D1520", grid:"#152132", node:"#18263A", nodeLine:"#3B4F66", ink:"#E8EEF5", muted:"#93A3B5",
+  link:"#2B3A4C", linkHi:"#7C93AD", hot:"#FF5A52", ok:"#3DDC97", ctl:"#F2B33D", chan:"#7C6A3B",
+  flood:"#A3B1C2", srv:{srv1:"#4C95EE", srv2:"#F0743F", srv3:"#23BF86"}
+};
 const POS = {
-  h1:[70,95], h2:[70,195], h3:[70,295], sink:[175,380],
-  s1:[255,195], s2:[450,70], s3:[450,320], s4:[645,195],
-  srv1:[830,95], srv2:[830,195], srv3:[830,295], gen:[725,380]
+  controller:[500,56],
+  s1:[300,290], s2:[500,185], s3:[500,405], s4:[700,290],
+  h1:[92,185], h2:[92,290], h3:[92,395], sink:[205,488],
+  srv1:[908,185], srv2:[908,290], srv3:[908,395], gen:[795,488]
 };
 const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["sink","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"],["gen","s4"]];
+const CHAN_CP = {s1:[330,120], s2:null, s3:[640,250], s4:[670,120]};
+const CTRL_ANCHOR = [500,82];
 
-function offsetLine(p, q, off){
-  const dx = q[0]-p[0], dy = q[1]-p[1], L = Math.hypot(dx,dy) || 1;
-  const nx = -dy/L*off, ny = dx/L*off;
-  return [[p[0]+nx,p[1]+ny],[q[0]+nx,q[1]+ny]];
+const canvas = $("stage"), ctx = canvas.getContext("2d");
+let scale = 1, dpr = 1;
+function resize(){
+  const w = canvas.parentElement.clientWidth;
+  dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * H / W * dpr);
+  canvas.style.height = (w * H / W) + "px";
+  scale = w / W;
 }
-function polyPoints(nodes, off){
-  // nodes: list of names; offset every segment sideways by off px and join at corners
-  const pts = [];
-  for (let i=0;i<nodes.length-1;i++){
-    const [a,b] = offsetLine(POS[nodes[i]], POS[nodes[i+1]], off);
-    if (i === 0) pts.push(a);
-    else { const prev = pts[pts.length-1]; pts[pts.length-1] = [(prev[0]+a[0])/2,(prev[1]+a[1])/2]; }
-    pts.push(b);
+new ResizeObserver(resize).observe(canvas.parentElement);
+resize();
+
+// ---- geometry ----
+function geom(pts){
+  const lens = [0];
+  for (let i=1;i<pts.length;i++) lens.push(lens[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  return {pts, lens, total: lens[lens.length-1] || 1};
+}
+function at(g, d){
+  d = Math.max(0, Math.min(g.total, d));
+  let i = 1; while (i < g.lens.length-1 && g.lens[i] < d) i++;
+  const seg = g.lens[i] - g.lens[i-1] || 1, f = (d - g.lens[i-1]) / seg;
+  const a = g.pts[i-1], b = g.pts[i];
+  return [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f];
+}
+function offsetPts(names, off){
+  const P = names.map(n => POS[n]); if (!off) return P.map(p => p.slice());
+  const out = [];
+  for (let i=0;i<P.length-1;i++){
+    const [p,q] = [P[i],P[i+1]], dx=q[0]-p[0], dy=q[1]-p[1], L=Math.hypot(dx,dy)||1, nx=-dy/L*off, ny=dx/L*off;
+    const a=[p[0]+nx,p[1]+ny], b=[q[0]+nx,q[1]+ny];
+    if (i===0) out.push(a); else { const pr=out[out.length-1]; out[out.length-1]=[(pr[0]+a[0])/2,(pr[1]+a[1])/2]; }
+    out.push(b);
   }
-  return pts.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  return out;
+}
+function chanPts(sw, up){   // controller <-> switch control channel, sampled curve
+  const a = CTRL_ANCHOR, b = POS[sw], cp = CHAN_CP[sw], pts = [];
+  for (let i=0;i<=20;i++){
+    const t = i/20;
+    if (!cp){ pts.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]); continue; }
+    const x = (1-t)*(1-t)*a[0] + 2*(1-t)*t*cp[0] + t*t*b[0], y = (1-t)*(1-t)*a[1] + 2*(1-t)*t*cp[1] + t*t*b[1];
+    pts.push([x,y]);
+  }
+  return up ? pts.reverse() : pts;
+}
+const linkOf = (a,b) => S && S.links.find(l => (l.a===a&&l.b===b)||(l.a===b&&l.b===a));
+function floodRoute(){
+  if (!S) return null;
+  const up = (a,b) => { const l = linkOf(a,b); return l && l.up; };
+  if (up(2,4) && up(1,2)) return ["gen","s4","s2","s1","sink"];
+  if (up(3,4) && up(1,3)) return ["gen","s4","s3","s1","sink"];
+  return null;
 }
 
-function drawTopology(){
-  const svg = $("topo"); svg.innerHTML = "";
-  const thr = S.util_threshold;
-  const srvAlive = Object.fromEntries(S.servers.map(s => [s.name, s]));
-  const gLinks = el("g",{},svg), gFlood = el("g",{},svg), gConn = el("g",{},svg), gNodes = el("g",{},svg), gLbl = el("g",{},svg);
+// ---- animation state ----
+let parts = [];          // moving particles
+let fx = [];             // one-off effects: rings, bursts, labels, path flashes
+const spawnAcc = {};     // per stream: accumulated spawn credit
+const conPath = {};      // connection key -> path key (to spot reroutes)
+let seenDec = new Set(), seenEvT = 0, firstState = true;
+const flash = {};        // node -> {t, color}
+let ctrlPulse = 0;
 
+function addPart(pts, o){ if (REDUCED) return; parts.push(Object.assign({g:geom(pts), d:0, speed:230, r:3, color:"#fff", shape:"dot"}, o)); }
+function addFx(o){ fx.push(Object.assign({t:0, life:1.2}, o)); }
+function flashNode(n, color){ flash[n] = {t:0, color}; }
+
+function activeConnections(){
+  if (!S) return [];
+  const conns = (S.connections||[]).filter(c => c.path && c.path.length);
+  // live mode: the controller lists recent connections; only the newest one per busy client is transferring
+  if (conns.some(c => c.active !== undefined)) return conns.map((c,i) => Object.assign({}, c, {idx:i}));
+  const newest = {};
+  for (const c of conns) if (!newest[c.client] || c.age < newest[c.client].age) newest[c.client] = c;
+  return conns.map((c,i) => Object.assign({}, c, {idx:i, active: !!(S.clients?.[c.client]?.busy && newest[c.client] === c)}));
+}
+function connRate(c, all){
+  if (c.mbps != null) return c.mbps;
+  let best = 9.4;
+  const fr = floodRoute(), floodOn = S.flood.on;
+  for (let i=0;i<c.path.length-1;i++){
+    const l = linkOf(c.path[i], c.path[i+1]); if (!l) continue;
+    const share = all.filter(o => o.active && o.path.join() .includes([c.path[i],c.path[i+1]].join())).length || 1;
+    let used = l.mbps;
+    if (floodOn && fr && fr.includes("s"+l.a) && fr.includes("s"+l.b)) used = Math.max(0, used - Math.min(20, S.flood.mbps));
+    if (used > 0.2) best = Math.min(best, used / share);
+  }
+  return Math.max(0.4, best);
+}
+
+// called when new state arrives: turn changes into one-off animations
+function onState(prev){
+  const decs = S.decisions || [];
+  for (const d of decs.slice().reverse()){
+    const key = `${d.t.toFixed(2)}|${d.client}|${d.port}`;
+    if (seenDec.has(key)) continue;
+    seenDec.add(key);
+    if (firstState) continue;
+    const path = String(d.path||"").split("-").filter(Boolean);
+    // PACKET_IN: the SYN reaches s1 with no matching rule and goes up to the controller
+    addPart(offsetPts([d.client,"s1"],0), {color:C.srv[d.server]?"#E8EEF5":"#fff", r:3, speed:300, shape:"sq", onArrive(){
+      addPart(chanPts("s1", true), {color:C.ctl, r:4.5, shape:"sq", speed:420, label:"PACKET_IN", onArrive(){
+        ctrlPulse = 1;
+        // FLOW_MOD to every switch on the chosen path
+        for (const sw of path) addPart(chanPts(sw, false), {color:C.ctl, r:4, shape:"dia", speed:460, label: sw==="s1" ? "FLOW_MOD" : null, onArrive(){ flashNode(sw, C.ctl); }});
+        addFx({kind:"vip", life:3.2, text:`${S.vip} → ${d.server}`, color:C.srv[d.server]});
+        addFx({kind:"pathflash", life:1.6, names:[d.client, ...path, d.server], color:C.srv[d.server]});
+      }});
+    }});
+  }
+  if (seenDec.size > 400) seenDec = new Set([...seenDec].slice(-200));
+
+  // reroutes: a known connection now uses a different path
+  for (const c of S.connections || []){
+    const key = `${c.client}:${c.port}`, pk = (c.path||[]).join("-");
+    if (conPath[key] && conPath[key] !== pk && !firstState){
+      const names = [c.client, ...c.path.map(n=>"s"+n), c.server];
+      addFx({kind:"pathflash", life:2.2, names, color:"#FFFFFF", width:9});
+      parts = parts.filter(p => p.conn !== `d:${key}`);   // packets on the old path are gone
+      const mid = POS["s"+c.path[Math.floor(c.path.length/2)]];
+      addFx({kind:"label", life:2.6, x:mid[0], y:mid[1]+(mid[1]>290?38:-34), text:`${c.client} rerouted via ${c.path.map(n=>"s"+n).join("-")}`, color:"#FFFFFF"});
+    }
+    conPath[key] = pk;
+  }
+
+  // controller log events: failures and recoveries
+  for (const e of S.events || []){
+    if (e.t <= seenEvT) continue;
+    if (!firstState){
+      const m = e.text.match(/s(\d)[-–]s(\d)/);
+      if ((e.kind === "link" || (e.kind === "action" && /^Link/.test(e.text))) && m){
+        const a = POS["s"+m[1]], b = POS["s"+m[2]], mid = [(a[0]+b[0])/2,(a[1]+b[1])/2];
+        const down = /DOWN|down/.test(e.text);
+        addFx({kind:"burst", life: down ? 1.1 : .9, x:mid[0], y:mid[1], color: down ? C.hot : C.ok, n: down ? 22 : 12});
+      }
+      const sm = e.text.match(/srv\d/);
+      if (sm && (e.kind === "health" || e.kind === "action")){
+        const p = POS[sm[0]], bad = /DOWN|killed/.test(e.text);
+        if (/killed|DOWN|started|UP/.test(e.text)) addFx({kind: bad ? "burst" : "ring", life: bad ? 1.1 : 1, x:p[0], y:p[1], color: bad ? C.hot : C.ok, n:24, r0:30});
+        if (e.kind === "health") addFx({kind:"label", life:3, x:p[0]-10, y:p[1]-36, text: bad ? "controller: DOWN" : "controller: UP", color: bad ? C.hot : C.ok, align:"right"});
+      }
+      if (e.kind === "action" && /flood started/i.test(e.text)) addFx({kind:"ring", life:1, x:POS.gen[0], y:POS.gen[1], color:C.flood, r0:22});
+      if (e.kind === "action" && /Restarting controller/.test(e.text)) addFx({kind:"ring", life:1.4, x:POS.controller[0], y:POS.controller[1], color:C.ctl, r0:60});
+    }
+    seenEvT = Math.max(seenEvT, e.t);
+  }
+  firstState = false;
+  renderTicker();
+}
+
+function renderTicker(){
+  const evs = (S.events||[]).filter(e => ["action","link","health","scenario","error","warn"].includes(e.kind) && S.now - e.t < 14).slice(-3);
+  $("ticker").innerHTML = evs.map(e => `<div class="tick ${e.kind} ${/DOWN|killed|failed|down/.test(e.text)?"bad":""}" style="opacity:${Math.max(.25, 1 - (S.now-e.t)/14)}">${esc(e.text)}</div>`).join("");
+}
+
+// ---- per-frame spawning of streams (data, reports, flood) ----
+let reportClock = 0;
+function spawn(dt){
+  if (!S || REDUCED) return;
+  const conns = activeConnections();
+  conns.forEach((c, i) => {
+    if (!c.active) return;
+    const names = [c.client, ...c.path.map(n=>"s"+n), c.server];
+    const off = (i - (conns.length-1)/2) * 6;
+    const key = `d:${c.client}:${c.port}`;
+    const rate = connRate(c, conns);                  // Mbps
+    spawnAcc[key] = (spawnAcc[key] || 0) + dt * (2 + rate * 1.1);
+    while (spawnAcc[key] >= 1){
+      spawnAcc[key] -= 1;
+      // download: server -> client
+      addPart(offsetPts(names.slice().reverse(), -off), {color:C.srv[c.server] || "#fff", r:3.1, speed:200 + rate*9, glow:true, conn:key});
+    }
+    spawnAcc[key+":ack"] = (spawnAcc[key+":ack"] || 0) + dt * (0.6 + rate*0.25);
+    while (spawnAcc[key+":ack"] >= 1){
+      spawnAcc[key+":ack"] -= 1;
+      addPart(offsetPts(names, off), {color:C.srv[c.server] || "#fff", r:1.6, speed:240, alpha:.55, conn:key});
+    }
+  });
+  // UDP flood
+  const fr = S.flood.on && floodRoute();
+  if (fr){
+    spawnAcc.flood = (spawnAcc.flood || 0) + dt * Math.min(40, S.flood.mbps * 1.3);
+    while (spawnAcc.flood >= 1){ spawnAcc.flood -= 1; addPart(offsetPts(fr, (Math.random()-.5)*7), {color:C.flood, r:1.9, speed:300 + Math.random()*60, alpha:.75}); }
+  }
+  // load reports: each live server, once a second: server -> s4 -> controller
+  reportClock += dt;
+  if (reportClock >= 1){
+    reportClock -= 1;
+    S.servers.forEach((s, i) => {
+      if (!s.process || !S.controller_online) return;
+      setTimeout(() => addPart(offsetPts([s.name,"s4"],0), {color:C.srv[s.name], r:3.6, shape:"dia", speed:260, alpha:.95, onArrive(){
+        addPart(chanPts("s4", true), {color:C.srv[s.name], r:3.6, shape:"dia", speed:330, alpha:.95, onArrive(){
+          addFx({kind:"ring", life:.6, x:POS.controller[0] + (i-1)*36, y:POS.controller[1]+22, color:C.srv[s.name], r0:4, r1:12});
+        }});
+      }}), i * 220);
+    });
+  }
+}
+
+// ---- drawing ----
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,y,w,h,r) : ctx.rect(x,y,w,h); }
+function text(t, x, y, o={}){
+  ctx.font = `${o.weight||600} ${o.size||13}px Ubuntu, "Segoe UI", "Noto Sans", Arial, sans-serif`;
+  ctx.textAlign = o.align || "center"; ctx.textBaseline = "middle";
+  if (o.bg){
+    const w = ctx.measureText(t).width + 12, h = (o.size||13) + 8, bx = o.align==="left" ? x-6 : o.align==="right" ? x-w+6 : x-w/2;
+    ctx.fillStyle = o.bg; rr(bx, y-h/2, w, h, 4); ctx.fill();
+    if (o.border){ ctx.strokeStyle = o.border; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  ctx.fillStyle = o.color || C.ink; ctx.fillText(t, x, y);
+}
+function line(pts, color, width, dash, alpha=1){
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.stroke(); ctx.restore();
+}
+
+let clockT = 0;
+function draw(dt){
+  clockT += dt;
+  ctx.setTransform(dpr*scale,0,0,dpr*scale,0,0);
+  ctx.fillStyle = C.bg; ctx.fillRect(0,0,W,H);
+  // dot grid
+  ctx.fillStyle = C.grid;
+  for (let x=20;x<W;x+=40) for (let y=20;y<H;y+=40) ctx.fillRect(x,y,2,2);
+  if (!S){ text("Connecting to the dashboard server…", W/2, H/2, {color:C.muted, size:16}); return; }
+
+  const thr = S.util_threshold, srvBy = Object.fromEntries(S.servers.map(s => [s.name, s]));
+
+  // control channels
+  for (const sw of ["s1","s2","s3","s4"]){
+    const on = S.controller_online;
+    line(chanPts(sw,false), on ? C.chan : "#3A2E2E", 1.6, [5,6], on ? .9 : .5);
+  }
   // host links
   for (const [h, sw] of HOSTLINK){
-    const [x1,y1] = POS[h], [x2,y2] = POS[sw];
-    const s = srvAlive[h];
-    const dead = s && !s.process;
-    el("line",{x1,y1,x2,y2,stroke: dead ? "var(--down)" : "var(--line)","stroke-width":2,"stroke-dasharray": dead ? "6 5" : null},gLinks);
+    const s = srvBy[h], dead = s && !s.process;
+    line([POS[h], POS[sw]], dead ? C.hot : C.link, dead ? 2 : 4, dead ? [6,6] : null, dead ? .8 : 1);
   }
-  // switch links: width and colour from utilisation
+  // core links: base + utilisation glow
   for (const l of S.links){
-    const a = "s"+l.a, b = "s"+l.b, [x1,y1] = POS[a], [x2,y2] = POS[b];
-    const hot = l.up && l.util >= thr;
-    const w = l.up ? 4 + 12*Math.min(1, l.util) : 3;
-    el("line",{x1,y1,x2,y2,stroke: !l.up || hot ? "var(--down)" : "var(--linkidle)","stroke-width":w,"stroke-linecap":"round","stroke-dasharray": l.up ? null : "9 7", opacity: l.up ? (hot ? .9 : .55 + .45*Math.min(1,l.util)) : 1},gLinks);
-    const mx = (x1+x2)/2, my = (y1+y2)/2;
-    let nx = -(y2-y1), ny = x2-x1; const L = Math.hypot(nx,ny); nx/=L; ny/=L;
-    if (nx*(mx-450) + ny*(my-195) < 0){ nx=-nx; ny=-ny; }
-    const tx = mx + nx*24, ty = my + ny*24 + 4;
-    const txt = !l.up ? "DOWN" : `${Math.round(l.util*100)}%  ·  ${l.delay_ms} ms`;
-    el("text",{class:"lbl halo num",x:tx,y:ty,"text-anchor":"middle",style: (!l.up || hot) ? "fill:var(--down)" : null},gLbl,txt);
+    const a = POS["s"+l.a], b = POS["s"+l.b];
+    if (!l.up){
+      line([a,b], C.hot, 3, [10,8], .9);
+      const m = [(a[0]+b[0])/2,(a[1]+b[1])/2];
+      ctx.save(); ctx.strokeStyle = C.hot; ctx.lineWidth = 4; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(m[0]-9,m[1]-9); ctx.lineTo(m[0]+9,m[1]+9); ctx.moveTo(m[0]+9,m[1]-9); ctx.lineTo(m[0]-9,m[1]+9); ctx.stroke(); ctx.restore();
+      continue;
+    }
+    const u = Math.min(1, l.util), hot = u >= thr;
+    line([a,b], C.link, 14);
+    if (u > 0.01){
+      ctx.save();
+      if (hot){ ctx.shadowColor = C.hot; ctx.shadowBlur = 14 + 6*Math.sin(clockT*5); }
+      line([a,b], hot ? C.hot : C.linkHi, 3 + 11*u, null, hot ? .95 : .35 + .5*u);
+      ctx.restore();
+    }
   }
-  // flood path: gen -> s4 -> (shortest) -> s1 -> sink
-  if (S.flood.on){
-    const fast = S.links.find(l=>l.a===1&&l.b===2).up && S.links.find(l=>l.a===2&&l.b===4).up;
-    const nodes = ["gen","s4", fast ? "s2" : "s3", "s1","sink"];
-    el("polyline",{points:polyPoints(nodes, 0),fill:"none",stroke:"var(--ink)","stroke-width":2.5,"stroke-dasharray":"7 5",class:"flood",opacity:.75},gFlood);
-  }
-  // live connections, each in its server's colour, spread sideways so they don't overlap
-  const conns = (S.connections || []).filter(c => c.path && c.path.length);
+  // connections: faint path for every recent connection, bright for active ones
+  const conns = activeConnections();
   conns.forEach((c, i) => {
-    const off = (i - (conns.length-1)/2) * 5;
-    const nodes = [c.client, ...c.path.map(d => "s"+d), c.server];
-    const pl = el("polyline",{points:polyPoints(nodes, off),fill:"none",stroke:colorOf(c.server),"stroke-width":3,"stroke-linejoin":"round","stroke-linecap":"round",opacity:.9},gConn);
-    el("title",{},pl,`${c.client}:${c.port} → ${c.server} via ${c.path.map(d=>"s"+d).join("-")}`);
+    const names = [c.client, ...c.path.map(n=>"s"+n), c.server];
+    const off = (i - (conns.length-1)/2) * 6;
+    line(offsetPts(names, off), C.srv[c.server] || "#fff", c.active ? 2.2 : 1.4, c.active ? null : [3,5], c.active ? .5 : .3);
   });
+  // effects under the nodes (path flashes)
+  for (const f of fx) if (f.kind === "pathflash"){
+    const k = 1 - f.t/f.life;
+    ctx.save(); ctx.shadowColor = f.color; ctx.shadowBlur = 18;
+    line(offsetPts(f.names,0), f.color, (f.width||7) * (0.6 + .4*k), null, .85*k);
+    ctx.restore();
+  }
+  // particles
+  for (const p of parts){
+    const [x,y] = at(p.g, p.d);
+    ctx.save(); ctx.globalAlpha = p.alpha ?? 1; ctx.fillStyle = p.color;
+    if (p.glow){ ctx.shadowColor = p.color; ctx.shadowBlur = 8; }
+    if (p.shape === "sq"){ ctx.fillRect(x-p.r, y-p.r, p.r*2, p.r*2); }
+    else if (p.shape === "dia"){ ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2); }
+    else { ctx.beginPath(); ctx.arc(x,y,p.r,0,7); ctx.fill(); }
+    ctx.restore();
+    if (p.label) text(p.label, x + 10, y - 10, {size:11, weight:700, color:C.ctl, align:"left", bg:"rgba(13,21,32,.85)"});
+  }
 
+  // controller
+  {
+    const [x,y] = POS.controller, on = S.controller_online, k = ctrlPulse;
+    ctx.save();
+    if (k > 0){ ctx.shadowColor = C.ctl; ctx.shadowBlur = 26*k; }
+    ctx.fillStyle = "#1E1A10"; rr(x-125, y-28, 250, 56, 9); ctx.fill();
+    ctx.strokeStyle = S.restarting ? C.muted : on ? C.ctl : C.hot; ctx.lineWidth = 2 + 2*k; ctx.setLineDash(on ? [] : [6,5]); ctx.stroke();
+    ctx.restore();
+    text("Ryu SDN controller", x, y-9, {size:15, weight:700, color: on ? "#FFE3A3" : C.muted});
+    text(S.restarting ? "restarting…" : on ? `${S.lb_policy} · ${S.path_policy === "congestion" ? "congestion-aware" : "delay-only"}` : "offline",
+         x, y+11, {size:12.5, weight:600, color: S.restarting ? C.muted : on ? C.muted : C.hot});
+  }
   // switches
   for (const n of ["s1","s2","s3","s4"]){
-    const [x,y] = POS[n];
-    el("rect",{x:x-27,y:y-18,width:54,height:36,rx:7,fill:"var(--ink)"},gNodes);
-    el("text",{x,y:y+5,"text-anchor":"middle","font-size":15,"font-weight":700,fill:"#fff"},gNodes,n);
+    const [x,y] = POS[n], f = flash[n], k = f ? Math.max(0, 1 - f.t/1.0) : 0;
+    ctx.save();
+    if (k > 0){ ctx.shadowColor = f.color; ctx.shadowBlur = 22*k; }
+    ctx.fillStyle = C.node; rr(x-29, y-21, 58, 42, 8); ctx.fill();
+    ctx.strokeStyle = k > 0 ? f.color : C.nodeLine; ctx.lineWidth = 2 + 2*k; ctx.stroke();
+    ctx.restore();
+    text(n, x, y+1, {size:16, weight:700});
   }
-  const vipl = el("text",{class:"lbl halo",x:POS.s1[0]+24,y:POS.s1[1]+45,"text-anchor":"middle"},gLbl,"VIP rewrite");
-  el("title",{},vipl,`s1 rewrites ${S.vip} to the chosen server's address, and back on replies`);
+  text("VIP rewrite", POS.s1[0]+4, POS.s1[1]+38, {size:11.5, color:C.muted, weight:600, bg:"rgba(13,21,32,.9)"});
   // clients
-  const busy = S.clients || {};
   for (const h of ["h1","h2","h3"]){
-    const [x,y] = POS[h], b = busy[h] && busy[h].busy;
-    el("circle",{cx:x,cy:y,r:21,fill:"#fff",stroke:"var(--ink)","stroke-width": b ? 3.5 : 2},gNodes);
-    el("text",{x,y:y+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill:"var(--ink)"},gNodes,h);
-    el("text",{class:"lbl halo num",x,y:y+38,"text-anchor":"middle"},gLbl, b ? `${busy[h].done}/${busy[h].total} done` : `10.0.0.${h[1]}`);
+    const [x,y] = POS[h], b = S.clients?.[h];
+    ctx.fillStyle = C.node; ctx.beginPath(); ctx.arc(x,y,23,0,7); ctx.fill();
+    ctx.strokeStyle = C.nodeLine; ctx.lineWidth = 2; ctx.stroke();
+    if (b && b.busy){
+      ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.arc(x,y,28, clockT*3, clockT*3 + 1.6); ctx.stroke(); ctx.restore();
+    }
+    text(h, x, y+1, {size:15, weight:700});
+    text(b && b.busy ? `${b.done}/${b.total} done` : `10.0.0.${h[1]}`, x, y+40, {size:11.5, color:C.muted});
   }
   // servers
   for (const s of S.servers){
-    const [x,y] = POS[s.name], up = s.alive;
-    el("rect",{x:x-30,y:y-21,width:60,height:42,rx:6,fill: up ? colorOf(s.name) : "#fff",stroke: up ? colorOf(s.name) : "var(--down)","stroke-width":2.5,"stroke-dasharray": up ? null : "5 4"},gNodes);
-    el("text",{x,y:y+5,"text-anchor":"middle","font-size":14,"font-weight":700,fill: up ? "#fff" : "var(--down)"},gNodes,s.name);
+    const [x,y] = POS[s.name], col = C.srv[s.name], up = s.alive, f = flash[s.name];
+    ctx.save();
+    ctx.fillStyle = up ? col : "#23161A";
+    if (up){ ctx.shadowColor = col; ctx.shadowBlur = 10 + Math.min(18, s.active*5); }
+    rr(x-34, y-23, 68, 46, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = up ? "rgba(255,255,255,.35)" : C.hot; ctx.lineWidth = 2; ctx.setLineDash(up ? [] : [5,4]); ctx.stroke();
+    ctx.restore();
+    text(s.name, x, y-3, {size:15, weight:700, color: up ? "#fff" : C.hot});
+    // load meter: one pip per active connection
+    if (up){ for (let i=0;i<Math.min(6, s.active);i++){ ctx.fillStyle = "#fff"; ctx.fillRect(x-25 + i*9, y+11, 6, 5); } }
     const sub = !s.process ? "✕ process stopped" : !up ? "! not reporting" : `${s.active} active`;
-    el("text",{class:"lbl halo",x,y:y+38,"text-anchor":"middle",style: up ? null : "fill:var(--down)"},gLbl,sub);
+    text(sub, x, y+40, {size:11.5, color: up ? C.muted : C.hot, weight: up ? 600 : 700});
   }
   // background hosts
   for (const n of ["gen","sink"]){
-    const [x,y] = POS[n];
-    el("rect",{x:x-23,y:y-13,width:46,height:26,rx:13,fill: S.flood.on ? "var(--ink)" : "#fff",stroke:"var(--faint)","stroke-width":1.5},gNodes);
-    el("text",{x,y:y+4.5,"text-anchor":"middle","font-size":12.5,"font-weight":600,fill: S.flood.on ? "#fff" : "var(--muted)"},gNodes,n);
+    const [x,y] = POS[n], on = S.flood.on;
+    ctx.fillStyle = on ? "#2A3442" : C.node; rr(x-26, y-14, 52, 28, 14); ctx.fill();
+    ctx.strokeStyle = on ? C.flood : C.nodeLine; ctx.lineWidth = 1.5; ctx.stroke();
+    text(n, x, y+1, {size:12.5, color: on ? C.ink : C.muted});
   }
-  if (S.flood.on) el("text",{class:"lbl halo",x:450,y:398,"text-anchor":"middle",style:"fill:var(--ink)"},gLbl,`UDP flood ${S.flood.mbps} Mbps (background traffic)`);
+  if (S.flood.on) text(`UDP flood ${S.flood.mbps} Mbps`, 500, 500, {size:12.5, weight:700, color:C.flood, bg:"rgba(13,21,32,.9)"});
+  // link labels
+  for (const l of S.links){
+    const a = POS["s"+l.a], b = POS["s"+l.b], mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
+    let nx = -(b[1]-a[1]), ny = b[0]-a[0]; const L = Math.hypot(nx,ny); nx/=L; ny/=L;
+    if (nx*(mx-500) + ny*(my-295) < 0){ nx=-nx; ny=-ny; }
+    const hot = l.up && l.util >= thr;
+    const t = !l.up ? "✕ DOWN" : `${Math.round(l.util*100)}%  ·  ${l.delay_ms} ms`;
+    text(t, mx + nx*30, my + ny*30, {size:12, weight:700, color: !l.up || hot ? "#FFD2CF" : C.muted, bg: !l.up || hot ? "rgba(120,20,20,.85)" : "rgba(13,21,32,.85)"});
+  }
+  // effects on top
+  for (const f of fx){
+    const k = f.t / f.life, a = 1 - k;
+    if (f.kind === "ring"){
+      ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = f.color; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||20) + ((f.r1||60) - (f.r0||20))*k, 0, 7); ctx.stroke(); ctx.restore();
+    } else if (f.kind === "burst"){
+      if (!f.seeds) f.seeds = Array.from({length:f.n||18}, () => [Math.random()*Math.PI*2, 40 + Math.random()*70]);
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = f.color; ctx.shadowColor = f.color; ctx.shadowBlur = 10;
+      for (const [ang, dist] of f.seeds){ const d = (f.r0||0) + dist*Math.sqrt(k); ctx.beginPath(); ctx.arc(f.x + Math.cos(ang)*d, f.y + Math.sin(ang)*d, 2.6*(1-k)+.6, 0, 7); ctx.fill(); }
+      ctx.strokeStyle = f.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||8) + 50*k, 0, 7); ctx.stroke();
+      ctx.restore();
+    } else if (f.kind === "vip"){
+      ctx.save(); ctx.globalAlpha = Math.min(1, a*2);
+      text(f.text, POS.s1[0], POS.s1[1]-46, {size:13, weight:700, color:"#0D1520", bg:f.color || C.ctl});
+      ctx.restore();
+    } else if (f.kind === "label"){
+      ctx.save(); ctx.globalAlpha = Math.min(1, a*2);
+      text(f.text, f.x, f.y, {size:12.5, weight:700, color:f.color, bg:"rgba(13,21,32,.92)", border:f.color, align:f.align});
+      ctx.restore();
+    }
+  }
+  if (REDUCED) text("Animations are off (reduced motion)", W-12, H-14, {size:11.5, color:C.muted, align:"right"});
 }
+
+let lastFrame = performance.now();
+function frame(now){
+  const dt = Math.min(0.1, (now - lastFrame)/1000); lastFrame = now;
+  if (!$("tab-live").classList.contains("hidden")){
+    spawn(dt);
+    for (const p of parts){ p.d += p.speed * dt; if (p.d >= p.g.total && !p.done){ p.done = true; p.onArrive && p.onArrive(); } }
+    parts = parts.filter(p => !p.done);
+    if (parts.length > 1400) parts = parts.slice(-1400);
+    for (const f of fx) f.t += dt;
+    fx = fx.filter(f => f.t < f.life);
+    for (const k in flash){ flash[k].t += dt; if (flash[k].t > 1.2) delete flash[k]; }
+    ctrlPulse = Math.max(0, ctrlPulse - dt*1.4);
+    draw(dt);
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// hover tooltips on the stage
+canvas.addEventListener("mousemove", ev => {
+  if (!S) return;
+  const r = canvas.getBoundingClientRect(), x = (ev.clientX - r.left)/scale, y = (ev.clientY - r.top)/scale;
+  let tip = null;
+  const near = (n, rad) => Math.hypot(POS[n][0]-x, POS[n][1]-y) < rad;
+  for (const s of S.servers) if (near(s.name, 38))
+    tip = `${s.name}  ${s.ip}\nprocess: ${s.process ? "running" : "stopped"}\ncontroller sees: ${s.alive ? "UP" : "DOWN"}\nactive connections: ${s.active}\nlast load report: ${s.last_report_age == null ? "never" : s.last_report_age + " s ago"}\nlink delay to s4: ${s.delay_ms} ms`;
+  for (const h of ["h1","h2","h3"]) if (near(h, 28)){ const b = S.clients?.[h]; tip = `${h}  10.0.0.${h[1]}\nconnects to the VIP ${S.vip}:9000${b && b.busy ? `\ndownloading: ${b.done}/${b.total} done` : ""}`; }
+  for (const n of ["s1","s2","s3","s4"]) if (near(n, 30)) tip = `${n} (Open vSwitch, OpenFlow 1.3)${n==="s1" ? "\nclient edge: rewrites the VIP to the chosen server" : n==="s4" ? "\nserver edge" : n==="s2" ? "\nfast path, 2 ms per link" : "\nslow path, 10 ms per link"}\nsee its rules in the OpenFlow table below`;
+  if (near("controller", 70) && Math.abs(POS.controller[1]-y) < 32) tip = `Ryu controller\nserver policy: ${S.lb_policy}\npath policy: ${S.path_policy}\nreads port counters every 2 s, load reports every 1 s`;
+  for (const n of ["gen","sink"]) if (near(n, 28)) tip = `${n}: background-traffic host (not a content server)${S.flood.on ? `\nflood running: ${S.flood.mbps} Mbps UDP` : ""}`;
+  if (!tip) for (const l of S.links){
+    const a = POS["s"+l.a], b = POS["s"+l.b], dx = b[0]-a[0], dy = b[1]-a[1];
+    const t = Math.max(0, Math.min(1, ((x-a[0])*dx + (y-a[1])*dy)/(dx*dx+dy*dy)));
+    if (Math.hypot(a[0]+dx*t-x, a[1]+dy*t-y) < 12) tip = `link s${l.a}–s${l.b}  (${l.delay_ms} ms, ${l.bw_mbps} Mbps)\n${l.up ? `in use: ${Math.round(l.util*100)}%  (${l.mbps} Mbps, controller's 2 s sample)` : "DOWN"}`;
+  }
+  const st = $("stip");
+  if (!tip){ st.classList.add("hidden"); canvas.style.cursor = "default"; return; }
+  st.textContent = tip; st.classList.remove("hidden"); canvas.style.cursor = "help";
+  st.style.left = (ev.clientX - r.left) + "px"; st.style.top = (ev.clientY - r.top) + "px";
+});
+canvas.addEventListener("mouseleave", () => $("stip").classList.add("hidden"));
 
 function renderNow(){
   const d = (S.decisions || [])[0];
@@ -460,12 +837,15 @@ function renderNow(){
   else if (d.policy === "round_robin") why = `Round robin: the next live server in turn. Loads were ${d.loads}.`;
   else why = `Least loaded: fewest active connections among live servers, ties to the closest. Loads were ${d.loads}.`;
   const path = String(d.path||"");
-  if (path.includes("s3")) why += d.path_policy === "congestion" ? ` Path via s3 because the fast path was congested or down (${d.link_util}).` : ` Path via s3 because the fast path was down.`;
-  else if (d.path_policy === "delay" && /s1-s2=(\d+)%/.test(d.link_util||"") && +RegExp.$1 >= 70) why += ` Path policy is delay-only, so it used the fast path even at ${RegExp.$1}% load.`;
-  box.innerHTML = `<b>${esc(d.client)}</b> → <b style="color:${colorOf(d.server)}">${esc(d.server)}</b> via <b>${esc(path)}</b> <span style="color:var(--muted)">${esc(ago)}</span><span class="why">${esc(why)}</span>`;
+  const m = /s1-s2=(\d+)%/.exec(d.link_util||"");
+  if (path.includes("s3")) why += d.path_policy === "congestion" ? ` Path via s3 because the fast path was congested or down (${d.link_util}).` : " Path via s3 because the fast path was down.";
+  else if (d.path_policy === "delay" && m && +m[1] >= 70) why += ` Path policy is delay-only, so it used the fast path even at ${m[1]}% load.`;
+  box.innerHTML = `<b>${esc(d.client)}</b> → <b style="color:${C.srv[d.server]||"#fff"}">${esc(d.server)}</b> via <b>${esc(path)}</b> <span style="color:var(--st-muted)">${esc(ago)}</span><span class="why">${esc(why)}</span>`;
 }
 
-// ---------- controls ----------
+/* =====================================================================
+   CONTROLS
+   ===================================================================== */
 function renderControls(){
   const sc = S.scenario, running = sc && !sc.done;
   const r = $("running");
@@ -481,7 +861,6 @@ function renderControls(){
     $("scenarios").dataset.built = 1;
   }
   document.querySelectorAll("[data-sc]").forEach(b => b.disabled = lock);
-
   $("srvCtl").innerHTML = S.servers.map(s => {
     const st = !s.process ? `<span class="pill down">✕ stopped</span>` : s.alive ? `<span class="pill ok">✓ up</span>` : `<span class="pill warn">! not reporting</span>`;
     return `<div class="row"><span class="lab"><b>${s.name}</b> ${st}</span>${s.process ? `<button class="btn danger" data-srv="${s.name}" data-op="stop" ${S.restarting?"disabled":""}>Kill</button>` : `<button class="btn restore" data-srv="${s.name}" data-op="start">Restart</button>`}</div>`;
@@ -495,7 +874,7 @@ function renderControls(){
   const fb = $("floodBtn"); fb.textContent = S.flood.on ? "Stop" : "Start"; fb.className = S.flood.on ? "btn danger" : "btn ghost";
   $("rqSend").disabled = S.restarting || !S.controller_online;
   $("polApply").disabled = S.restarting;
-  if (document.activeElement !== $("polLb") && document.activeElement !== $("polPath") && !renderControls.touched){
+  if (!renderControls.touched && document.activeElement !== $("polLb") && document.activeElement !== $("polPath")){
     $("polLb").value = S.lb_policy; $("polPath").value = S.path_policy;
   }
   const busy = Object.entries(S.clients || {}).filter(([,v]) => v.busy).map(([k,v]) => `${k} ${v.done}/${v.total}`);
@@ -508,6 +887,7 @@ document.addEventListener("click", e => {
   else if (t.dataset.srv) act({action:"server", name:t.dataset.srv, op:t.dataset.op});
   else if (t.dataset.link){ const [a,b] = t.dataset.link.split(","); act({action:"link", a:"s"+a, b:"s"+b, op:t.dataset.op}); }
   else if (t.dataset.tab) showTab(t.dataset.tab);
+  else if (t.dataset.sw) selectSwitch(+t.dataset.sw);
 });
 $("rqSend").onclick = () => act({action:"request", client:$("rqClient").value, file:$("rqFile").value, count:+$("rqCount").value || 1});
 $("floodBtn").onclick = () => act({action:"flood", op: S && S.flood.on ? "stop" : "start", mbps:+$("floodMbps").value || 25});
@@ -516,7 +896,9 @@ $("polApply").onclick = () => { renderControls.touched = false; act({action:"pol
 $("resetBtn").onclick = () => act({action:"reset"});
 $("clearBtn").onclick = () => act({action:"clear"}, "Charts cleared");
 
-// ---------- server cards + summary ----------
+/* =====================================================================
+   SERVER CARDS
+   ===================================================================== */
 function renderCards(){
   const sm = S.summary || {};
   const perServer = {};
@@ -532,7 +914,7 @@ function renderCards(){
       <span>served <b>${p ? p.n : 0}</b>${p ? `, avg <b>${(p.mbps/p.n).toFixed(1)} Mbps</b>` : ""}</span></div></div>`;
   }).join("");
   const v = (x, unit) => x == null ? "–" : `${x}<small>${unit}</small>`;
-  const summary = `<div class="card sumcard" style="--c:var(--ink)">
+  $("cards").innerHTML = cards + `<div class="card sumcard" style="--c:var(--ink)">
     <div class="top"><span class="name">Requests on the charts</span></div>
     <div class="stats" style="margin-top:6px">
       <div class="stat"><div class="v num">${sm.ok ?? 0}<small>of ${sm.total ?? 0} ok</small></div><div class="k">${sm.failed ? `<span style="color:var(--down)">✕ ${sm.failed} failed</span>` : "none failed"}${sm.retries ? `, ${sm.retries} retries` : ""}</div></div>
@@ -540,27 +922,24 @@ function renderCards(){
       <div class="stat"><div class="v num">${v(sm.avg_ttc_ms != null ? (sm.avg_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">average time to get a file</div></div>
       <div class="stat"><div class="v num">${v(sm.max_ttc_ms != null ? (sm.max_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">worst wait</div></div>
     </div></div>`;
-  $("cards").innerHTML = cards + summary;
 }
 
-// ---------- charts ----------
+/* =====================================================================
+   CHARTS
+   ===================================================================== */
 const CW = 760, PADL = 40, PADR = 10;
-function timeDomain(){
-  const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 180);
-  return [Math.min(t0, t1 - 60), t1];
-}
+function timeDomain(){ const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 180); return [Math.min(t0, t1 - 60), t1]; }
 function xScale(t, d){ return PADL + (t - d[0]) / (d[1]-d[0]) * (CW - PADL - PADR); }
 function axisX(svg, d, H, B){
   const span = d[1]-d[0], step = span > 120 ? 30 : 15;
   for (let s = 0; s <= span; s += step){
-    const t = d[1] - s, x = xScale(t, d);
-    if (x < PADL) break;
+    const x = xScale(d[1] - s, d); if (x < PADL) break;
     el("text",{x,y:H-B+14,"text-anchor":"middle","font-size":11,fill:"var(--faint)",class:"num"},svg, s === 0 ? "now" : `−${s}s`);
   }
 }
 function eventMarks(svg, d, top, bottom, labels){
   const marks = (S.events || []).filter(e => e.mark && e.t >= d[0]);
-  const rowsEnd = [-1e9, -1e9, -1e9];          // right edge of the last label in each row
+  const rowsEnd = [-1e9, -1e9, -1e9];
   for (const e of marks){
     const x = xScale(e.t, d);
     el("line",{x1:x,x2:x,y1:top,y2:bottom,stroke:"var(--ink)","stroke-width":1,"stroke-dasharray":"2 3",opacity:.55},svg);
@@ -568,26 +947,24 @@ function eventMarks(svg, d, top, bottom, labels){
     const w = e.mark.length * 6.3 + 6, right = x + w > CW - PADR;
     const x0 = right ? x - w : x, x1 = right ? x : x + w;
     const row = rowsEnd.findIndex(end => end < x0);
-    if (row < 0) continue;                     // no room: the line still shows, the log has the detail
+    if (row < 0) continue;
     rowsEnd[row] = x1;
     el("text",{x: right ? x-3 : x+3,y:top+10+row*13,"text-anchor": right ? "end" : "start","font-size":11,"font-weight":600,fill:"var(--ink)",class:"halo"},svg,e.mark);
   }
 }
-function hover(container, svg, items){   // items: [{x,y,text}] in viewBox units
+function hover(container, svg, items){
   const tip = container.querySelector(".tip") || container.appendChild(Object.assign(document.createElement("div"),{className:"tip hidden"}));
   svg.onmousemove = ev => {
     const r = svg.getBoundingClientRect(), k = CW / r.width;
     const mx = (ev.clientX - r.left) * k, my = (ev.clientY - r.top) * k;
     let best = null, bd = 18*k;
-    for (const it of items){ const dd = Math.hypot(it.x-mx, (it.y==null?my:it.y)-my) ; if (dd < bd){ bd = dd; best = it; } }
+    for (const it of items){ const dd = Math.hypot(it.x-mx, it.y-my); if (dd < bd){ bd = dd; best = it; } }
     if (!best){ tip.classList.add("hidden"); return; }
     tip.textContent = best.text; tip.classList.remove("hidden");
-    tip.style.left = (best.x / k + svg.offsetLeft) + "px";
-    tip.style.top = ((best.y ?? my) / k + svg.offsetTop) + "px";
+    tip.style.left = (best.x / k + svg.offsetLeft) + "px"; tip.style.top = (best.y / k + svg.offsetTop) + "px";
   };
   svg.onmouseleave = () => tip.classList.add("hidden");
 }
-
 function drawUtil(){
   const svg = $("utilSvg"); svg.innerHTML = "";
   const H = 170, B = 20, T = 8, d = timeDomain(), y = u => T + (H-T-B) * (1 - Math.min(1, u));
@@ -615,13 +992,11 @@ function drawUtil(){
     }
     flush();
     const last = [...hist].reverse().find(h => s.f(h) != null);
-    if (last){ const px = xScale(last.t,d), py = y(s.f(last)); el("circle",{cx:px,cy:py,r:3.5,fill:s.color,stroke:"#fff","stroke-width":2},svg); }
-    else if (hist.length) el("text",{x:CW-PADR,y: s.name==="Fast path" ? y(0)-6 : y(0)-20,"text-anchor":"end","font-size":11.5,"font-weight":600,fill:"var(--down)"},svg,`${s.name} down`);
+    if (last){ el("circle",{cx:xScale(last.t,d),cy:y(s.f(last)),r:3.5,fill:s.color,stroke:"#fff","stroke-width":2},svg); }
   }
   axisX(svg, d, H, B);
   hover($("utilChart"), svg, items);
 }
-
 function drawRequests(){
   const svg = $("reqSvg"); svg.innerHTML = "";
   const H = 190, B = 20, T = 8, d = timeDomain();
@@ -637,7 +1012,7 @@ function drawRequests(){
   const items = [];
   for (const r of rows){
     const px = xScale(r.end, d), py = y((r.ttc_ms||0)/1000);
-    const text = `${r.client} ${r.file}: ${r.status === "ok" ? `${r.served_by}, ${(r.ttc_ms/1000).toFixed(1)} s, ${r.mbps} Mbps${r.attempts>1?`, ${r.attempts} attempts`:""}` : `failed after ${r.attempts} attempts (${r.error.replace("failed: ","")})`}`;
+    const text = `${r.client} ${r.file}: ${r.status === "ok" ? `${r.served_by}, ${(r.ttc_ms/1000).toFixed(1)} s, ${r.mbps} Mbps${r.attempts>1?`, ${r.attempts} attempts`:""}` : `failed after ${r.attempts} attempts (${String(r.error).replace("failed: ","")})`}`;
     if (r.status === "ok"){
       el("circle",{cx:px,cy:py,r:5.5,fill:colorOf(r.served_by),stroke:"#fff","stroke-width":2},svg);
       if (r.attempts > 1) el("circle",{cx:px,cy:py,r:9,fill:"none",stroke:"var(--ink)","stroke-width":1.2},svg);
@@ -655,7 +1030,9 @@ function drawRequests(){
   $("chartSub").textContent = `dotted lines mark your actions · since ${clock(Math.max(S.chart_since, d[0]))}`;
 }
 
-// ---------- event log + decisions ----------
+/* =====================================================================
+   EVENT LOG + DECISIONS
+   ===================================================================== */
 function renderLog(){
   const showDec = $("showDec").checked;
   const evs = (S.events || []).filter(e => showDec || e.kind !== "decision").slice(-80).reverse();
@@ -673,43 +1050,98 @@ function renderDecisions(){
     : `<tr><td colspan="6" class="empty">No decisions yet.</td></tr>`;
 }
 
-// ---------- header ----------
+/* =====================================================================
+   OPENFLOW TABLES
+   ===================================================================== */
+let flowSw = 1, flowSeen = {}, flowBusy = false;
+function selectSwitch(n){
+  flowSw = n;
+  document.querySelectorAll("[data-sw]").forEach(b => b.setAttribute("aria-selected", +b.dataset.sw === n));
+  $("flowMeta").textContent = "Loading…";
+  loadFlows(true);
+}
+function describeRule(r, F){
+  const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
+  const name = ip => F.hosts[ip] || ip;
+  const outs = [...r.actions.matchAll(/output:(\d+)/g)].map(x => F.ports[x[1]] || `port ${x[1]}`);
+  const to = outs.length ? outs.join(", ") : "";
+  if (r.priority === 0) return {kind:"miss", label:"table miss", text:"Anything no other rule matches goes to the controller (PACKET_IN). This is how new connections and load reports reach it."};
+  if (r.match.includes("ipv6") && /drop/.test(r.actions)) return {kind:"miss", label:"drop", text:"Drop IPv6 background chatter (not used in this project)."};
+  if (/ip_dst/.test(r.actions) && m.nw_dst === S?.vip) {
+    const srvIp = (/set_field:([\d.]+)->ip_dst/.exec(r.actions)||[])[1];
+    return {kind:"nat", label:"VIP rewrite", text:`${name(m.nw_src)}:${m.tp_src} → VIP becomes → ${name(srvIp)} (${srvIp}); send towards ${to}.`};
+  }
+  if (/ip_src/.test(r.actions)) return {kind:"nat", label:"reply rewrite", text:`Reply ${name(m.nw_src)} → ${name(m.nw_dst)}:${m.tp_dst} is rewritten to come from the VIP; send to ${to}.`};
+  if (r.priority === 20) return {kind:"path", label:"connection path", text:`${name(m.nw_src)}:${m.tp_src} → ${name(m.nw_dst)}:${m.tp_dst}: send to ${to}. Its own path, so it can avoid congestion.`};
+  if (r.priority === 10) return {kind:"route", label:"route", text:`Traffic for ${name(m.nw_dst)} (${m.nw_dst}): send to ${to}. Shortest path by delay.`};
+  return {kind:"miss", label:`priority ${r.priority}`, text:r.actions};
+}
+async function loadFlows(force){
+  if (flowBusy || (!force && $("tab-live").classList.contains("hidden"))) return;
+  flowBusy = true;
+  try {
+    const sw = flowSw, F = await (await fetch(`/api/flows?sw=${sw}`, {cache:"no-store"})).json();
+    if (sw !== flowSw) return;
+    if (F.error){ $("flowMeta").innerHTML = `<span style="color:var(--down)">Couldn't read s${sw}'s table: ${esc(F.error)}</span>`; $("flowRows").innerHTML = ""; return; }
+    const keyOf = r => `${r.priority}|${r.cookie}|${r.match.join(",")}`;
+    const prev = flowSeen[sw];
+    const keys = new Set(F.rules.map(keyOf));
+    const added = prev ? F.rules.filter(r => !prev.has(keyOf(r))).length : 0;
+    const removed = prev ? [...prev].filter(k => !keys.has(k)).length : 0;
+    const counts = {};
+    const rows = F.rules.map(r => {
+      const d = describeRule(r, F); counts[d.label] = (counts[d.label]||0) + 1;
+      const fresh = prev && !prev.has(keyOf(r));
+      return `<tr class="${fresh ? "fresh" : ""}"><td class="r num"><b>${r.priority}</b></td><td><span class="kind ${d.kind}">${esc(d.label)}</span></td>
+        <td class="wrapc">${esc(d.text)}</td><td class="mono wrapm">${esc(r.match.join(", ") || "(everything)")}</td><td class="mono wrapm">${esc(r.actions.replace(/,(?=set_field|output)/g, ", "))}</td>
+        <td class="r num">${Number(r.n_packets).toLocaleString()}</td><td class="r num">${r.duration < 60 ? r.duration.toFixed(0)+" s" : (r.duration/60).toFixed(0)+" min"}</td>
+        <td class="r num">${r.idle_timeout ? r.idle_timeout + " s" : "never"}</td></tr>`;
+    });
+    flowSeen[sw] = keys;
+    $("flowRows").innerHTML = rows.join("") || `<tr><td colspan="8" class="empty">No rules.</td></tr>`;
+    const parts2 = Object.entries(counts).map(([k,v]) => `${v} ${k}`).join(", ");
+    $("flowMeta").innerHTML = `Live from <code>ovs-ofctl -O OpenFlow13 dump-flows s${sw}</code>${S && S.mode === "sim" ? " (simulated)" : ""}: <b>${F.rules.length} rules</b> (${esc(parts2)}).` +
+      (added || removed ? ` Since the last check: <b>${added} added</b>, <b>${removed} removed</b>.` : "") +
+      ` Connection rules expire after 15 s idle; route rules after 60 s.`;
+  } catch(e){ $("flowMeta").textContent = "Couldn't load the flow table."; }
+  finally { flowBusy = false; }
+}
+setInterval(() => loadFlows(false), 1500);
+
+/* =====================================================================
+   HEADER, REFRESH, TABS, RESULTS
+   ===================================================================== */
 function renderHeader(){
   const st = $("status"); st.className = "chip status " + (S.restarting ? "busy" : S.controller_online ? "live" : "off");
   $("statusText").textContent = S.restarting ? "Controller restarting" : S.controller_online ? (S.mode === "sim" ? "Simulation running" : "Controller live") : "Controller offline";
   $("cLb").textContent = S.lb_policy; $("cPath").textContent = S.path_policy; $("cVip").textContent = S.vip;
   $("simBanner").classList.toggle("hidden", S.mode !== "sim");
 }
-
 async function refresh(){
-  try {
-    const r = await fetch("/api/state", {cache:"no-store"});
-    S = await r.json();
-  } catch(e){
-    const st = $("status"); st.className = "chip status off"; $("statusText").textContent = "Dashboard server stopped";
-    return;
-  }
+  let next;
+  try { next = await (await fetch("/api/state", {cache:"no-store"})).json(); }
+  catch(e){ const st = $("status"); st.className = "chip status off"; $("statusText").textContent = "Dashboard server stopped"; return; }
+  S = next;
+  onState();
   renderHeader();
   if (!$("tab-live").classList.contains("hidden")){
-    drawTopology(); renderNow(); renderControls(); renderCards(); drawUtil(); drawRequests(); renderLog(); renderDecisions();
+    renderNow(); renderControls(); renderCards(); drawUtil(); drawRequests(); renderLog(); renderDecisions();
   }
 }
-
-// ---------- results tab ----------
 let resultsLoaded = false;
 function showTab(name){
   document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
   $("tab-live").classList.toggle("hidden", name !== "live");
   $("tab-results").classList.toggle("hidden", name !== "results");
   if (name === "results" && !resultsLoaded) loadResults();
-  if (name === "live") refresh();
+  if (name === "live"){ resize(); refresh(); loadFlows(true); }
 }
-function bars(rows, field, fmt, colorFn, best){
+function bars(rows, field, fmt, colorFn){
   const vals = rows.map(r => r[field]).filter(v => v != null);
   const max = Math.max(...vals, 1e-9);
   return `<div class="bars">` + rows.map(r => {
     const v = r[field], w = v == null ? 0 : 100 * v / max;
-    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val ${w < 35 ? "out" : ""}" style="${w >= 35 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`;
+    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val" style="${w >= 35 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`;
   }).join("") + `</div>`;
 }
 async function loadResults(){
@@ -721,9 +1153,8 @@ async function loadResults(){
   const get = (sc, cfg) => { const r = R.rows.find(x => x.scenario === sc && x.config === cfg); if (!r) return null;
     const n = k => r[k] === "" || r[k] == null ? null : +r[k];
     return {label: cfg, req:n("requests"), ok:n("completed"), failed:n("failed_requests"), extra:n("extra_attempts"), mbps:n("mean_throughput_mbps"), ttc:n("mean_time_to_content_ms"), maxttc:n("max_time_to_content_ms")}; };
-  const pol = c => ({static:"var(--faint)", round_robin:"var(--slow)", least_loaded:"var(--srv1)", path_delay:"var(--faint)", path_congestion:"var(--srv1)"}[c.label] || "var(--ink)");
+  const pol = c => ({static:"var(--faint)", round_robin:"var(--slow)", least_loaded:"var(--srv1)"}[c.label] || "var(--ink)");
   const cards = [];
-
   const conc = ["static","round_robin","least_loaded"].map(c => get("concurrent", c)).filter(Boolean);
   if (conc.length){
     const s = conc.find(r => r.label==="static"), l = conc.find(r => r.label==="least_loaded");
@@ -736,10 +1167,11 @@ async function loadResults(){
   if (cong.length){
     const a = cong.find(r=>r.label==="path_delay"), b = cong.find(r=>r.label==="path_congestion");
     cong.forEach(r => r.label = r.label === "path_delay" ? "delay only" : "congestion-aware");
+    const cc = r => r.label === "delay only" ? "var(--faint)" : "var(--srv1)";
     cards.push(`<section class="panel res"><h2>25 Mbps flood on the fast path</h2>
       <p class="claim">${a && b && b.maxttc ? `<b>${(a.maxttc/b.maxttc).toFixed(1)}×</b> shorter worst wait with congestion-aware paths` : ""}</p>
-      <div class="metric">Worst time to get a file (s, lower is better)</div>${bars(cong,"maxttc",v=>(v/1000).toFixed(1)+" s",r=>r.label==="delay only"?"var(--faint)":"var(--srv1)")}
-      <div class="metric">Failed attempts that had to be retried</div>${bars(cong,"extra",v=>String(v),r=>r.label==="delay only"?"var(--faint)":"var(--srv1)")}</section>`);
+      <div class="metric">Worst time to get a file (s, lower is better)</div>${bars(cong,"maxttc",v=>(v/1000).toFixed(1)+" s",cc)}
+      <div class="metric">Failed attempts that had to be retried</div>${bars(cong,"extra",v=>String(v),cc)}</section>`);
   }
   const sf = ["static","least_loaded"].map(c => get("serverfail", c)).filter(Boolean);
   if (sf.length){
@@ -763,6 +1195,7 @@ async function loadResults(){
 }
 
 refresh();
+loadFlows(true);
 setInterval(() => { if (!$("tab-live").classList.contains("hidden")) refresh(); }, 1000);
 </script>
 </body>
