@@ -534,7 +534,11 @@ class LiveBackend(Backend):
         if (a, b) not in SWITCH_LINKS:
             raise ValueError("unknown link")
         with self.lock:
-            if up == ((a, b) not in self.links_down):
+            # A link can also be cut from the mininet> prompt, so ask the controller too
+            st = self._read_state() or {}
+            ctrl_up = next((l.get("up", True) for l in st.get("links", [])
+                            if (l.get("a"), l.get("b")) == (a, b)), True)
+            if up == ((a, b) not in self.links_down and ctrl_up):
                 return
             self.net.configLinkStatus(f"s{a}", f"s{b}", "up" if up else "down")
             (self.links_down.discard if up else self.links_down.add)((a, b))
@@ -670,7 +674,7 @@ class LiveBackend(Backend):
         for a, pa, b, pb, d, bw in cfg.LINKS:
             l = links.get((a, b), {})
             out["links"].append({"a": a, "b": b, "delay_ms": d, "bw_mbps": bw,
-                                 "up": (a, b) not in self.links_down,
+                                 "up": (a, b) not in self.links_down and l.get("up", True),
                                  "controller_sees_up": l.get("up", True),
                                  "util": l.get("util", 0.0), "mbps": l.get("mbps", 0.0)})
         out["connections"] = st.get("connections", [])
