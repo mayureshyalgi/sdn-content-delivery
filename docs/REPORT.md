@@ -273,7 +273,7 @@ path utilisation rather than load first; adaptive sampling; heterogeneous worklo
 | **D2** Dynamic SDN functionality | 6 | load balancing, monitoring, congestion-aware routing, rerouting, recovery: §3.3–3.5, §5 |
 | **D2** Challenging scenario / robustness | 4 | server failure, link failure, congestion: §5.2–5.4 |
 | **D2** Performance evaluation & comparison | 5 | §4–5: automated, 3 repetitions, 4 conditions, static baseline, graphs |
-| **D2** Documentation, demo & viva | 6 | README, this report, ARCHITECTURE, EVIDENCE, RESULTS_SUMMARY, [VIVA_QA.md](VIVA_QA.md) |
+| **D2** Documentation, demo & viva | 6 | README, this report, ARCHITECTURE, EVIDENCE, RESULTS_SUMMARY, live dashboard |
 
 ## Appendix B — Reproducing the results
 

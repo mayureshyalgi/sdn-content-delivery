@@ -54,7 +54,7 @@ Full analysis: [docs/REPORT.md](docs/REPORT.md).
 | `topology/` | `topo.py` (Mininet topology) |
 | `tests/` | `run_experiments.py` (automated experiments), `make_graphs.py` (plots) |
 | `results/` | raw logs and CSVs; `results/experiments/<batch>/` per experiment batch, with `graphs/` |
-| `docs/` | `REPORT.md`, `ARCHITECTURE.md`, `VIVA_QA.md`, `evidence/` (screenshots and results tables) |
+| `docs/` | `REPORT.md`, `ARCHITECTURE.md`, `evidence/` (screenshots and results tables) |
 
 ## Setup
 

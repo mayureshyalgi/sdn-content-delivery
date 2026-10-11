@@ -248,7 +248,6 @@ sdn-content-delivery/
 |-- tests/          failure-injection and experiment scripts
 `-- docs/
     |-- ARCHITECTURE.md          this document
-    |-- VIVA_QA.md               questions and answers for the viva
     `-- evidence/
         |-- EVIDENCE.md          every screenshot and what it proves
         |-- RESULTS_SUMMARY.md   all measured data in tables
