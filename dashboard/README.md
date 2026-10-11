@@ -19,7 +19,14 @@ sudo python3 dashboard/demo.py
 ```
 
 Open **http://localhost:8080** in the VM's browser. Startup takes about 15 seconds (controller,
-switches, then the three servers reporting UP). The terminal keeps the usual `mininet>` prompt as a
+switches, then the three servers reporting UP).
+
+Two pages:
+
+| Page | What it shows |
+|---|---|
+| `http://localhost:8080/` | **D1 demo.** Step 1 runs three clients at once, step 2 asks for a missing file (`ERR 404`). Below the map: socket messages (TCP + UDP heartbeats), the controller's choice with the loads it saw, the address-swap rules in s1, and the test results. |
+| `http://localhost:8080/full` | Full dashboard for D2: guided demos for server crash, link cut and congestion, policy changes, charts and the measured results. | The terminal keeps the usual `mininet>` prompt as a
 backup; type `exit` there to stop everything.
 
 ### Open it from your Mac (network still runs in the VM)

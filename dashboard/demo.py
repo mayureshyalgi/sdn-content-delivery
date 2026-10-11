@@ -41,6 +41,7 @@ VIP = cfg.VIP
 CLIENTS = ["h1", "h2", "h3"]
 SERVERS = ["srv1", "srv2", "srv3"]
 FILES = {"small.bin": 10 * 1024, "medium.bin": 1024 * 1024, "large.bin": 5 * 1024 * 1024}
+MISSING = "missing.bin"     # not on any server: shows the ERR 404 reply (D1 error handling)
 LB_POLICIES = ("static", "round_robin", "least_loaded")
 PATH_POLICIES = ("delay", "congestion")
 SWITCH_LINKS = [(a, b) for a, _pa, b, _pb, _d, _bw in cfg.LINKS]
@@ -310,7 +311,7 @@ class Backend:
                 "restarting": self.restarting, "util_threshold": UTIL_THRESHOLD,
                 "events": list(self.events)[-120:],
                 "util_history": [u for u in self.util_history if u["t"] >= since - 2],
-                "decisions": list(self.decisions)[-15:][::-1],
+                "decisions": [d for d in self.decisions if d["t"] >= since][-15:][::-1],
                 "scenario": None if sc is None else {
                     "name": sc["name"], "title": SCENARIOS[sc["name"]]["title"],
                     "elapsed": round(now() - sc["t0"], 1), "step": sc["step"], "done": sc["done"]},
@@ -497,7 +498,7 @@ class LiveBackend(Backend):
                     self.event("action", f"{name} process killed", f"{name} killed")
 
     def request(self, client, file, count, quiet=False):
-        if file not in FILES or not 1 <= int(count) <= 50:
+        if (file not in FILES and file != MISSING) or not 1 <= int(count) <= 50:
             raise ValueError("bad file or count")
         targets = CLIENTS if client == "all" else [client]
         if any(c not in CLIENTS for c in targets):
@@ -511,7 +512,8 @@ class LiveBackend(Backend):
                 proc = self.net.get(c).popen(
                     ["python3", "app/client.py", f"--name={c}", "--server", VIP, "--file", file,
                      "--count", str(int(count)), "--interval", "0", "--timeout", "10",
-                     "--csv", csv_path], cwd=PROJECT, stdout=out, stderr=subprocess.STDOUT)
+                     "--csv", csv_path] + (["--retries", "0"] if file == MISSING else []),
+                    cwd=PROJECT, stdout=out, stderr=subprocess.STDOUT)
                 self.client_jobs.append({"client": c, "proc": proc, "count": int(count),
                                          "start_rows": self._count_rows(csv_path), "file": file})
         if not quiet:
@@ -648,7 +650,8 @@ class LiveBackend(Backend):
                     "error": "" if r.get("status") == "ok" else r.get("status", ""),
                     "total_ms": num(r.get("total_ms")), "ttc_ms": ttc,
                     "mbps": num(r.get("throughput_mbps")),
-                    "attempts": int(num(r.get("attempts"), 1)), "file": r.get("file")})
+                    "attempts": int(num(r.get("attempts"), 1)), "file": r.get("file"),
+                    "bytes": int(num(r.get("bytes"), 0))})
         rows.sort(key=lambda r: r["end"])
         return rows
 
@@ -690,7 +693,8 @@ class LiveBackend(Backend):
                 done = self._count_rows(os.path.join(self.session, f"{c}.csv"))
                 total = sum(j["count"] for j in jobs)
                 first = min(j["start_rows"] for j in jobs)
-                out["clients"][c] = {"busy": True, "done": min(total, done - first), "total": total}
+                out["clients"][c] = {"busy": True, "done": min(total, done - first), "total": total,
+                                     "file": jobs[-1].get("file")}
             else:
                 out["clients"][c] = {"busy": False}
         return out
@@ -774,7 +778,7 @@ class SimBackend(Backend):
 
     # ---- actions -------------------------------------------------------------
     def request(self, client, file, count, quiet=False):
-        if file not in FILES or not 1 <= int(count) <= 50:
+        if (file not in FILES and file != MISSING) or not 1 <= int(count) <= 50:
             raise ValueError("bad file or count")
         targets = CLIENTS if client == "all" else [client]
         if any(c not in CLIENTS for c in targets):
@@ -923,6 +927,9 @@ class SimBackend(Backend):
             self._attempt_failed(job, "connection refused" if self.lb_policy != "static"
                                  else "timed out")
             return
+        if job["file"] == MISSING:
+            self._finish(job, ok=False, why="server error: ERR 404 file not found")
+            return
         self.dls.append({"job": job, "client": job["client"], "server": server, "path": path,
                          "port": port, "left": FILES[job["file"]] * 8 / 1e6, "rate": 0.0,
                          "begin": now(), "congestion_aware": aware, "starved": 0.0})
@@ -952,7 +959,8 @@ class SimBackend(Backend):
                           "served_by": server or "-", "status": "ok" if ok else "failed",
                           "error": "" if ok else f"failed: {why}",
                           "total_ms": total_ms, "ttc_ms": round((t - req["start"]) * 1000, 1),
-                          "mbps": mbps, "attempts": req["attempts"], "file": job["file"]})
+                          "mbps": mbps, "attempts": req["attempts"], "file": job["file"],
+                          "bytes": FILES.get(job["file"], 0) if ok else 0})
         job["done"] += 1
         job["current"] = None
         job["next_at"] = t
@@ -1085,7 +1093,8 @@ class SimBackend(Backend):
             for c in CLIENTS:
                 jobs = [j for j in self.jobs if j["client"] == c]
                 out["clients"][c] = ({"busy": True, "done": sum(j["done"] for j in jobs),
-                                      "total": sum(j["count"] for j in jobs)} if jobs else {"busy": False})
+                                      "total": sum(j["count"] for j in jobs), "file": jobs[-1]["file"]}
+                                     if jobs else {"busy": False})
         return out
 
     def flows(self, dpid):
@@ -1157,7 +1166,9 @@ def make_handler(backend):
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             path = self.path.split("?")[0]
-            if path in ("/", "/index.html"):
+            if path in ("/", "/d1"):
+                self.send_file(os.path.join(HERE, "d1.html"), "text/html; charset=utf-8")
+            elif path in ("/full", "/index.html"):
                 self.send_file(os.path.join(HERE, "index.html"), "text/html; charset=utf-8")
             elif path == "/api/state":
                 self.send_json(backend.state())

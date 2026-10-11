@@ -108,9 +108,10 @@ sudo python3 dashboard/demo.py        # then open http://localhost:8080
 python3 dashboard/demo.py --sim       # rehearse without Mininet
 ```
 
-Starts the controller, network and servers, and drives every scenario from a web page: requests,
-server and link failures, a congestion flood, policy changes, with live link use, paths and
-response times. See [dashboard/README.md](dashboard/README.md).
+The main page (`/`) is the D1 demo: two buttons (three clients at once, a missing file) and
+panels for the socket messages, the controller's choice, the address-swap rules in s1 and the test
+results. The full dashboard with failures, congestion and policy changes is at `/full`.
+See [dashboard/README.md](dashboard/README.md).
 
 ## Running the experiments
 
