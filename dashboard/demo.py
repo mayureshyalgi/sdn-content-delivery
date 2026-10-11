@@ -1332,6 +1332,8 @@ def main():
     try:
         if backend.mode == "live" and not args.no_cli and sys.stdin.isatty():
             from mininet.cli import CLI
+            from mininet.log import setLogLevel
+            setLogLevel("output")   # startup was kept quiet; let mininet> commands print their results
             print("  The mininet> prompt below still works. Type exit to stop everything.\n")
             CLI(backend.net)
         else:
