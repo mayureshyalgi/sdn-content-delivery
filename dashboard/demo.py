@@ -374,6 +374,9 @@ class LiveBackend(Backend):
         cleanup()
         self.start_controller()
         print("Starting the network ...")
+        # Inherited by every Mininet host shell: clients typed at the mininet> prompt then log
+        # to this session's CSVs, so the dashboard shows them like its own requests.
+        os.environ["SDN_DEMO_CSV_DIR"] = self.session
         self.net = Mininet(topo=ContentTopo(), switch=OVSSwitch, link=TCLink,
                            controller=None, autoSetMacs=False)
         self.net.addController("c0", controller=RemoteController,

@@ -110,6 +110,12 @@ def main():
     parser.add_argument("--ping", action="store_true", help="only send a PING health check")
     args = parser.parse_args()
 
+    # When the demo dashboard is running it sets SDN_DEMO_CSV_DIR for every Mininet host, so a
+    # download started by hand at the mininet> prompt is recorded and shown on the dashboard too.
+    demo_dir = os.environ.get("SDN_DEMO_CSV_DIR")
+    if not args.csv and demo_dir and args.name in ("h1", "h2", "h3"):
+        args.csv = os.path.join(demo_dir, f"{args.name}.csv")
+
     if args.ping:
         try:
             ping_server(args.server, args.port, args.timeout)
