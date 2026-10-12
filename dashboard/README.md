@@ -51,6 +51,19 @@ mode in UTM.
 Every session's logs and CSVs are saved in `results/demo/<date_time>/`: one log per controller start,
 `decisions.csv`, `h1.csv`…`h3.csv`, server logs and flood output.
 
+## Terminal ⇄ dashboard
+
+The VM terminal and the page show the same activity:
+
+- **Page → terminal:** every click is printed at the `mininet>` prompt as the equivalent command
+  (`[dashboard] clicked on the web page = mininet> h1 python3 app/client.py ...`), followed by the
+  controller's decisions (`[controller] [LB] h1:50408 -> srv1 via s1-s2-s4`), health and link events, and
+  the client programs' output (`[client] [h1] #1 large.bin from srv1 ...`).
+- **Terminal → page:** every command typed at `mininet>` and its output appear in the page's
+  *Terminal ⇄ dashboard* panel; downloads typed there also show in the decisions, rules and results.
+
+`--quiet-terminal` turns the terminal echo off.
+
 ## What's on the page
 
 The page is built so someone who has never seen SDN can follow it:

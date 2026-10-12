@@ -48,6 +48,45 @@ SWITCH_LINKS = [(a, b) for a, _pa, b, _pb, _d, _bw in cfg.LINKS]
 DPID = {f"s{i}": i for i in (1, 2, 3, 4)}
 UTIL_THRESHOLD = 0.7
 
+
+class Console:
+    """Prints dashboard activity in the VM terminal without breaking the mininet> prompt.
+
+    Every click on the web page is echoed here as the equivalent mininet> command, and the
+    controller's decisions and the clients' output follow it, so the terminal shows everything
+    the page shows. Commands typed at the prompt go the other way (see EchoCLI in main())."""
+
+    COLORS = {"dashboard": "\033[1;36m", "controller": "\033[33m", "client": "\033[0;37m"}
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.at_prompt = False          # True while mininet> is waiting for input
+        self.enabled = True
+        self.color = sys.stdout.isatty()
+
+    def say(self, who, text):
+        if not self.enabled:
+            return
+        tag = f"[{who}]"
+        if self.color:
+            tag = self.COLORS.get(who, "") + tag + "\033[0m"
+        line = f"{tag} {text}"
+        with self.lock:
+            out = sys.__stdout__
+            if self.at_prompt:
+                try:
+                    import readline
+                    typed = readline.get_line_buffer()
+                except Exception:
+                    typed = ""
+                out.write("\r\033[K" + line + "\nmininet> " + typed)
+            else:
+                out.write(line + "\n")
+            out.flush()
+
+
+CONSOLE = Console()
+
 SCENARIOS = {
     "concurrent": {
         "title": "Three clients at once",
@@ -369,6 +408,7 @@ class LiveBackend(Backend):
         self.sink_proc = None
         self.flood_mbps = 0
         self.links_down = set()
+        self.out_pos = {}            # dashboard clients' output files -> bytes already echoed
 
         print("Cleaning up any old Mininet ...")
         cleanup()
@@ -577,6 +617,7 @@ class LiveBackend(Backend):
             try:
                 self._tail_controller_log()
                 self._tail_decisions()
+                self._tail_client_outputs()
                 st = self._read_state()
                 if st:
                     with self.lock:
@@ -602,8 +643,11 @@ class LiveBackend(Backend):
             if tag == "[LB]":
                 if "rejected" in line:   # normal decisions come from decisions.csv instead
                     self.event("warn", line[line.index(tag):])
+                    self._echo("controller", line[line.index(tag):])
             elif tag:
                 self.event(TAG_KIND[tag], line[line.index(tag):])
+                if tag in ("[HEALTH]", "[LINK]", "[START]"):
+                    self._echo("controller", line[line.index(tag):])
             elif "Traceback" in line or "Error" in line:
                 self.event("error", "controller: " + line[:200])
 
@@ -623,6 +667,30 @@ class LiveBackend(Backend):
             with self.lock:
                 self.decisions.append(d)
             self.event("decision", f"{d['client']} → {d['server']} via {d['path']}")
+            self._echo("controller", f"[LB] {d['client']}:{d['port']} -> {d['server']} via {d['path']}"
+                                     f"  (loads: {d['loads']})")
+
+    def _echo(self, who, text):
+        """One line for the terminal and the same line for the page's terminal mirror."""
+        CONSOLE.say(who, text)
+        self.event("echo_" + who, text)
+
+    def _tail_client_outputs(self):
+        """Echo the output of clients started from the web page, line by line."""
+        for c in CLIENTS:
+            path = os.path.join(self.session, f"{c}_out.txt")
+            try:
+                with open(path) as f:
+                    f.seek(self.out_pos.get(path, 0))
+                    chunk = f.read()
+                    if not chunk.endswith("\n"):          # keep a half-written line for later
+                        chunk = chunk[:chunk.rfind("\n") + 1]
+                    self.out_pos[path] = self.out_pos.get(path, 0) + len(chunk.encode())
+            except OSError:
+                continue
+            for line in chunk.splitlines():
+                if line.strip():
+                    self._echo("client", line)
 
     def _read_state(self):
         try:
@@ -1241,8 +1309,38 @@ def make_handler(backend):
     return Handler
 
 
+def web_commands(body):
+    """The mininet> commands that do the same thing as a click on the web page."""
+    a = body.get("action")
+    if a == "request":
+        who = CLIENTS if body.get("client") == "all" else [body.get("client", "h1")]
+        f, n = body.get("file", "medium.bin"), int(body.get("count", 3))
+        return [f"{c} python3 app/client.py --name={c} --server {VIP} --file {f} --count {n}"
+                + (" --retries 0" if f == MISSING else "") for c in who]
+    if a == "server":
+        n = body.get("name")
+        return [f"{n} python3 app/server.py --name={n} &" if body.get("op") == "start"
+                else f"{n} pkill -f 'server.py --name={n}'"]
+    if a == "link":
+        return [f"link {body.get('a')} {body.get('b')} {body.get('op')}"]
+    if a == "flood":
+        return [f"gen iperf -c 10.0.0.21 -u -b {int(body.get('mbps', 25))}M &" if body.get("op") == "start"
+                else "gen pkill iperf"]
+    if a == "policy":
+        return [f"(restart the controller with LB_POLICY={body.get('lb')} PATH_POLICY={body.get('path')})"]
+    if a == "scenario":
+        return [f"(guided demo: {SCENARIOS.get(body.get('name'), {}).get('title', body.get('name'))})"]
+    if a == "reset":
+        return ["(fix everything: all links up, all servers running, flood off)"]
+    return []
+
+
 def run_action(b, body):
     a = body.get("action")
+    if a != "clear":
+        for cmd in web_commands(body):
+            CONSOLE.say("dashboard", f"clicked on the web page = mininet> {cmd}")
+            b.event("web", cmd)
     if a == "request":
         b.request(body.get("client", "h1"), body.get("file", "medium.bin"), int(body.get("count", 3)))
         return "Requests sent"
@@ -1303,6 +1401,67 @@ def default_ryu():
     return os.path.join(home, "ryu-env", "bin", "ryu-manager")
 
 
+class _Tee:
+    """A stream wrapper that also keeps a copy of what is written while capturing."""
+
+    def __init__(self, stream):
+        self.stream, self.buf = stream, None
+
+    def write(self, s):
+        if self.buf is not None:
+            self.buf.append(s)
+        return self.stream.write(s)
+
+    def flush(self):
+        self.stream.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
+def EchoCLI(net, backend):
+    """The usual mininet> prompt, but every command and its output also goes to the web page."""
+    from mininet.cli import CLI
+    from mininet.log import lg, output
+
+    tees = []
+    for h in lg.handlers:                    # mininet prints command output through its logger
+        if hasattr(h, "stream"):
+            h.stream = _Tee(h.stream)
+            tees.append(h.stream)
+
+    class _EchoCLI(CLI):
+        def precmd(self, line):
+            line = super().precmd(line)
+            CONSOLE.at_prompt = False
+            if line.strip() and line.strip() != "EOF":
+                backend.event("terminal", "mininet> " + line.strip())
+            for t in tees:
+                t.buf = []
+            return line
+
+        def postcmd(self, stop, line):
+            text = "".join(x for t in tees for x in (t.buf or []))
+            for t in tees:
+                t.buf = None
+            lines = [l.rstrip() for l in text.splitlines() if l.strip()]
+            if line.strip() and lines:
+                backend.event("terminal_out", "\n".join(lines[-15:]))
+            CONSOLE.at_prompt = not stop
+            return super().postcmd(stop, line)
+
+        def do_sh(self, line):
+            """Run a shell command in the VM (output is also shown on the web page)."""
+            r = subprocess.run(line, shell=True, capture_output=True, text=True)
+            output(r.stdout + r.stderr)
+
+    CONSOLE.at_prompt = True
+    try:
+        _EchoCLI(net)
+    finally:
+        CONSOLE.at_prompt = False
+
+
 def main():
     ap = argparse.ArgumentParser(description="SDN content-delivery demo dashboard")
     ap.add_argument("--sim", action="store_true", help="simulated network (no Mininet, no sudo)")
@@ -1313,8 +1472,11 @@ def main():
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--ryu", default=None, help="path to ryu-manager (default ~/ryu-env/bin/ryu-manager)")
     ap.add_argument("--no-cli", action="store_true", help="don't open the mininet> prompt")
+    ap.add_argument("--quiet-terminal", action="store_true",
+                    help="don't echo web-page activity in the terminal")
     args = ap.parse_args()
     os.chdir(PROJECT)
+    CONSOLE.enabled = not args.quiet_terminal
 
     if args.sim:
         backend = SimBackend(args)
@@ -1348,8 +1510,9 @@ def main():
             from mininet.cli import CLI
             from mininet.log import setLogLevel
             setLogLevel("output")   # startup was kept quiet; let mininet> commands print their results
-            print("  The mininet> prompt below still works. Type exit to stop everything.\n")
-            CLI(backend.net)
+            print("  The mininet> prompt below still works. Type exit to stop everything.")
+            print("  Clicks on the web page are echoed here; commands typed here appear on the page.\n")
+            EchoCLI(backend.net, backend)
         else:
             print("  Press Ctrl+C to stop.\n")
             while True:
