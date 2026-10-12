@@ -40,13 +40,14 @@ import net_config as cfg  # noqa: E402
 VIP = cfg.VIP
 CLIENTS = ["h1", "h2", "h3"]
 SERVERS = ["srv1", "srv2", "srv3"]
-FILES = {"small.bin": 10 * 1024, "medium.bin": 1024 * 1024, "large.bin": 5 * 1024 * 1024}
+FILES = {"small.txt": 1024, "medium.bin": 1024 * 1024, "large.bin": 5 * 1024 * 1024}
 MISSING = "missing.bin"     # not on any server: shows the ERR 404 reply (D1 error handling)
 LB_POLICIES = ("static", "round_robin", "least_loaded")
 PATH_POLICIES = ("delay", "congestion")
 SWITCH_LINKS = [(a, b) for a, _pa, b, _pb, _d, _bw in cfg.LINKS]
 DPID = {f"s{i}": i for i in (1, 2, 3, 4)}
 UTIL_THRESHOLD = 0.7
+VIP_IDLE_DEMO = 40          # address-swap rules stay in the switch 40 s after a download (15 s in the experiments)
 
 
 class Console:
@@ -437,7 +438,8 @@ class LiveBackend(Backend):
         self.ctrl_n += 1
         path = os.path.join(self.session, f"controller_{self.ctrl_n}.log")
         env = dict(os.environ, LB_POLICY=self.lb_policy, PATH_POLICY=self.path_policy,
-                   LB_DECISIONS_CSV=self.decisions_csv, LB_STATE_JSON=self.state_json)
+                   LB_DECISIONS_CSV=self.decisions_csv, LB_STATE_JSON=self.state_json,
+                   VIP_IDLE_TIMEOUT=str(VIP_IDLE_DEMO))
         self.ctrl_log = path
         self.ctrl_log_pos = 0
         logf = open(path, "w")
@@ -1188,13 +1190,13 @@ class SimBackend(Backend):
                                   "duration": t - self.flood_since,
                                   "n_packets": int((t - self.flood_since) * self.flood_mbps * 1e6 / 8 / 1470)})
             conns = [dict(c, live=True) for c in self._conn_records()] + \
-                    [dict(c, live=False) for c in self.ended if t - c["end"] < 15]
+                    [dict(c, live=False) for c in self.ended if t - c["end"] < VIP_IDLE_DEMO]
         for c in conns:
             path, cip = c["path"], f"10.0.0.{c['client'][1]}"
             sip = f"10.0.0.1{c['server'][-1]}"
             data_pk = int(c["bytes"] / 1448)
             ack_pk = data_pk // 2 + 3
-            base = {"cookie": "0x2", "idle_timeout": 15, "duration": t - c["begin"]}
+            base = {"cookie": "0x2", "idle_timeout": VIP_IDLE_DEMO, "duration": t - c["begin"]}
             fwd = ["tcp", f"nw_src={cip}", f"nw_dst={sip}", f"tp_src={c['port']}", "tp_dst=9000"]
             rev = ["tcp", f"nw_src={sip}", f"nw_dst={cip}", "tp_src=9000", f"tp_dst={c['port']}"]
             if dpid == 1:

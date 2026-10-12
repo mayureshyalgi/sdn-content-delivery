@@ -134,17 +134,16 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
 
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:15px;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.bad{background:var(--bad)}
-/* terminal mirror */
-.term{padding:16px 18px 18px}
-.term pre{margin:0;background:#16202B;color:#D5DDE5;font-family:var(--code);font-size:13px;line-height:1.55;border-radius:10px;padding:12px 14px;height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word}
-.term .t{color:#6F7F90}
-.term .web{color:#5FD0E6;font-weight:600}
-.term .cmd{color:#FFFFFF;font-weight:600}
-.term .out{color:#AEB9C5}
-.term .ctl{color:#F2C14E}
-.term .bad{color:#FF8A80}
-.term .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--ink2);margin:0 0 10px}
-.term .legend b{font-family:var(--code);font-size:13px}
+.trio{display:flex;gap:8px;flex-wrap:wrap}
+.trio .btn{padding:7px 0;width:58px;justify-content:center}
+.pick{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink2);margin:0 0 10px}
+.pick select{font:inherit;font-size:14.5px;padding:4px 8px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
+.play{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:5px 11px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink2)}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn.sm{padding:5px 12px;font-size:14px}
 @media (prefers-reduced-motion: reduce){.beat,.rule.fresh{animation:none}}
 </style>
 </head>
@@ -166,9 +165,25 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
         <button class="btn" id="go1"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Run</button>
       </div>
       <div class="step">
-        <h2><span class="n">2</span>Ask for a missing file</h2>
-        <p>h1 asks for <code>missing.bin</code>. The server answers <code>ERR 404</code> and nothing crashes.</p>
-        <button class="btn" id="go2"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Run</button>
+        <h2><span class="n">2</span>One client at a time</h2>
+        <p>Pick a client. It sends <code>GET</code> to <code>10.0.0.100</code> and receives the file from the server the controller chooses.</p>
+        <label class="pick">File
+          <select id="file1">
+            <option value="small.txt">small.txt · 1 KB</option>
+            <option value="medium.bin">medium.bin · 1 MB</option>
+            <option value="large.bin" selected>large.bin · 5 MB</option>
+          </select>
+        </label>
+        <div class="trio" data-file="file1">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n">3</span>Ask for a missing file</h2>
+        <p>The client asks for <code>missing.bin</code>. The server answers <code>ERR 404</code> and nothing crashes.</p>
+        <div class="trio" data-file="missing.bin">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
       </div>
       <div class="step">
         <button class="btn line" id="clear">Clear results</button>
@@ -177,7 +192,14 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
     </section>
 
     <section class="box map" aria-labelledby="h-map">
-      <div class="maphead"><h2 id="h-map">The network</h2><span class="rub">Architecture · 2 marks</span></div>
+      <div class="maphead"><h2 id="h-map">The network</h2>
+        <div class="play">
+          <button class="btn line sm" id="pause" aria-pressed="false" title="Freeze the map (P)">Pause</button>
+          <span class="seg" role="group" aria-label="Animation speed">
+            <button data-speed="1" aria-pressed="true">1×</button><button data-speed="0.5" aria-pressed="false">½×</button><button data-speed="0.25" aria-pressed="false">¼×</button><button data-speed="0.1" aria-pressed="false">⅒×</button>
+          </span>
+          <span class="rub">Architecture · 2 marks</span>
+        </div></div>
       <canvas id="stage" role="img" aria-label="Network map: three clients on the left, three servers on the right, four switches in the middle and the controller on top"></canvas>
       <div class="key">
         <span><i style="width:10px;height:10px;border-radius:50%;background:#2A78D6;border:1.5px solid #fff;box-shadow:0 0 0 1px #2A78D6"></i>file data (TCP), coloured by server</span>
@@ -186,18 +208,6 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
       </div>
     </section>
   </div>
-
-  <section class="box term" aria-labelledby="h-term">
-    <div class="ph"><h2 id="h-term">Terminal ⇄ dashboard</h2><span class="rub">Live from the VM</span></div>
-    <p class="lead">The same lines the VM terminal prints. A click here appears there as the equivalent <code>mininet&gt;</code> command; a command typed at <code>mininet&gt;</code> appears here with its output.</p>
-    <div class="legend">
-      <span><b style="color:#1D8FA6">[dashboard]</b> clicked on this page</span>
-      <span><b>mininet&gt;</b> typed in the terminal</span>
-      <span><b style="color:#A87600">[controller]</b> Ryu's log</span>
-      <span><b style="color:#5B6875">[client]</b> client program output</span>
-    </div>
-    <pre id="term" aria-live="polite"></pre>
-  </section>
 
   <div class="three">
     <section class="box panel" aria-labelledby="h-sock">
@@ -246,7 +256,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const SRVC = {srv1:"#2A78D6", srv2:"#EB6834", srv3:"#1BAF7A"};
 const SRVIP = {srv1:"10.0.0.11", srv2:"10.0.0.12", srv3:"10.0.0.13"};
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const SIZE = {"large.bin":"5 MB", "medium.bin":"1 MB", "small.bin":"10 KB"};
+const SIZE = {"large.bin":"5 MB", "medium.bin":"1 MB", "small.txt":"1 KB"};
 let S = null, busy = false;
 function setHTML(node, html){ if (node._h !== html){ node.innerHTML = html; node._h = html; } }
 const ms = v => v == null ? "–" : v >= 1000 ? (v/1000).toFixed(1) + " s" : Math.round(v) + " ms";
@@ -265,7 +275,13 @@ async function act(body, msg){
   busy = false; refresh();
 }
 $("go1").onclick = () => act({action:"request", client:"all", file:"large.bin", count:1}, "h1, h2 and h3 are downloading");
-$("go2").onclick = () => act({action:"request", client:"h1", file:"missing.bin", count:1}, "h1 asked for missing.bin");
+document.querySelectorAll(".trio").forEach(row => row.querySelectorAll("button").forEach(b => {
+  b.onclick = () => {
+    const c = b.dataset.client, src = row.dataset.file;
+    const file = src === "missing.bin" ? src : $(src).value;
+    act({action:"request", client:c, file, count:1}, `${c} asked 10.0.0.100 for ${file}`);
+  };
+}));
 $("clear").onclick = () => { act({action:"clear"}, "Cleared"); seenRules = null; };
 
 /* ================= MAP ================= */
@@ -356,7 +372,7 @@ function spawn(dt){
         addPart(chanPts("s4", true), {color:SRVC[s.name], r:4, shape:"dia", speed:330, onArrive(){
           fx.push({kind:"ring", t:0, life:.6, x:POS.controller[0]+(i-1)*40, y:POS.controller[1]+24, color:SRVC[s.name], r0:4, r1:13});
         }});
-      }}), i*230);
+      }}), i*230/SPEED);
     });
   }
 }
@@ -460,10 +476,26 @@ function draw(dt){
     const k = f.t/f.life; ctx.save(); ctx.globalAlpha = 1-k; ctx.strokeStyle = f.color; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(f.x, f.y, f.r0 + (f.r1-f.r0)*k, 0, 7); ctx.stroke(); ctx.restore();
   }
+  if (PAUSED) text("Paused · map frozen, network still running", 16, 24, {size:14, color:"#fff", bg:C.ink, align:"left"});
+  else if (SPEED < 1) text(`Slow motion ${SPEED === .5 ? "½" : SPEED === .25 ? "¼" : "1/10"}× · network at full speed`, 16, 24, {size:13.5, color:"#6B4700", bg:"#FFF4DC", border:"#E9C77A", align:"left"});
 }
-let last = performance.now();
+let last = performance.now(), PAUSED = false, SPEED = 1;
+function setPaused(p){
+  PAUSED = p; const b = $("pause");
+  b.textContent = p ? "Resume" : "Pause"; b.setAttribute("aria-pressed", String(p));
+}
+$("pause").onclick = () => setPaused(!PAUSED);
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  SPEED = Number(b.dataset.speed);
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+});
+addEventListener("keydown", e => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === "p" || e.key === "P"){ setPaused(!PAUSED); e.preventDefault(); }
+});
 function frame(now){
-  const dt = Math.min(.1, (now-last)/1000); last = now;
+  const real = Math.min(.1, (now-last)/1000); last = now;
+  const dt = PAUSED ? 0 : real * SPEED;
   spawn(dt);
   for (const p of parts){ p.d += p.speed*dt; if (p.d >= p.g.total && !p.done){ p.done = true; p.onArrive && p.onArrive(); } }
   parts = parts.filter(p => !p.done); if (parts.length > 1200) parts = parts.slice(-1200);
@@ -544,7 +576,7 @@ async function loadRules(){
         <div class="big">${esc(cli)}: 10.0.0.100 → <span style="color:${SRVC[srv]||"inherit"}">${esc(srv)}</span></div>
         <div>Going out: change the address to ${esc(ip)}.${back ? ` Coming back: relabel as 10.0.0.100.` : ""}</div>
         <div class="meta">port ${esc(m.tp_src)} · ${Number(r.n_packets).toLocaleString()} packets matched · removed after ${r.idle_timeout} s unused</div>
-      </div>`; }).join("") : `<div class="empty">No address-swap rules right now. They appear when a download starts and expire 15 s after it ends.</div>`);
+      </div>`; }).join("") : `<div class="empty">No address-swap rules right now. They appear when a download starts and stay 40 s after it ends.</div>`);
     const miss = F.rules.filter(r => r.priority === 0).length, routes = F.rules.filter(r => r.priority === 10 || r.priority === 20).length;
     setHTML($("fixed"), `Also in s1: <b>${miss}</b> table-miss rule (unknown packets go to the controller) and <b>${routes}</b> forwarding rules. ${F.rules.length} rules in total.`);
     const raw = F.rules.map(r => `priority=${r.priority} ${r.match.join(",")} n_packets=${r.n_packets}${r.idle_timeout ? " idle_timeout=" + r.idle_timeout : ""} actions=${r.actions}`).join("\n");
@@ -569,36 +601,16 @@ function renderTop(){
   L.className = "live" + (!S.controller_online ? " off" : sim ? " sim" : "");
   L.querySelector("span").textContent = !S.controller_online ? "Controller not responding" : sim ? "Practice mode (no VM)" : "Live: Mininet + Ryu";
   const anyBusy = Object.values(S.clients||{}).some(b => b.busy);
-  $("go1").disabled = anyBusy; $("go2").disabled = anyBusy;
+  $("go1").disabled = anyBusy;
+  document.querySelectorAll(".trio button").forEach(b => { b.disabled = !!S.clients?.[b.dataset.client]?.busy; });
   const st = $("status");
   if (anyBusy){ st.textContent = "Downloads running… watch the map."; st.classList.remove("hidden"); } else st.classList.add("hidden");
-}
-
-const MIRROR = {web:"web", terminal:"cmd", terminal_out:"out", echo_controller:"ctl", echo_client:"out"};
-function clock(t){ const d = new Date(t * 1000); return d.toTimeString().slice(0, 8); }
-function renderTerm(){
-  const evs = (S.events || []).filter(e => MIRROR[e.kind]).slice(-60);
-  const lines = evs.map(e => {
-    const cls = MIRROR[e.kind], bad = /DOWN|ERR|failed|rejected/.test(e.text) ? " bad" : "";
-    const text = e.kind === "web" ? "[dashboard] clicked on the web page = mininet> " + e.text
-               : e.kind === "echo_controller" ? "[controller] " + e.text
-               : e.kind === "echo_client" ? "[client] " + e.text
-               : e.text;
-    const body = esc(text).split("\n").join("\n          ");
-    return `<span class="t">${clock(e.t)}</span>  <span class="${cls}${bad}">${body}</span>`;
-  });
-  const pre = $("term"), html = lines.join("\n") || `<span class="t">Nothing yet. Click Run, or type a command at mininet&gt; in the VM.</span>`;
-  if (pre._h !== html){
-    const atBottom = pre.scrollHeight - pre.scrollTop - pre.clientHeight < 40;
-    pre.innerHTML = html; pre._h = html;
-    if (atBottom) pre.scrollTop = pre.scrollHeight;
-  }
 }
 
 async function refresh(){
   try { S = await (await fetch("/api/state", {cache:"no-store"})).json(); }
   catch(e){ $("live").className = "live off"; $("live").querySelector("span").textContent = "Dashboard not reachable"; return; }
-  onState(); renderTop(); renderSockets(); renderDecisions(); renderResults(); renderTerm();
+  onState(); renderTop(); renderSockets(); renderDecisions(); renderResults();
 }
 setInterval(refresh, 700); refresh();
 </script>

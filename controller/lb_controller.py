@@ -60,7 +60,7 @@ COOKIE_ROUTE = 0x1
 COOKIE_VIP = 0x2
 
 ROUTE_IDLE = 60     # seconds before an unused route rule expires
-VIP_IDLE = 15       # seconds before an unused VIP connection rule expires
+VIP_IDLE = int(os.environ.get("VIP_IDLE_TIMEOUT", "15"))  # seconds before an unused VIP rule expires
 DEAD_AFTER = 3.0    # seconds without a load report -> server DOWN
 STATUS_EVERY = 5    # seconds between status lines in the log
 

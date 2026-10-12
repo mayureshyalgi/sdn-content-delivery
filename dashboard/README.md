@@ -51,6 +51,16 @@ mode in UTM.
 Every session's logs and CSVs are saved in `results/demo/<date_time>/`: one log per controller start,
 `decisions.csv`, `h1.csv`…`h3.csv`, server logs and flood output.
 
+## D1 page controls
+
+- **Three clients at once**, **One client at a time** (h1, h2 or h3, with a choice of file) and
+  **Ask for a missing file** (from any client).
+- **Pause** (or the P key) freezes the map; **1× ½× ¼× ⅒×** slow the animation down. Both change only the
+  drawing: the real network keeps running at full speed.
+- While the dashboard runs, the controller keeps each address-swap rule for **40 s** after its download
+  (`VIP_IDLE_TIMEOUT=40`), so the rules can be read and checked with `ovs-ofctl`. Hand runs and the
+  experiment runner keep the normal 15 s.
+
 ## Terminal ⇄ dashboard
 
 The VM terminal and the page show the same activity:
@@ -59,8 +69,8 @@ The VM terminal and the page show the same activity:
   (`[dashboard] clicked on the web page = mininet> h1 python3 app/client.py ...`), followed by the
   controller's decisions (`[controller] [LB] h1:50408 -> srv1 via s1-s2-s4`), health and link events, and
   the client programs' output (`[client] [h1] #1 large.bin from srv1 ...`).
-- **Terminal → page:** every command typed at `mininet>` and its output appear in the page's
-  *Terminal ⇄ dashboard* panel; downloads typed there also show in the decisions, rules and results.
+- **Terminal → page:** downloads typed at `mininet>` show in the page's decisions, rules and results;
+  link cuts and server crashes show on the map.
 
 `--quiet-terminal` turns the terminal echo off.
 
