@@ -439,7 +439,6 @@ function draw(dt){
   text("Clients", POS.h1[0], 118, {size:15, color:C.ink3});
   text("Content servers", POS.srv1[0]-6, 118, {size:15, color:C.ink3});
   for (const sw of ["s1","s2","s3","s4"]) line(chanPts(sw,false), S.controller_online ? C.chan : "#E8C9C9", 2, [6,7], .9);
-  line([POS.sink, POS.s1], C.track, 4, null, .7); line([POS.gen, POS.s4], C.track, 4, null, .7);
   for (const [h, sw] of HOSTLINK){
     const s = S.servers.find(x => x.name === h), dead = s && !s.process;
     line([POS[h], POS[sw]], dead ? C.bad : C.track, dead ? 3 : 8, dead ? [7,7] : null);
@@ -500,12 +499,6 @@ function draw(dt){
     if (up) for (let i=0;i<Math.min(6,s.active);i++){ ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x-22+i*9, y+13, 3, 0, 7); ctx.fill(); }
     text(!s.process ? "stopped" : !up ? "no heartbeat" : s.active === 1 ? "1 client" : `${s.active} clients`, x, y+42, {size:12.5, weight:400, color: up ? C.ink2 : C.bad});
   }
-  for (const n of ["sink","gen"]){
-    const [x,y] = POS[n];
-    ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = "#fff"; rr(x-26,y-14,52,28,14); ctx.fill(); ctx.strokeStyle = C.ink3; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
-    text(n, x, y+1, {size:13, color:C.ink3, weight:400});
-  }
-  text("gen / sink: spare hosts for the D2 tests", 500, 452, {size:12.5, weight:400, color:C.ink3});
   for (const p of parts) if (p.label){   // labels last, so nothing covers them
     const [x,y] = at(p.g, p.d);
     text(p.label, Math.min(x+12, W-290), Math.max(y-12, 100), {size:12.5, color:"#6B4700", align:"left", bg:"#FFF4DC", border:"#E9C77A"});
