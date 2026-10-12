@@ -57,6 +57,10 @@ Every session's logs and CSVs are saved in `results/demo/<date_time>/`: one log 
   **Ask for a missing file** (from any client).
 - **Pause** (or the P key) freezes the map; **1× ½× ¼× ⅒×** slow the animation down. Both change only the
   drawing: the real network keeps running at full speed.
+- **Open rule log** (in *Rules in switch s1*) opens a pop-up with every address-swap rule s1 held this
+  session: when it was installed, client, port and server, packets and bytes each way, and when the switch
+  removed it, with the raw OpenFlow rules on request. It is also saved as `s1_rules.log` and `s1_rules.csv`
+  in the session folder (*Download CSV* in the pop-up).
 - While the dashboard runs, the controller keeps each address-swap rule for **40 s** after its download
   (`VIP_IDLE_TIMEOUT=40`), so the rules can be read and checked with `ovs-ofctl`. Hand runs and the
   experiment runner keep the normal 15 s.

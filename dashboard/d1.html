@@ -144,6 +144,25 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
 .seg button + button{border-left:1px solid var(--rule)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
 .btn.sm{padding:5px 12px;font-size:14px}
+/* rule log pop-up */
+.logbtn{margin:0 0 12px}
+dialog.log{border:0;border-radius:14px;padding:0;width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 24px 60px rgba(27,36,48,.35);color:var(--ink)}
+dialog.log::backdrop{background:rgba(27,36,48,.45)}
+.lhead{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--rule2)}
+.lhead h2{margin:0;font-size:19px}
+.lhead p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.lhead .sp{flex:1}
+.x{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--ink2);padding:0 4px}
+.ltools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 20px;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--rule2)}
+.ltools a{color:var(--srv1);font-weight:700}
+.lbody{overflow:auto;max-height:calc(100vh - 220px)}
+table.lt{border-collapse:collapse;width:100%;font-size:14px}
+.lt th{position:sticky;top:0;background:#F4F6F9;text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);padding:8px 12px;border-bottom:1px solid var(--rule)}
+.lt td{padding:8px 12px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.lt td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.lt .raw td{padding-top:0;font-family:var(--code);font-size:12px;color:var(--ink2);word-break:break-all}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill.on{background:var(--goodbg);color:var(--good)} .pill.off{background:#EEF2F5;color:var(--ink3)}
 @media (prefers-reduced-motion: reduce){.beat,.rule.fresh{animation:none}}
 </style>
 </head>
@@ -232,6 +251,7 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
     <section class="box panel" aria-labelledby="h-rules">
       <div class="ph"><h2 id="h-rules">Rules in switch s1</h2><span class="rub">SDN flow rules · 4 marks</span></div>
       <p class="lead">s1 swaps the shared address for the chosen server, and back on the reply. Read live from Open vSwitch.</p>
+      <button class="btn line sm logbtn" id="openLog">Open rule log <span id="logCount"></span></button>
       <div id="rules"></div>
       <div class="fixed" id="fixed"></div>
       <details class="raw"><summary>Show the raw rules (ovs-ofctl dump-flows s1)</summary><pre id="raw"></pre></details>
@@ -248,6 +268,24 @@ details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border
     </div>
   </section>
 </main>
+<dialog class="log" id="logDlg" aria-labelledby="logTitle">
+  <div class="lhead">
+    <div><h2 id="logTitle">Rule log · switch s1</h2>
+      <p>Every address-swap rule the controller installed in s1 during this session, read from Open vSwitch once a second. Rules stay here after the switch removes them.</p></div>
+    <span class="sp"></span>
+    <button class="x" id="closeLog" aria-label="Close">×</button>
+  </div>
+  <div class="ltools">
+    <span id="logStats"></span>
+    <label><input type="checkbox" id="showRaw"> Show the raw OpenFlow rules</label>
+    <a href="/api/rulelog.csv" download="s1_rules.csv" id="dlCsv">Download CSV</a>
+    <span id="logFile"></span>
+  </div>
+  <div class="lbody"><table class="lt">
+    <thead><tr><th>#</th><th>Installed</th><th>Connection</th><th>Request rule<br>(client → server)</th><th>Reply rule<br>(server → client)</th><th>Status</th></tr></thead>
+    <tbody id="logRows"></tbody>
+  </table></div>
+</dialog>
 <div class="toast hidden" id="toast" role="status"></div>
 
 <script>
@@ -606,6 +644,38 @@ function renderTop(){
   const st = $("status");
   if (anyBusy){ st.textContent = "Downloads running… watch the map."; st.classList.remove("hidden"); } else st.classList.add("hidden");
 }
+
+// ---- rule log pop-up ----
+const kb = b => b >= 1e6 ? (b/1e6).toFixed(2) + " MB" : b >= 1e3 ? (b/1e3).toFixed(1) + " KB" : b + " B";
+let logTimer = null, logCount = 0;
+async function loadLog(){
+  try {
+    const L = await (await fetch("/api/rulelog", {cache:"no-store"})).json();
+    const rows = L.rules || [], live = rows.filter(r => !r.removed).length;
+    logCount = rows.length; $("logCount").textContent = rows.length ? `(${rows.length})` : "";
+    if (!$("logDlg").open) return;
+    $("logStats").innerHTML = `<b>${rows.length}</b> rules logged · <b>${live}</b> in the switch now`;
+    $("logFile").textContent = L.file ? `Saved in ${L.file}` : "";
+    $("dlCsv").hidden = !L.file;
+    const raw = $("showRaw").checked;
+    setHTML($("logRows"), rows.length ? rows.map(r => {
+      const age = r.removed ? `<span class="pill off">removed after ${Math.round(r.removed - r.installed)} s</span>`
+                            : `<span class="pill on">in switch · ${Math.round(L.now - r.installed)} s</span>`;
+      return `<tr><td class="n">${r.id}</td><td class="n">${clock(r.installed)}</td>
+        <td><b>${esc(r.client)}</b> → 10.0.0.100 → <b style="color:${SRVC[r.server]||"inherit"}">${esc(r.server)}</b><br><span style="color:var(--ink3)">port ${esc(r.port)} · ${esc(r.server_ip)}</span></td>
+        <td class="n">${Number(r.out_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.out_bytes||0)}</span></td>
+        <td class="n">${Number(r.back_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.back_bytes||0)}</span></td>
+        <td>${age}</td></tr>` + (raw ? `<tr class="raw"><td></td><td colspan="5">${esc(r.raw_out)}<br>${esc(r.raw_back)}</td></tr>` : "");
+    }).join("") : `<tr><td colspan="6"><div class="empty">No rules yet. Run a download and they appear here.</div></td></tr>`);
+  } catch(e){ /* dashboard not reachable; the top badge says so */ }
+}
+function clock(t){ return new Date(t * 1000).toTimeString().slice(0, 8); }
+$("openLog").onclick = () => { $("logDlg").showModal(); loadLog(); clearInterval(logTimer); logTimer = setInterval(loadLog, 1500); };
+$("closeLog").onclick = () => $("logDlg").close();
+$("logDlg").addEventListener("close", () => clearInterval(logTimer));
+$("logDlg").addEventListener("click", e => { if (e.target === $("logDlg")) $("logDlg").close(); });
+$("showRaw").onchange = loadLog;
+setInterval(() => { if (!$("logDlg").open) loadLog(); }, 3000); loadLog();
 
 async function refresh(){
   try { S = await (await fetch("/api/state", {cache:"no-store"})).json(); }

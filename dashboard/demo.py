@@ -221,6 +221,8 @@ class Backend:
         self.lb_policy = "least_loaded"
         self.path_policy = "congestion"
         self.restarting = False
+        self.rule_log = []            # every address-swap rule seen in s1, oldest first
+        self.rule_live = {}           # "client_ip:port" -> its entry while it is in the switch
 
     # ---- events ------------------------------------------------------------
     def event(self, kind, text, mark=None):
@@ -236,6 +238,88 @@ class Backend:
     def flood(self, on, mbps=25): raise NotImplementedError
     def set_policy(self, lb, path): raise NotImplementedError
     def clients_busy(self): raise NotImplementedError
+
+    # ---- rule log: every address-swap rule s1 ever held ---------------------
+    def track_rules(self):
+        """Poll s1 once and record address-swap rules as they appear, change and expire."""
+        try:
+            rules = self.flows(1)
+        except Exception:
+            return
+        t = now()
+        seen = {}
+        swap = [r for r in rules if r.get("priority") == 30]
+        for r in swap:
+            if "ip_dst" not in r["actions"]:
+                continue
+            m = dict(x.split("=", 1) for x in r["match"] if "=" in x)
+            cip, port = m.get("nw_src"), m.get("tp_src")
+            sip = next((part.split(":", 1)[1].split("->")[0] for part in r["actions"].split(",")
+                        if part.endswith("->ip_dst")), "?")
+            back = next((b for b in swap if "ip_src" in b["actions"]
+                         and f"nw_dst={cip}" in b["match"] and f"tp_dst={port}" in b["match"]), None)
+            seen[f"{cip}:{port}"] = (r, back, sip)
+        new_lines = []
+        with self.lock:
+            for key, (r, back, sip) in seen.items():
+                e = self.rule_live.get(key)
+                if e is None:
+                    cip, port = key.split(":")
+                    e = {"id": len(self.rule_log) + 1, "installed": t, "removed": None,
+                         "client": HOST_NAMES.get(cip, cip), "client_ip": cip, "port": port,
+                         "server": HOST_NAMES.get(sip, sip), "server_ip": sip,
+                         "idle_timeout": r.get("idle_timeout", 0)}
+                    self.rule_log.append(e)
+                    self.rule_live[key] = e
+                    new_lines.append(f"INSTALLED  {e['client']} ({cip}) port {port}: 10.0.0.100 -> "
+                                     f"{e['server']} ({sip}), idle_timeout={e['idle_timeout']} s")
+                e.update(last_seen=t, out_packets=r.get("n_packets", 0), out_bytes=r.get("n_bytes", 0),
+                         back_packets=back.get("n_packets", 0) if back else 0,
+                         back_bytes=back.get("n_bytes", 0) if back else 0,
+                         raw_out=f"priority={r['priority']},{','.join(r['match'])} actions={r['actions']}",
+                         raw_back=(f"priority={back['priority']},{','.join(back['match'])} actions={back['actions']}"
+                                   if back else ""))
+            for key in [k for k in self.rule_live if k not in seen]:
+                e = self.rule_live.pop(key)
+                e["removed"] = t
+                new_lines.append(f"REMOVED    {e['client']} port {e['port']} -> {e['server']} after "
+                                 f"{t - e['installed']:.0f} s; carried {e.get('back_bytes', 0):,} bytes "
+                                 f"to the client in {e.get('back_packets', 0):,} packets")
+            if len(self.rule_log) > 2000:
+                self.rule_log = self.rule_log[-2000:]
+        if new_lines:
+            self._write_rule_log(new_lines)
+
+    def _write_rule_log(self, lines):
+        folder = getattr(self, "session", None)
+        if not folder:
+            return
+        try:
+            with open(os.path.join(folder, "s1_rules.log"), "a") as f:
+                for line in lines:
+                    f.write(time.strftime("%H:%M:%S ") + line + "\n")
+            with open(os.path.join(folder, "s1_rules.csv"), "w", newline="") as f:
+                w = csv.writer(f)
+                w.writerow(["id", "installed", "removed", "client", "client_ip", "client_port", "server",
+                            "server_ip", "out_packets", "out_bytes", "back_packets", "back_bytes",
+                            "idle_timeout", "rule_out", "rule_back"])
+                with self.lock:
+                    rows = list(self.rule_log)
+                for e in rows:
+                    w.writerow([e["id"], time.strftime("%H:%M:%S", time.localtime(e["installed"])),
+                                time.strftime("%H:%M:%S", time.localtime(e["removed"])) if e["removed"] else "",
+                                e["client"], e["client_ip"], e["port"], e["server"], e["server_ip"],
+                                e.get("out_packets", 0), e.get("out_bytes", 0), e.get("back_packets", 0),
+                                e.get("back_bytes", 0), e["idle_timeout"], e.get("raw_out", ""),
+                                e.get("raw_back", "")])
+        except OSError:
+            pass
+
+    def rule_log_state(self):
+        with self.lock:
+            return {"now": now(), "rules": [dict(e) for e in reversed(self.rule_log)],
+                    "file": (os.path.relpath(os.path.join(self.session, "s1_rules.log"), PROJECT)
+                             if getattr(self, "session", None) else None)}
 
     def reset(self):
         """Put the network back to normal: links up, servers running, flood off."""
@@ -1257,6 +1341,15 @@ def make_handler(backend):
                 data.update(ports={str(k): v for k, v in PORT_NAMES.get(data["switch"], {}).items()},
                             hosts=HOST_NAMES, time=now())
                 self.send_json(data)
+            elif path == "/api/rulelog":
+                self.send_json(backend.rule_log_state())
+            elif path == "/api/rulelog.csv":
+                folder = getattr(backend, "session", None)
+                f = os.path.join(folder, "s1_rules.csv") if folder else None
+                if f and os.path.exists(f):
+                    self.send_file(f, "text/csv; charset=utf-8")
+                else:
+                    self.send_error(404)
             elif path == "/api/results":
                 self.send_json(latest_results_batch() or {})
             elif path.startswith("/results/experiments/") and path.endswith(".png"):
@@ -1494,6 +1587,12 @@ def main():
         from mininet.log import setLogLevel
         setLogLevel("warning")
         backend = LiveBackend(args)
+
+    def rule_tracker():
+        while True:
+            backend.track_rules()
+            time.sleep(1)
+    threading.Thread(target=rule_tracker, daemon=True).start()
 
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(backend))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
