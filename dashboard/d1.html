@@ -323,13 +323,13 @@ document.querySelectorAll(".trio").forEach(row => row.querySelectorAll("button")
 $("clear").onclick = () => { act({action:"clear"}, "Cleared"); seenRules = null; };
 
 /* ================= MAP ================= */
-const W = 1000, H = 480;
+const W = 1000, H = 540;
 const C = {ink:"#1B2430", ink2:"#4A5866", ink3:"#7B8896", track:"#E3E8EE", signal:"#C98500", chan:"#E2B860", bad:"#D64545"};
 const POS = {
   controller:[500,52],
-  s1:[300,262], s2:[500,165], s3:[500,360], s4:[700,262],
-  h1:[96,165], h2:[96,262], h3:[96,360], sink:[220,440],
-  srv1:[904,165], srv2:[904,262], srv3:[904,360], gen:[780,440]
+  s1:[300,300], s2:[500,175], s3:[500,425], s4:[700,300],
+  h1:[96,170], h2:[96,300], h3:[96,430], sink:[220,500],
+  srv1:[904,170], srv2:[904,300], srv3:[904,430], gen:[780,500]
 };
 const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"]];
 const CHAN_CP = {s1:[310,110], s2:null, s3:[640,230], s4:[690,110]};
@@ -415,8 +415,22 @@ function spawn(dt){
   }
 }
 function rr(x,y,w,h,r){ ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
+// IP and MAC of every host, as set in topology/topo.py and controller/net_config.py
+const ADDR = {
+  h1:["10.0.0.1","00:00:00:00:00:01"], h2:["10.0.0.2","00:00:00:00:00:02"], h3:["10.0.0.3","00:00:00:00:00:03"],
+  srv1:["10.0.0.11","00:00:00:00:00:11"], srv2:["10.0.0.12","00:00:00:00:00:12"], srv3:["10.0.0.13","00:00:00:00:00:13"],
+};
+function addrs(name, x, y){
+  const [ip, mac] = ADDR[name];
+  ctx.font = `400 11.5px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`;
+  const w = ctx.measureText("MAC " + mac).width + 12;
+  ctx.fillStyle = "rgba(255,255,255,.92)"; rr(x-w/2, y-9, w, 33, 6); ctx.fill();   // keeps links from running through the text
+  text("IP  " + ip, x, y, {mono:true, size:12, weight:600, color:C.ink2});
+  text("MAC " + mac, x, y+15, {mono:true, size:11.5, color:C.ink3});
+}
 function text(t, x, y, o={}){
-  ctx.font = `${o.weight||700} ${o.size||14}px "Atkinson Hyperlegible","Segoe UI",Ubuntu,Arial,sans-serif`;
+  ctx.font = o.mono ? `${o.weight||400} ${o.size||12}px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`
+                   : `${o.weight||700} ${o.size||14}px "Atkinson Hyperlegible","Segoe UI",Ubuntu,Arial,sans-serif`;
   ctx.textAlign = o.align || "center"; ctx.textBaseline = "middle";
   if (o.bg){
     const w = ctx.measureText(t).width + 14, h = (o.size||14) + 10, bx = o.align==="left" ? x-7 : x-w/2;
@@ -478,8 +492,8 @@ function draw(dt){
     text(n, x, y+1, {size:17});
   }
   // route labels
-  text("fast route · 2 ms links", 500, 165-40, {size:13, color:C.ink2, bg:"#F1F4F7"});
-  text("slow route · 10 ms links", 500, 360+40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  text("fast route · 2 ms links", 500, POS.s2[1]-40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  text("slow route · 10 ms links", 500, POS.s3[1]+40, {size:13, color:C.ink2, bg:"#F1F4F7"});
   const vip = fx.find(f => f.kind === "vip");
   if (vip){ ctx.save(); ctx.globalAlpha = Math.min(1, (1-vip.t/vip.life)*2); text(vip.text, POS.s1[0], POS.s1[1]+46, {size:14, color:"#fff", bg:vip.color}); ctx.restore(); }
   else text("address swap here", POS.s1[0], POS.s1[1]+46, {size:12.5, weight:400, color:C.ink3});
@@ -489,6 +503,7 @@ function draw(dt){
     if (b && b.busy){ ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(x,y,31,clockT*3,clockT*3+1.6); ctx.stroke(); ctx.restore(); }
     text(h, x, y+1, {size:16});
     text(b && b.busy ? `getting ${b.file || "file"}` : "idle", x, y+42, {size:12.5, weight:400, color: b && b.busy ? C.ink : C.ink3});
+    addrs(h, x, y+60);
   }
   for (const s of S.servers){
     const [x,y] = POS[s.name], up = s.alive;
@@ -498,6 +513,7 @@ function draw(dt){
     text(s.name, x, y-4, {size:17, color: up ? "#fff" : C.bad});
     if (up) for (let i=0;i<Math.min(6,s.active);i++){ ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x-22+i*9, y+13, 3, 0, 7); ctx.fill(); }
     text(!s.process ? "stopped" : !up ? "no heartbeat" : s.active === 1 ? "1 client" : `${s.active} clients`, x, y+42, {size:12.5, weight:400, color: up ? C.ink2 : C.bad});
+    addrs(s.name, x, y+60);
   }
   for (const p of parts) if (p.label){   // labels last, so nothing covers them
     const [x,y] = at(p.g, p.d);
