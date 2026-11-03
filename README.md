@@ -110,7 +110,9 @@ python3 dashboard/demo.py --sim       # rehearse without Mininet
 
 The main page (`/`) is the D1 demo: two buttons (three clients at once, a missing file) and
 panels for the socket messages, the controller's choice, the address-swap rules in s1 and the test
-results. The full dashboard with failures, congestion and policy changes is at `/full`.
+results. The D2 page (`/d2`) adds server crashes, link cuts, the congestion flood, policy changes,
+guided tests, live link load, a copy of the terminal and a comparison of the results. The older
+full dashboard is still at `/full`.
 See [dashboard/README.md](dashboard/README.md).
 
 ## Running the experiments

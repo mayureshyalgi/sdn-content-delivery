@@ -26,8 +26,12 @@ Two pages:
 | Page | What it shows |
 |---|---|
 | `http://localhost:8080/` | **D1 demo.** Step 1 runs three clients at once, step 2 asks for a missing file (`ERR 404`). Below the map: socket messages (TCP + UDP heartbeats), the controller's choice with the loads it saw, the address-swap rules in s1, and the test results. |
-| `http://localhost:8080/full` | Full dashboard for D2: guided demos for server crash, link cut and congestion, policy changes, charts and the measured results. | The terminal keeps the usual `mininet>` prompt as a
-backup; type `exit` there to stop everything.
+| `http://localhost:8080/d2` | **D2 demo.** Everything on the D1 page, plus: stop/start each server, cut/restore each link, the UDP flood that jams the fast route, a policy switch (server choice and route choice), the four guided tests, rules for any switch s1–s4, live link load, what the controller noticed (server down, link cut, congestion, reroutes), a copy of the terminal, and results grouped by policy and network condition next to the measured experiments. Pause (or P), Step ▸ (or →) and ⅒×–2× speeds control only the animation. |
+| `http://localhost:8080/full` | The older all-in-one dashboard. | The terminal keeps the usual `mininet>` prompt as a
+backup; type `exit` there to stop everything. Everything the pages do is printed there as it happens:
+each click as the equivalent `mininet>` command, the controller's decisions, server health, link
+cuts, congestion (`[MONITOR]`), moved downloads (`[REROUTE]`) and the clients' output. Practice mode
+(`--sim`) prints the same kind of lines.
 
 ### Open it from your Mac (network still runs in the VM)
 

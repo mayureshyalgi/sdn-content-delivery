@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDN content delivery · D2</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231B2430'/><path d='M7 22 L16 12 L25 22' stroke='%23C98500' stroke-width='3' fill='none' stroke-linecap='round'/><circle cx='7' cy='22' r='3.5' fill='%232A78D6'/><circle cx='16' cy='12' r='3.5' fill='%23fff'/><circle cx='25' cy='22' r='3.5' fill='%231BAF7A'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Atkinson+Hyperlegible+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#EEF2F5; --paper:#FFFFFF; --ink:#1B2430; --ink2:#4A5866; --ink3:#7B8896;
+  --rule:#D5DDE5; --rule2:#E7ECF1; --track:#E3E8EE;
+  --signal:#C98500; --signalbg:#FFF4DC;
+  --srv1:#2A78D6; --srv2:#EB6834; --srv3:#1BAF7A;
+  --bad:#D64545; --badbg:#FCE9E7; --good:#1E7A55; --goodbg:#E1F3EA;
+  --font:"Atkinson Hyperlegible","Segoe UI","Ubuntu","Noto Sans",Arial,sans-serif;
+  --code:"Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 var(--font)}
+button{font:inherit;color:inherit}
+code,.mono{font-family:var(--code);font-size:.92em}
+.num{font-variant-numeric:tabular-nums}
+.hidden{display:none !important}
+:focus-visible{outline:3px solid var(--srv1);outline-offset:2px;border-radius:4px}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;padding:14px 24px;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar h1{font-size:22px;line-height:1.1;margin:0}
+.bar h1 em{font-style:normal;color:var(--signal)}
+.bar .sp{flex:1}
+.live{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:5px 12px;border-radius:999px;background:var(--goodbg);color:var(--good)}
+.live i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.live.off{background:var(--badbg);color:var(--bad)} .live.sim{background:var(--signalbg);color:#8A5B00}
+.bar a{color:var(--ink2);font-size:14.5px}
+
+.wrap{max-width:1500px;margin:0 auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:20px}
+@media (max-width:600px){.wrap{padding:12px}.bar{padding:12px}}
+.box{background:var(--paper);border:1px solid var(--rule);border-radius:12px}
+
+/* steps + map */
+.top{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.top{grid-template-columns:minmax(0,1fr)}}
+.steps{padding:6px 0}
+.step{padding:14px 18px;border-bottom:1px solid var(--rule2)}
+.step:last-child{border-bottom:0}
+.step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:14px;margin-right:8px}
+.step h2{display:flex;align-items:center;margin:0 0 6px;font-size:17px}
+.step p{margin:0 0 10px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:7px 16px;cursor:pointer;font-weight:700;font-size:15px}
+.btn svg{width:13px;height:13px;fill:currentColor}
+.btn:hover:not(:disabled){background:#2B3949;border-color:#2B3949}
+.btn.line{background:var(--paper);color:var(--ink);border-color:var(--rule)}
+.btn.line:hover:not(:disabled){background:var(--paper);border-color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.status{font-size:14px;color:#6B4700;background:var(--signalbg);border-radius:8px;padding:6px 10px;margin-top:10px}
+
+.map{overflow:hidden;position:relative}
+.maphead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 14px;padding:14px 18px 0}
+.maphead h2{margin:0;font-size:18px}
+#stage{display:block;width:100%;height:auto}
+.key{display:flex;flex-wrap:wrap;gap:6px 22px;padding:10px 18px 14px;font-size:14px;color:var(--ink2);border-top:1px solid var(--rule2)}
+.key span{display:inline-flex;align-items:center;gap:7px}
+.key i{display:inline-block;flex:none}
+
+/* rubric tag on each panel */
+.rub{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ink2);background:#EEF2F5;border:1px solid var(--rule);border-radius:999px;padding:1px 10px;white-space:nowrap}
+
+/* three evidence panels */
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+@media (max-width:1250px){.three{grid-template-columns:minmax(0,1fr)}}
+.panel{padding:16px 18px 18px}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.ph h2{margin:0;font-size:18px}
+.lead{margin:0 0 12px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.empty{color:var(--ink3);font-size:14.5px;padding:14px;border:1.5px dashed var(--rule);border-radius:10px;text-align:center}
+.sub{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
+
+/* socket messages */
+.ex{border:1px solid var(--rule2);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.ex .ln{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:7px 10px;font-size:14px;align-items:baseline}
+.ex .ln + .ln{border-top:1px solid var(--rule2)}
+.ex .who{font-weight:700;white-space:nowrap}
+.ex .msg{font-family:var(--code);font-size:13.5px;background:#F4F6F9;border-radius:5px;padding:1px 7px;justify-self:start;word-break:break-all}
+.ex .ln.err .msg{background:var(--badbg);color:var(--bad);font-weight:600}
+.ex .ln.ok .msg{background:var(--goodbg);color:var(--good);font-weight:600}
+.ex .note{grid-column:2;color:var(--ink3);font-size:13px}
+.proto{font-size:11.5px;font-weight:700;border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.proto.tcp{background:#E6EEF8;color:#245FA8} .proto.udp{background:var(--signalbg);color:#8A5B00}
+.wait{color:#6B4700}
+.hb{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:13.5px;padding:5px 0;border-top:1px solid var(--rule2)}
+.hb:first-of-type{border-top:0}
+.hb .msg{font-family:var(--code);font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .age{color:var(--ink3);font-size:13px;white-space:nowrap}
+.hb.dead .age{color:var(--bad);font-weight:700}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.beat{animation:beat .9s ease-out}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(201,133,0,.6)}100%{box-shadow:0 0 0 8px rgba(201,133,0,0)}}
+.conc{font-size:14px;margin:0 0 10px;padding:7px 10px;border-radius:8px;background:#F4F6F9}
+.conc b{font-size:16px}
+
+/* controller decisions */
+.dec{border:1px solid var(--rule2);border-left:5px solid var(--ink3);border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.dec .big{font-size:17px;font-weight:700}
+.dec .meta{font-size:13.5px;color:var(--ink2)}
+.loads{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.loads span{font-size:13px;border:1px solid var(--rule);border-radius:6px;padding:1px 8px;color:var(--ink2)}
+.loads span.pick{color:#fff;font-weight:700;border-color:transparent}
+.how{list-style:none;padding:0;margin:0 0 12px;counter-reset:h}
+.how li{counter-increment:h;position:relative;padding:2px 0 2px 28px;font-size:14px;color:var(--ink2);line-height:1.4}
+.how li::before{content:counter(h);position:absolute;left:0;top:3px;width:19px;height:19px;border-radius:50%;background:var(--signalbg);color:#8A5B00;font-weight:700;font-size:12px;display:grid;place-items:center}
+
+/* rules */
+.rule{border:1px solid var(--rule2);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:14px}
+.rule .big{font-weight:700;font-size:15px}
+.rule .meta{color:var(--ink3);font-size:13px}
+.rule.fresh{animation:fresh 2s ease-out}
+@keyframes fresh{0%{background:var(--signalbg)}100%{background:#fff}}
+.fixed{font-size:13.5px;color:var(--ink2);margin-top:10px;padding-top:10px;border-top:1px solid var(--rule2)}
+details.raw{margin-top:10px;font-size:13.5px}
+details.raw summary{cursor:pointer;color:var(--ink2)}
+details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border-radius:8px;padding:8px 10px;overflow:auto;max-height:240px;margin:8px 0 0;white-space:pre}
+
+/* results */
+.res{padding:16px 18px 18px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:8px}
+@media (max-width:800px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:#F4F6F9;border-radius:10px;padding:12px 14px}
+.card .v{font-size:28px;font-weight:700;line-height:1.1}
+.card .l{font-size:14px;color:var(--ink2)}
+.card.bad .v{color:var(--bad)} .card.good .v{color:var(--good)}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:15px;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.bad{background:var(--bad)}
+.trio{display:flex;gap:8px;flex-wrap:wrap}
+.trio .btn{padding:7px 0;width:58px;justify-content:center}
+.pick{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink2);margin:0 0 10px}
+.pick select{font:inherit;font-size:14.5px;padding:4px 8px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
+.play{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:5px 11px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink2)}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn.sm{padding:5px 12px;font-size:14px}
+/* rule log pop-up */
+.logbtn{margin:0 0 12px}
+dialog.log{border:0;border-radius:14px;padding:0;width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 24px 60px rgba(27,36,48,.35);color:var(--ink)}
+dialog.log::backdrop{background:rgba(27,36,48,.45)}
+.lhead{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--rule2)}
+.lhead h2{margin:0;font-size:19px}
+.lhead p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.lhead .sp{flex:1}
+.x{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--ink2);padding:0 4px}
+.ltools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 20px;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--rule2)}
+.ltools a{color:var(--srv1);font-weight:700}
+.lbody{overflow:auto;max-height:calc(100vh - 220px)}
+table.lt{border-collapse:collapse;width:100%;font-size:14px}
+.lt th{position:sticky;top:0;background:#F4F6F9;text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);padding:8px 12px;border-bottom:1px solid var(--rule)}
+.lt td{padding:8px 12px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.lt td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.lt .raw td{padding-top:0;font-family:var(--code);font-size:12px;color:var(--ink2);word-break:break-all}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill.on{background:var(--goodbg);color:var(--good)} .pill.off{background:#EEF2F5;color:var(--ink3)}
+/* ---- D2 additions ---- */
+.polpill{font-size:14px;color:var(--ink2);background:#EEF2F5;border:1px solid var(--rule);border-radius:999px;padding:3px 12px}
+.polpill b{color:var(--ink)}
+.grp{padding:12px 18px 2px;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--rule2)}
+.grp.d2{color:#8A5B00;background:var(--signalbg);border-top:1px solid #F0D9A3;border-bottom-color:#F0D9A3;padding-bottom:10px}
+.step .n.d2{background:var(--signal)}
+.tog{display:flex;gap:8px;flex-wrap:wrap}
+.tog .btn{padding:6px 12px;font-size:14.5px}
+.btn.bad{background:var(--badbg);color:var(--bad);border-color:#EBB4AE}
+.btn.bad:hover:not(:disabled){background:#F8D9D5;border-color:var(--bad)}
+.tog small{display:block;font-weight:400;font-size:12px;opacity:.8}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick.col{flex-direction:column;align-items:stretch;gap:3px;margin:0 0 8px}
+.pick.col select{width:100%}
+.scen{display:flex;flex-direction:column;gap:6px}
+.scen button{display:flex;justify-content:space-between;align-items:center;text-align:left;border:1px solid var(--rule);background:#fff;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:14.5px;font-weight:700}
+.scen button:hover:not(:disabled){border-color:var(--ink)}
+.scen button:disabled{opacity:.45;cursor:not-allowed}
+.scen button span{font-weight:400;color:var(--ink3);font-size:13px}
+.scen button.on{background:var(--signalbg);border-color:var(--signal)}
+.prog{font-size:14px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--signalbg);color:#6B4700}
+.prog b{display:block;color:var(--ink)}
+.prog .bar2{height:5px;border-radius:3px;background:#F0D9A3;margin-top:6px;overflow:hidden}
+.prog .bar2 i{display:block;height:100%;background:var(--signal)}
+.top .map{position:sticky;top:12px}
+@media (max-width:1000px){.top .map{position:static}}
+.swtabs{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin:0 0 10px}
+.swtabs button{border:0;background:#fff;padding:4px 12px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink2)}
+.swtabs button + button{border-left:1px solid var(--rule)}
+.swtabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.dec .why{font-size:13.5px;color:var(--ink2);margin-top:4px}
+.dec .why b{color:var(--ink)}
+.loads span.down{color:var(--bad);border-color:#EBB4AE;background:var(--badbg)}
+.tagc{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 6px;margin-left:6px;vertical-align:1px;background:#EEF2F5;color:var(--ink2)}
+.tagc.slow{background:#ECE9FA;color:#4A3BB0}
+.tagc.hot{background:var(--badbg);color:var(--bad)}
+/* conditions row */
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1100px){.two{grid-template-columns:minmax(0,1fr)}}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.ckey{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13.5px;color:var(--ink2);margin-top:6px}
+.ckey i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:4px;margin-right:6px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:5;transform:translate(-50%,-125%)}
+.tl{max-height:330px;overflow:auto;margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--rule2);font-size:14px;line-height:1.4}
+.tl li:first-child{border-top:0}
+.tl time{color:var(--ink3);font-variant-numeric:tabular-nums;font-size:13px}
+.tl .k{display:inline-block;font-size:11.5px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:6px;vertical-align:1px}
+.k.bad{background:var(--badbg);color:var(--bad)} .k.good{background:var(--goodbg);color:var(--good)}
+.k.mon{background:var(--signalbg);color:#8A5B00} .k.act{background:#E6EEF8;color:#245FA8} .k.rr{background:#ECE9FA;color:#4A3BB0}
+/* terminal */
+.term{background:#14191F;color:#D7DEE5;font-family:var(--code);font-size:13px;line-height:1.5;border-radius:10px;padding:10px 14px;height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.term .t{color:#6E7B88}
+.term .dashboard{color:#6FD3E0} .term .controller{color:#F2C86B} .term .client{color:#C9D3DD} .term .you{color:#9BE29B;font-weight:600} .term .output{color:#AAB6C2}
+.thead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.thead label{font-size:14px;color:var(--ink2)}
+/* results */
+.cards.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1000px){.cards.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.res .two{margin-top:16px}
+table.cmp{border-collapse:collapse;width:100%;font-size:14px}
+.cmp th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);padding:6px 8px;border-bottom:1px solid var(--rule)}
+.cmp td{padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.cmp td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp th.n{text-align:right}
+.cmp td.best{font-weight:700;color:var(--good)}
+.cmp .cond{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 6px;margin:1px 4px 1px 0;background:var(--badbg);color:var(--bad)}
+.cmp .cond.ok{background:var(--goodbg);color:var(--good)}
+.hint{font-size:13.5px;color:var(--ink3);margin:8px 0 0}
+details.meas{margin-top:16px;border-top:1px solid var(--rule2);padding-top:12px}
+details.meas > summary{cursor:pointer;font-weight:700;font-size:16.5px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+.rcard{border:1px solid var(--rule2);border-radius:10px;padding:12px 14px}
+.rcard h3{margin:0 0 4px;font-size:16px}
+.rcard .claim{margin:0 0 8px;font-size:14.5px}
+.metric{font-size:13px;color:var(--ink3);margin:8px 0 4px}
+.bars{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;align-items:center;font-size:13.5px}
+.bars .track{position:relative;height:20px;background:#F1F4F7;border-radius:5px}
+.bars .fill{height:100%;border-radius:5px}
+.bars .val{position:absolute;top:0;left:8px;line-height:20px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+.gallery a{display:block;font-size:13px;color:var(--ink2);text-decoration:none}
+.gallery img{width:100%;border:1px solid var(--rule);border-radius:8px;display:block;margin-bottom:4px;background:#fff}
+@media (prefers-reduced-motion: reduce){.beat,.rule.fresh{animation:none}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>SDN content delivery <em>· D2</em></h1>
+  <span class="live" id="live"><i></i><span>Connecting…</span></span>
+  <span class="polpill" id="polpill"></span>
+  <span class="sp"></span>
+  <a href="/">← D1 page</a>
+</header>
+
+<main class="wrap">
+  <div class="top">
+    <section class="box steps" aria-label="Demo steps">
+      <div class="grp">Basics (same as D1)</div>
+      <div class="step">
+        <h2><span class="n">1</span>Three clients at once</h2>
+        <p>h1, h2 and h3 each download 5 MB files at the same moment, all from one address: <code>10.0.0.100</code>.</p>
+        <div class="row2">
+          <button class="btn" id="go1"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Run</button>
+          <label class="pick" style="margin:0">files each
+            <select id="count1"><option value="1">1</option><option value="3" selected>3</option><option value="5">5</option><option value="10">10</option></select>
+          </label>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n">2</span>One client at a time</h2>
+        <p>Pick a client. It sends <code>GET</code> to <code>10.0.0.100</code> and receives the file from the server the controller chooses.</p>
+        <label class="pick">File
+          <select id="file1">
+            <option value="small.txt">small.txt · 1 KB</option>
+            <option value="medium.bin">medium.bin · 1 MB</option>
+            <option value="large.bin" selected>large.bin · 5 MB</option>
+          </select>
+        </label>
+        <div class="trio" data-file="file1">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n">3</span>Ask for a missing file</h2>
+        <p>The client asks for <code>missing.bin</code>. The server answers <code>ERR 404</code> and nothing crashes.</p>
+        <div class="trio" data-file="missing.bin">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
+      </div>
+      <div class="grp d2">D2 · make the network misbehave</div>
+      <div class="step">
+        <h2><span class="n d2">4</span>Crash a server</h2>
+        <p>Stops the server program. Its heartbeats stop, and after 3 s the controller marks it down and sends new clients to the others.</p>
+        <div class="tog" id="srvTog"></div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">5</span>Cut a link</h2>
+        <p>The switch tells the controller, which deletes the old rules and moves every download to the other route.</p>
+        <div class="tog" id="linkTog"></div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">6</span>Jam the fast route</h2>
+        <p><code>gen</code> floods UDP to <code>sink</code> through s4 → s2 → s1. The controller measures every link each 2 s; above 70% busy counts as congested.</p>
+        <div class="row2">
+          <button class="btn" id="floodBtn">Start flood</button>
+          <label class="pick" style="margin:0"><select id="floodMbps"><option value="15">15 Mbps</option><option value="25" selected>25 Mbps</option><option value="40">40 Mbps</option></select></label>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">7</span>Change the controller's rules</h2>
+        <p>Restarts the controller (about 5 s). Clear results, run the same test again, and compare below.</p>
+        <label class="pick col">Server choice
+          <select id="lbSel"><option value="least_loaded">Least busy server (least_loaded)</option><option value="round_robin">Take turns (round_robin)</option><option value="static">Always srv1 (static)</option></select>
+        </label>
+        <label class="pick col">Route choice
+          <select id="pathSel"><option value="congestion">Avoid busy links (congestion)</option><option value="delay">Shortest route only (delay)</option></select>
+        </label>
+        <button class="btn" id="applyPol">Apply</button>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">8</span>Guided tests</h2>
+        <p>Each one runs by itself and repeats the automated experiments.</p>
+        <div class="scen" id="scen"></div>
+        <div class="prog hidden" id="prog"></div>
+      </div>
+      <div class="step">
+        <div class="row2"><button class="btn line" id="reset">Fix everything</button><button class="btn line" id="clear">Clear results</button></div>
+        <div class="status hidden" id="status"></div>
+      </div>
+    </section>
+
+    <section class="box map" aria-labelledby="h-map">
+      <div class="maphead"><h2 id="h-map">The network</h2>
+        <div class="play">
+          <button class="btn line sm" id="pause" aria-pressed="false" title="Freeze the packets (P)">Pause</button>
+          <button class="btn line sm hidden" id="stepBtn" title="Move the packets a little (→)">Step ▸</button>
+          <span class="seg" role="group" aria-label="Animation speed">
+            <button data-speed="0.1" aria-pressed="false">⅒×</button><button data-speed="0.25" aria-pressed="false">¼×</button><button data-speed="0.5" aria-pressed="false">½×</button><button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button>
+          </span>
+        </div></div>
+      <canvas id="stage" role="img" aria-label="Network map: three clients on the left, three servers on the right, four switches in the middle and the controller on top"></canvas>
+      <div class="key">
+        <span><i style="width:10px;height:10px;border-radius:50%;background:#2A78D6;border:1.5px solid #fff;box-shadow:0 0 0 1px #2A78D6"></i>file data (TCP), coloured by server</span>
+        <span><i style="width:9px;height:9px;background:#C98500;transform:rotate(45deg)"></i>switch ↔ controller (OpenFlow)</span>
+        <span><i style="width:9px;height:9px;background:#1BAF7A;transform:rotate(45deg)"></i>server heartbeat (UDP, every 1 s)</span>
+        <span><i style="width:7px;height:7px;border-radius:50%;background:#8E9AA8"></i>background flood (UDP)</span>
+        <span><i style="width:18px;height:6px;border-radius:3px;background:#D64545"></i>link over 70% busy</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="three">
+    <section class="box panel" aria-labelledby="h-sock">
+      <div class="ph"><h2 id="h-sock">Socket messages</h2><span class="rub">Complete functionality · 4 marks</span></div>
+      <p class="lead">Our own text protocol over raw sockets. Each server gives every connection its own thread.</p>
+      <div class="conc" id="conc"></div>
+      <div id="tcp"></div>
+      <div class="sub">UDP heartbeats → controller 10.0.0.254:5555</div>
+      <div id="udp"></div>
+    </section>
+
+    <section class="box panel" aria-labelledby="h-ctrl">
+      <div class="ph"><h2 id="h-ctrl">Controller's choice</h2><span class="rub">Dynamic SDN · 6 marks</span></div>
+      <ol class="how" id="how"></ol>
+      <div id="decs"></div>
+    </section>
+
+    <section class="box panel" aria-labelledby="h-rules">
+      <div class="ph"><h2 id="h-rules">Rules in switch <span id="swName">s1</span></h2><span class="rub">Dynamic SDN · 6 marks</span></div>
+      <div class="swtabs" role="group" aria-label="Switch"><button data-sw="1" aria-pressed="true">s1</button><button data-sw="2" aria-pressed="false">s2</button><button data-sw="3" aria-pressed="false">s3</button><button data-sw="4" aria-pressed="false">s4</button></div>
+      <p class="lead" id="swLead">s1 swaps the shared address for the chosen server, and back on the reply. Read live from Open vSwitch.</p>
+      <button class="btn line sm logbtn" id="openLog">Open rule log <span id="logCount"></span></button>
+      <div id="rules"></div>
+      <div class="fixed" id="fixed"></div>
+      <details class="raw"><summary>Show the raw rules (<span id="rawCmd">ovs-ofctl dump-flows s1</span>)</summary><pre id="raw"></pre></details>
+    </section>
+  </div>
+
+  <div class="two">
+    <section class="box panel" aria-labelledby="h-load">
+      <div class="ph"><h2 id="h-load">Link load, live</h2><span class="rub">Robustness · 4 marks</span></div>
+      <p class="lead">How busy each route is, measured by the controller from the switches' port counters every 2 s. Above the red line it counts as congested.</p>
+      <div class="chart" id="utilChart"><svg id="utilSvg" viewBox="0 0 760 210" role="img" aria-label="Link load over time"></svg></div>
+      <div class="ckey"><span><i style="background:#1B2430"></i>fast route (s1–s2–s4)</span><span><i style="background:#5B4BC4"></i>slow route (s1–s3–s4)</span><span><i style="background:#D64545;height:0;border-top:2px dashed #D64545"></i>70% congestion line</span><span style="color:var(--ink3)">grey marks: what you did</span></div>
+    </section>
+    <section class="box panel" aria-labelledby="h-tl">
+      <div class="ph"><h2 id="h-tl">What the controller noticed</h2><span class="rub">Dynamic SDN · 6 marks</span></div>
+      <ul class="tl" id="tl"></ul>
+    </section>
+  </div>
+
+  <section class="box panel" aria-labelledby="h-term">
+    <div class="thead"><div class="ph" style="margin:0"><h2 id="h-term">Terminal</h2></div>
+      <span class="lead" style="margin:0" id="termLead">The same lines as the Ubuntu terminal running <code>demo.py</code>: your clicks as mininet&gt; commands, the controller's decisions, and the clients' output.</span>
+      <label><input type="checkbox" id="follow" checked> follow</label></div>
+    <div class="term" id="term" tabindex="0" aria-label="Terminal output"></div>
+  </section>
+
+  <section class="box res" aria-labelledby="h-res">
+    <div class="ph"><h2 id="h-res">Results and comparison</h2><span class="rub">Performance evaluation · 5 marks</span></div>
+    <div class="cards five">
+      <div class="card"><div class="v num" id="rDone">0</div><div class="l">requests served OK</div></div>
+      <div class="card"><div class="v num" id="rTime">–</div><div class="l">average response time</div></div>
+      <div class="card"><div class="v num" id="rMbps">–</div><div class="l">average throughput</div></div>
+      <div class="card"><div class="v num" id="rRetry">0</div><div class="l">retried · failed</div></div>
+      <div class="card"><div class="v num" id="rErr">0</div><div class="l">errors handled cleanly</div></div>
+    </div>
+    <div class="two">
+      <div>
+        <div class="sub" style="margin-top:0">Every request (response time)</div>
+        <div class="chart" id="reqChart"><svg id="reqSvg" viewBox="0 0 760 200" role="img" aria-label="Response time of each request"></svg></div>
+        <div class="ckey" id="reqKey"></div>
+      </div>
+      <div>
+        <div class="sub" style="margin-top:0">Compare: same requests, different rules and conditions</div>
+        <div id="cmp"></div>
+        <p class="hint">Each row groups the requests made under one controller setting and one network condition. Run step 1 with two settings (step 7) to compare them side by side.</p>
+      </div>
+    </div>
+    <details class="meas" id="meas" open><summary>Measured experiments (automated runner)</summary>
+      <p class="lead" id="resLead" style="margin-top:8px"></p>
+      <div class="rgrid" id="resCards"></div>
+      <div class="gallery" id="gallery"></div>
+    </details>
+  </section>
+</main>
+<dialog class="log" id="logDlg" aria-labelledby="logTitle">
+  <div class="lhead">
+    <div><h2 id="logTitle">Rule log · switch s1</h2>
+      <p>Every address-swap rule the controller installed in s1 during this session, read from Open vSwitch once a second. Rules stay here after the switch removes them.</p></div>
+    <span class="sp"></span>
+    <button class="x" id="closeLog" aria-label="Close">×</button>
+  </div>
+  <div class="ltools">
+    <span id="logStats"></span>
+    <label><input type="checkbox" id="showRaw"> Show the raw OpenFlow rules</label>
+    <a href="/api/rulelog.csv" download="s1_rules.csv" id="dlCsv">Download CSV</a>
+    <span id="logFile"></span>
+  </div>
+  <div class="lbody"><table class="lt">
+    <thead><tr><th>#</th><th>Installed</th><th>Connection</th><th>Request rule<br>(client → server)</th><th>Reply rule<br>(server → client)</th><th>Status</th></tr></thead>
+    <tbody id="logRows"></tbody>
+  </table></div>
+</dialog>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const SRVC = {srv1:"#2A78D6", srv2:"#EB6834", srv3:"#1BAF7A"};
+const SRVIP = {srv1:"10.0.0.11", srv2:"10.0.0.12", srv3:"10.0.0.13"};
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SIZE = {"large.bin":"5 MB", "medium.bin":"1 MB", "small.txt":"1 KB"};
+const LB_NAME = {least_loaded:"Least busy server", round_robin:"Take turns", static:"Always srv1"};
+const PATH_NAME = {congestion:"avoid busy links", delay:"shortest route only"};
+const LINKS = [[1,2],[2,4],[1,3],[3,4]];     // same order as the controller's link list
+let S = null, busy = false;
+function setHTML(node, html){ if (node._h !== html){ node.innerHTML = html; node._h = html; } }
+const ms = v => v == null ? "–" : v >= 1000 ? (v/1000).toFixed(1) + " s" : Math.round(v) + " ms";
+const route = p => String(p||"").split("-").filter(Boolean).join(" → ");
+
+function toast(msg, bad){
+  const t = $("toast"); t.textContent = msg; t.className = "toast" + (bad ? " bad" : "");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hidden"), bad ? 5000 : 2200);
+}
+async function act(body, msg){
+  if (busy) return; busy = true;
+  try {
+    const d = await (await fetch("/api/action", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)})).json();
+    if (d.ok) toast(msg || d.message); else toast(d.message || "That didn't work", true);
+  } catch(e){ toast("Can't reach the dashboard. Is demo.py still running in the VM?", true); }
+  busy = false; refresh();
+}
+$("go1").onclick = () => { const n = +$("count1").value; act({action:"request", client:"all", file:"large.bin", count:n}, `h1, h2 and h3 are downloading ${n} file${n>1?"s":""} each`); };
+document.querySelectorAll(".trio").forEach(row => row.querySelectorAll("button").forEach(b => {
+  b.onclick = () => {
+    const c = b.dataset.client, src = row.dataset.file;
+    const file = src === "missing.bin" ? src : $(src).value;
+    act({action:"request", client:c, file, count:1}, `${c} asked 10.0.0.100 for ${file}`);
+  };
+}));
+$("clear").onclick = () => { act({action:"clear"}, "Cleared"); seenRules = null; };
+$("reset").onclick = () => act({action:"reset"}, "Fixing everything: links up, servers running, flood off");
+$("floodBtn").onclick = () => act(S && S.flood.on ? {action:"flood", op:"stop"} : {action:"flood", op:"start", mbps:+$("floodMbps").value});
+$("applyPol").onclick = () => act({action:"policy", lb:$("lbSel").value, path:$("pathSel").value}, "Restarting the controller with the new rules…");
+document.getElementById("srvTog").addEventListener("click", e => {
+  const b = e.target.closest("button[data-srv]"); if (!b || !S) return;
+  const s = S.servers.find(x => x.name === b.dataset.srv);
+  act({action:"server", name:s.name, op: s.process ? "stop" : "start"});
+});
+document.getElementById("linkTog").addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]"); if (!b || !S) return;
+  const l = S.links.find(x => x.a === +b.dataset.a && x.b === +b.dataset.b);
+  act({action:"link", a:"s"+l.a, b:"s"+l.b, op: l.up ? "down" : "up"});
+});
+document.getElementById("scen").addEventListener("click", e => {
+  const b = e.target.closest("button[data-sc]"); if (!b) return;
+  if (b.dataset.sc === "stop") act({action:"scenario_stop"}); else act({action:"scenario", name:b.dataset.sc});
+});
+
+/* ================= MAP ================= */
+const W = 1000, H = 540;
+const C = {ink:"#1B2430", ink2:"#4A5866", ink3:"#7B8896", track:"#E3E8EE", signal:"#C98500", chan:"#E2B860", bad:"#D64545", ok:"#1E7A55", flood:"#8E9AA8", slow:"#5B4BC4"};
+const POS = {
+  controller:[500,52],
+  s1:[300,300], s2:[500,175], s3:[500,425], s4:[700,300],
+  h1:[96,170], h2:[96,300], h3:[96,430], sink:[220,500],
+  srv1:[904,170], srv2:[904,300], srv3:[904,430], gen:[780,500]
+};
+const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"]];
+const CHAN_CP = {s1:[310,110], s2:null, s3:[640,230], s4:[690,110]};
+const ANCHOR = [500,80];
+const canvas = $("stage"), ctx = canvas.getContext("2d");
+let scale = 1, dpr = 1;
+function resize(){
+  const w = canvas.parentElement.clientWidth || 800;
+  dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(w*dpr); canvas.height = Math.round(w*H/W*dpr);
+  canvas.style.height = (w*H/W) + "px"; scale = w/W;
+}
+new ResizeObserver(resize).observe(canvas.parentElement); resize();
+
+function geom(pts){ const L=[0]; for (let i=1;i<pts.length;i++) L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])); return {pts, L, total:L[L.length-1]||1}; }
+function at(g, d){ d=Math.max(0,Math.min(g.total,d)); let i=1; while(i<g.L.length-1 && g.L[i]<d) i++; const f=(d-g.L[i-1])/((g.L[i]-g.L[i-1])||1), a=g.pts[i-1], b=g.pts[i]; return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
+function offsetPts(names, off){
+  const P = names.map(n => POS[n]); if (!off) return P.map(p => p.slice());
+  const out = [];
+  for (let i=0;i<P.length-1;i++){
+    const p=P[i], q=P[i+1], dx=q[0]-p[0], dy=q[1]-p[1], L=Math.hypot(dx,dy)||1, nx=-dy/L*off, ny=dx/L*off, a=[p[0]+nx,p[1]+ny], b=[q[0]+nx,q[1]+ny];
+    if (i===0) out.push(a); else { const pr=out[out.length-1]; out[out.length-1]=[(pr[0]+a[0])/2,(pr[1]+a[1])/2]; }
+    out.push(b);
+  }
+  return out;
+}
+function chanPts(sw, up){
+  const a = ANCHOR, b = POS[sw], cp = CHAN_CP[sw], pts = [];
+  for (let i=0;i<=20;i++){ const t=i/20;
+    pts.push(cp ? [(1-t)*(1-t)*a[0]+2*(1-t)*t*cp[0]+t*t*b[0], (1-t)*(1-t)*a[1]+2*(1-t)*t*cp[1]+t*t*b[1]] : [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]); }
+  return up ? pts.reverse() : pts;
+}
+let parts = [], fx = [], flash = {}, ctrlPulse = 0, seenDec = new Set(), first = true;
+const acc = {};
+function addLabel(o){   // one label per spot: a newer one replaces the older
+  fx = fx.filter(f => !(f.kind === "label" && Math.abs(f.x - o.x) < 5 && Math.abs(f.y - o.y) < 5));
+  fx.push(Object.assign({kind:"label", t:0, life:3.4}, o));
+}
+function addPart(pts, o){ if (!REDUCED) parts.push(Object.assign({g:geom(pts), d:0, speed:230, r:3.4, color:"#fff", shape:"dot"}, o)); }
+
+function active(){
+  if (!S) return [];
+  return (S.connections||[]).filter(c => c.path && c.path.length).map((c,i) => {
+    const on = c.active !== undefined ? c.active : !!S.clients?.[c.client]?.busy;
+    return Object.assign({}, c, {on});
+  });
+}
+function onState(){
+  for (const d of (S.decisions||[]).slice().reverse()){
+    const key = `${d.t.toFixed(2)}|${d.client}|${d.port}`;
+    if (seenDec.has(key)) continue;
+    seenDec.add(key);
+    if (first) continue;
+    const path = String(d.path||"").split("-").filter(Boolean);
+    addPart([POS[d.client], POS.s1], {color:C.ink, r:3.6, speed:320, shape:"sq", onArrive(){
+      addPart(chanPts("s1", true), {color:C.signal, r:5, shape:"sq", speed:400, label:"PACKET_IN: new download, which server?", onArrive(){
+        ctrlPulse = 1;
+        for (const sw of path) addPart(chanPts(sw, false), {color:C.signal, r:4.5, shape:"dia", speed:440, label: sw==="s1" ? "FLOW_MOD: install rules" : null, onArrive(){ flash[sw] = {t:0}; }});
+        fx.push({kind:"vip", t:0, life:3.4, text:`10.0.0.100 → ${d.server}`, color:SRVC[d.server]});
+      }});
+    }});
+  }
+  if (seenDec.size > 300) seenDec = new Set([...seenDec].slice(-150));
+  // D2: a moved download flashes its new route
+  for (const c of S.connections || []){
+    const key = `${c.client}:${c.port}`, pk = (c.path||[]).join("-");
+    if (conPath[key] && pk && conPath[key] !== pk && !first){
+      const names = [c.client, ...c.path.map(n => "s"+n), c.server];
+      fx.push({kind:"pathflash", t:0, life:2.6, names, color:C.signal});
+      addLabel({x:500, y:332, text:`${c.client} moved to ${c.path.map(n=>"s"+n).join(" → ")}`, color:C.ink});
+    }
+    if (pk) conPath[key] = pk;
+  }
+  // D2: link and server events from the controller
+  for (const e of S.events || []){
+    if (e.t <= seenEvT) continue;
+    seenEvT = Math.max(seenEvT, e.t);
+    if (first) continue;
+    const m = e.text.match(/s(\d)[-–]s(\d)/);
+    if (e.kind === "link" && m){
+      const a = POS["s"+m[1]], b = POS["s"+m[2]], down = /DOWN/.test(e.text);
+      fx.push({kind:"burst", t:0, life:1.1, x:(a[0]+b[0])/2, y:(a[1]+b[1])/2, color: down ? C.bad : C.ok, n: down ? 22 : 12});
+    }
+    const sm = e.text.match(/srv\d/);
+    if (sm && e.kind === "health"){
+      const p = POS[sm[0]], bad = /DOWN/.test(e.text);
+      fx.push({kind: bad ? "burst" : "ring", t:0, life:1.1, x:p[0], y:p[1], color: bad ? C.bad : C.ok, n:24, r0:30, r1:70});
+      addLabel({x:p[0]-50, y:p[1]-44, text: bad ? "controller: marked down" : "controller: back up", color: bad ? C.bad : C.ok});
+    }
+    if (e.kind === "monitor" && m && /congested \(/.test(e.text)){
+      addLabel({x:500, y:272, text:`controller: s${m[1]}–s${m[2]} congested`, color:C.bad});
+    }
+  }
+  first = false;
+}
+const conPath = {};
+let seenEvT = 0;
+function floodRoute(){
+  const up = (a,b) => { const l = S.links.find(x => x.a === a && x.b === b); return l && l.up; };
+  if (up(2,4) && up(1,2)) return ["gen","s4","s2","s1","sink"];
+  if (up(3,4) && up(1,3)) return ["gen","s4","s3","s1","sink"];
+  return null;
+}
+let hb = 0;
+function spawn(dt){
+  if (!S || REDUCED) return;
+  const cs = active();
+  cs.forEach((c, i) => {
+    if (!c.on) return;
+    const names = [c.client, ...c.path.map(n => "s"+n), c.server], off = (i-(cs.length-1)/2)*7, k = `${c.client}:${c.port}`, rate = c.mbps ?? 6;
+    acc[k] = (acc[k]||0) + dt*(2 + rate*1.1);
+    while (acc[k] >= 1){ acc[k] -= 1; addPart(offsetPts(names.slice().reverse(), -off), {color:SRVC[c.server]||C.ink, r:3.6, speed:200+rate*9, ring:true}); }
+  });
+  const fr = S.flood.on && floodRoute();
+  if (fr){
+    acc.flood = (acc.flood || 0) + dt * Math.min(40, S.flood.mbps * 1.3);
+    while (acc.flood >= 1){ acc.flood -= 1; addPart(offsetPts(fr, (Math.random()-.5)*8), {color:C.flood, r:2.1, speed:300 + Math.random()*60, alpha:.8}); }
+  }
+  hb += dt;
+  if (hb >= 1){
+    hb -= 1;
+    S.servers.forEach((s, i) => {
+      if (!s.process || !S.controller_online) return;
+      setTimeout(() => addPart([POS[s.name], POS.s4], {color:SRVC[s.name], r:4, shape:"dia", speed:260, onArrive(){
+        addPart(chanPts("s4", true), {color:SRVC[s.name], r:4, shape:"dia", speed:330, onArrive(){
+          fx.push({kind:"ring", t:0, life:.6, x:POS.controller[0]+(i-1)*40, y:POS.controller[1]+24, color:SRVC[s.name], r0:4, r1:13});
+        }});
+      }}), i*230/SPEED);
+    });
+  }
+}
+function rr(x,y,w,h,r){ ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
+// IP and MAC of every host, as set in topology/topo.py and controller/net_config.py
+const ADDR = {
+  h1:["10.0.0.1","00:00:00:00:00:01"], h2:["10.0.0.2","00:00:00:00:00:02"], h3:["10.0.0.3","00:00:00:00:00:03"],
+  srv1:["10.0.0.11","00:00:00:00:00:11"], srv2:["10.0.0.12","00:00:00:00:00:12"], srv3:["10.0.0.13","00:00:00:00:00:13"],
+};
+function addrs(name, x, y){
+  const [ip, mac] = ADDR[name];
+  ctx.font = `400 11.5px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`;
+  const w = ctx.measureText("MAC " + mac).width + 12;
+  ctx.fillStyle = "rgba(255,255,255,.92)"; rr(x-w/2, y-9, w, 33, 6); ctx.fill();   // keeps links from running through the text
+  text("IP  " + ip, x, y, {mono:true, size:12, weight:600, color:C.ink2});
+  text("MAC " + mac, x, y+15, {mono:true, size:11.5, color:C.ink3});
+}
+function text(t, x, y, o={}){
+  ctx.font = o.mono ? `${o.weight||400} ${o.size||12}px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`
+                   : `${o.weight||700} ${o.size||14}px "Atkinson Hyperlegible","Segoe UI",Ubuntu,Arial,sans-serif`;
+  ctx.textAlign = o.align || "center"; ctx.textBaseline = "middle";
+  if (o.bg){
+    const w = ctx.measureText(t).width + 14, h = (o.size||14) + 10, bx = o.align==="left" ? x-7 : x-w/2;
+    ctx.fillStyle = o.bg; rr(bx, y-h/2, w, h, 6); ctx.fill();
+    if (o.border){ ctx.strokeStyle = o.border; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+  ctx.fillStyle = o.color || C.ink; ctx.fillText(t, x, y);
+}
+function line(pts, color, width, dash, alpha=1){
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(...pts[0]); for (let i=1;i<pts.length;i++) ctx.lineTo(...pts[i]); ctx.stroke(); ctx.restore();
+}
+let clockT = 0;
+function draw(dt){
+  clockT += dt;
+  ctx.setTransform(dpr*scale,0,0,dpr*scale,0,0);
+  ctx.fillStyle = "#fff"; ctx.fillRect(0,0,W,H);
+  if (!S){ text("Connecting…", W/2, H/2, {color:C.ink3, size:18, weight:400}); return; }
+
+  text("Clients", POS.h1[0], 118, {size:15, color:C.ink3});
+  text("Content servers", POS.srv1[0]-6, 118, {size:15, color:C.ink3});
+  for (const sw of ["s1","s2","s3","s4"]) line(chanPts(sw,false), S.controller_online ? C.chan : "#E8C9C9", 2, [6,7], .9);
+  for (const [h, sw] of HOSTLINK){
+    const s = S.servers.find(x => x.name === h), dead = s && !s.process;
+    line([POS[h], POS[sw]], dead ? C.bad : C.track, dead ? 3 : 8, dead ? [7,7] : null);
+  }
+  line([POS.sink, POS.s1], C.track, 6, null, .8); line([POS.gen, POS.s4], C.track, 6, null, .8);
+  for (const l of S.links){
+    const a = POS["s"+l.a], b = POS["s"+l.b];
+    if (!l.up){
+      line([a,b], C.track, 16, null, .5); line([a,b], C.bad, 3, [10,8]);
+      continue;
+    }
+    const u = Math.min(1, l.util), hot = u >= S.util_threshold;
+    line([a,b], C.track, 18);
+    if (u > 0.01){
+      ctx.save();
+      if (hot){ ctx.shadowColor = C.bad; ctx.shadowBlur = 10 + 6*Math.sin(clockT*5); }
+      line([a,b], hot ? C.bad : "#9DAEC0", 4 + 14*u, null, hot ? .9 : .55);
+      ctx.restore();
+    }
+  }
+  for (const f of fx) if (f.kind === "pathflash"){
+    const k = 1 - f.t/f.life;
+    line(offsetPts(f.names, 0), f.color, 11*(0.6 + .4*k), null, .6*k);
+  }
+  const cs = active();
+  cs.forEach((c, i) => {
+    const names = [c.client, ...c.path.map(n=>"s"+n), c.server], off = (i-(cs.length-1)/2)*7;
+    line(offsetPts(names, off), SRVC[c.server]||C.ink, c.on ? 3 : 2, c.on ? null : [3,6], c.on ? .55 : .3);
+  });
+  for (const p of parts){
+    const [x,y] = at(p.g, p.d);
+    ctx.save(); ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha ?? 1;
+    if (p.shape === "sq") ctx.fillRect(x-p.r, y-p.r, p.r*2, p.r*2);
+    else if (p.shape === "dia"){ ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2); ctx.strokeStyle="#fff"; ctx.lineWidth=1.2; ctx.strokeRect(-p.r,-p.r,p.r*2,p.r*2); }
+    else { ctx.beginPath(); ctx.arc(x,y,p.r,0,7); ctx.fill(); if (p.ring){ ctx.strokeStyle="#fff"; ctx.lineWidth=1.5; ctx.stroke(); } }
+    ctx.restore();
+  }
+  { // controller
+    const [x,y] = POS.controller, on = S.controller_online;
+    ctx.save(); if (ctrlPulse > 0){ ctx.shadowColor = C.signal; ctx.shadowBlur = 24*ctrlPulse; }
+    ctx.fillStyle = C.ink; rr(x-140, y-30, 280, 60, 12); ctx.fill();
+    if (!on){ ctx.strokeStyle = C.bad; ctx.lineWidth = 3; ctx.setLineDash([7,6]); ctx.stroke(); }
+    ctx.restore();
+    text("SDN controller (Ryu)", x, y-10, {size:17, color: on ? "#FFD27A" : "#E7A3A3"});
+    text(S.restarting ? "restarting with new rules…" : on ? `${LB_NAME[S.lb_policy] || S.lb_policy} · ${PATH_NAME[S.path_policy] || S.path_policy}` : "not responding", x, y+12, {size:13, weight:400, color:"#C9D3DD"});
+  }
+  for (const n of ["s1","s2","s3","s4"]){
+    const [x,y] = POS[n], f = flash[n], k = f ? Math.max(0, 1-f.t) : 0;
+    ctx.save(); if (k > 0){ ctx.shadowColor = C.signal; ctx.shadowBlur = 20*k; }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill();
+    ctx.strokeStyle = k > 0 ? C.signal : C.ink; ctx.lineWidth = 5; ctx.stroke(); ctx.restore();
+    text(n, x, y+1, {size:17});
+  }
+  // route labels
+  text("fast route · 2 ms links", 500, POS.s2[1]-40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  text("slow route · 10 ms links", 500, POS.s3[1]+40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  const vip = fx.find(f => f.kind === "vip");
+  if (vip){ ctx.save(); ctx.globalAlpha = Math.min(1, (1-vip.t/vip.life)*2); text(vip.text, POS.s1[0], POS.s1[1]+46, {size:14, color:"#fff", bg:vip.color}); ctx.restore(); }
+  else text("address swap here", POS.s1[0], POS.s1[1]+46, {size:12.5, weight:400, color:C.ink3});
+  for (const h of ["h1","h2","h3"]){
+    const [x,y] = POS[h], b = S.clients?.[h];
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,24,0,7); ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+    if (b && b.busy){ ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(x,y,31,clockT*3,clockT*3+1.6); ctx.stroke(); ctx.restore(); }
+    text(h, x, y+1, {size:16});
+    text(b && b.busy ? `getting ${b.file || "file"}` : "idle", x, y+42, {size:12.5, weight:400, color: b && b.busy ? C.ink : C.ink3});
+    addrs(h, x, y+60);
+  }
+  for (const s of S.servers){
+    const [x,y] = POS[s.name], up = s.alive;
+    ctx.save(); ctx.fillStyle = up ? SRVC[s.name] : "#fff"; rr(x-38,y-25,76,50,10); ctx.fill();
+    if (!up){ ctx.strokeStyle = C.bad; ctx.lineWidth = 2.5; ctx.setLineDash([6,5]); ctx.stroke(); }
+    ctx.restore();
+    text(s.name, x, y-4, {size:17, color: up ? "#fff" : C.bad});
+    if (up) for (let i=0;i<Math.min(6,s.active);i++){ ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x-22+i*9, y+13, 3, 0, 7); ctx.fill(); }
+    text(!s.process ? "stopped" : !up ? "no heartbeat" : s.active === 1 ? "1 client" : `${s.active} clients`, x, y+42, {size:12.5, weight:400, color: up ? C.ink2 : C.bad});
+    addrs(s.name, x, y+60);
+  }
+  for (const n of ["gen","sink"]){
+    const [x,y] = POS[n], on = S.flood.on;
+    ctx.fillStyle = on ? C.flood : "#fff"; rr(x-28,y-15,56,30,15); ctx.fill();
+    ctx.strokeStyle = C.flood; ctx.lineWidth = 1.5; ctx.stroke();
+    text(n, x, y+1, {size:13.5, color: on ? "#fff" : C.ink3});
+  }
+  text(S.flood.on ? `background flood: ${S.flood.mbps} Mbps (UDP)` : "gen → sink: background traffic (off)", 500, 528, {size:13, weight: S.flood.on ? 700 : 400, color: S.flood.on ? C.ink2 : C.ink3});
+  for (const l of S.links){
+    const a = POS["s"+l.a], b = POS["s"+l.b], mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
+    if (!l.up){
+      ctx.save(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(mx,my,14,0,7); ctx.fill();
+      ctx.strokeStyle = C.bad; ctx.lineWidth = 4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(mx-7,my-7); ctx.lineTo(mx+7,my+7); ctx.moveTo(mx+7,my-7); ctx.lineTo(mx-7,my+7); ctx.stroke(); ctx.restore();
+    }
+    let nx = -(b[1]-a[1]), ny = b[0]-a[0]; const L = Math.hypot(nx,ny); nx /= L; ny /= L;
+    if (nx*(mx-500) + ny*(my-300) < 0){ nx = -nx; ny = -ny; }
+    const hot = l.up && l.util >= S.util_threshold;
+    text(!l.up ? "cut" : `${Math.round(l.util*100)}%`, mx + nx*30, my + ny*30, {size:13, color: !l.up || hot ? "#fff" : C.ink2, bg: !l.up || hot ? C.bad : "#F1F4F7"});
+  }
+  for (const f of fx){
+    const k = f.t/f.life, a = 1-k;
+    if (f.kind === "burst"){
+      if (!f.seeds) f.seeds = Array.from({length:f.n||18}, () => [Math.random()*Math.PI*2, 40 + Math.random()*70]);
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = f.color;
+      for (const [ang, dist] of f.seeds){ const d = (f.r0||0) + dist*Math.sqrt(k); ctx.beginPath(); ctx.arc(f.x + Math.cos(ang)*d, f.y + Math.sin(ang)*d, 3*(1-k)+.8, 0, 7); ctx.fill(); }
+      ctx.strokeStyle = f.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||8) + 50*k, 0, 7); ctx.stroke(); ctx.restore();
+    } else if (f.kind === "label"){
+      ctx.save(); ctx.globalAlpha = Math.min(1, a*2);
+      text(f.text, f.x, f.y, {size:13.5, color:f.color, bg:"#fff", border:f.color}); ctx.restore();
+    }
+  }
+  for (const p of parts) if (p.label){   // labels last, so nothing covers them
+    const [x,y] = at(p.g, p.d);
+    text(p.label, Math.min(x+12, W-290), Math.max(y-12, 100), {size:12.5, color:"#6B4700", align:"left", bg:"#FFF4DC", border:"#E9C77A"});
+  }
+  for (const f of fx) if (f.kind === "ring"){
+    const k = f.t/f.life; ctx.save(); ctx.globalAlpha = 1-k; ctx.strokeStyle = f.color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||20) + ((f.r1||60)-(f.r0||20))*k, 0, 7); ctx.stroke(); ctx.restore();
+  }
+  if (PAUSED) text("Paused · Step ▸ moves the packets", 16, 24, {size:14, color:"#fff", bg:C.ink, align:"left"});
+  else if (SPEED !== 1) text(`${SPEED > 1 ? "Fast" : "Slow"} motion ${({0.5:"½",0.25:"¼",0.1:"1/10",2:"2"})[SPEED]}× (animation only)`, 16, 24, {size:13.5, color:"#6B4700", bg:"#FFF4DC", border:"#E9C77A", align:"left"});
+}
+let last = performance.now(), PAUSED = false, SPEED = 1;
+function setPaused(p){
+  PAUSED = p; const b = $("pause");
+  b.textContent = p ? "Resume" : "Pause"; b.setAttribute("aria-pressed", String(p));
+  $("stepBtn").classList.toggle("hidden", !p);
+}
+let stepLeft = 0;
+$("stepBtn").onclick = () => { stepLeft += 0.12; };
+$("pause").onclick = () => setPaused(!PAUSED);
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  SPEED = Number(b.dataset.speed);
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+});
+addEventListener("keydown", e => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === "p" || e.key === "P"){ setPaused(!PAUSED); e.preventDefault(); }
+  if (e.key === "ArrowRight" && PAUSED){ stepLeft += 0.12; e.preventDefault(); }
+});
+function frame(now){
+  const real = Math.min(.1, (now-last)/1000); last = now;
+  let dt = PAUSED ? 0 : real * SPEED;
+  if (PAUSED && stepLeft > 0){ dt = Math.min(stepLeft, real * 0.5); stepLeft -= dt; }
+  spawn(dt);
+  for (const p of parts){ p.d += p.speed*dt; if (p.d >= p.g.total && !p.done){ p.done = true; p.onArrive && p.onArrive(); } }
+  parts = parts.filter(p => !p.done); if (parts.length > 1200) parts = parts.slice(-1200);
+  for (const f of fx) f.t += dt; fx = fx.filter(f => f.t < f.life);
+  for (const k in flash){ flash[k].t += dt; if (flash[k].t > 1.2) delete flash[k]; }
+  ctrlPulse = Math.max(0, ctrlPulse - dt*1.4);
+  draw(dt); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ================= PANELS ================= */
+function serverFor(r){
+  if (r.served_by && r.served_by !== "-") return r.served_by;
+  const d = (S.decisions||[]).find(d => d.client === r.client && d.t >= r.start - 1 && d.t <= (r.end || S.now) + 1);
+  return d ? d.server : null;
+}
+function lines(exs){
+  return exs.map(e => `<div class="ex">
+    <div class="ln"><span class="who">${e.client} → 10.0.0.100:9000<span class="proto tcp">TCP</span></span><code class="msg">GET ${esc(e.file)}</code></div>
+    ${e.reply}</div>`).join("");
+}
+function renderSockets(){
+  const reqs = (S.requests||[]).slice(-4).reverse();
+  const busyNow = Object.entries(S.clients||{}).filter(([,b]) => b.busy).map(([c,b]) => ({client:c, file:b.file || "file", reply:
+    `<div class="ln"><span class="who wait">${(() => { const d = (S.decisions||[]).find(d => d.client === c); return d ? d.server + " → " + c : "server → " + c; })()}</span><span class="wait">sending the file…</span></div>`}));
+  const done = reqs.map(r => {
+    const srv = serverFor(r), who = `${srv || "server"} → ${r.client}`;
+    if (r.status === "ok") return {client:r.client, file:r.file, reply:
+      `<div class="ln ok"><span class="who" style="color:${SRVC[srv]||"inherit"}">${esc(who)}</span><code class="msg">OK ${r.bytes || ""} ${esc(srv || "")}</code>
+       <span class="note">then ${SIZE[r.file] || "the file"} of data · ${ms(r.ttc_ms)} · ${r.mbps != null ? r.mbps.toFixed(2) + " Mbps" : ""}</span></div>`};
+    const err = /ERR \d+[^,;]*/.exec(r.error || "");
+    return {client:r.client, file:r.file, reply: err
+      ? `<div class="ln err"><span class="who">${esc(who)}</span><code class="msg">${esc(err[0])}</code><span class="note">the client prints the error and exits cleanly; the server keeps running</span></div>`
+      : `<div class="ln err"><span class="who">${esc(r.client)}</span><code class="msg">${esc(r.error || "failed")}</code></div>`};
+  });
+  const all = [...busyNow, ...done].slice(0, 4);
+  setHTML($("tcp"), all.length ? lines(all) : `<div class="empty">Press <b>Run</b> on step 1 to see the messages.</div>`);
+  const open = S.servers.reduce((a, s) => a + (s.active||0), 0);
+  setHTML($("conc"), `Open TCP connections right now: <b class="num">${open}</b>` + (open > 1 ? " · handled in parallel, one thread each" : ""));
+  setHTML($("udp"), S.servers.map(s => {
+    const dead = !s.alive, age = s.last_report_age;
+    return `<div class="hb ${dead ? "dead" : ""}"><span><i class="dot hbdot" data-s="${s.name}" style="background:${SRVC[s.name]}"></i><b>${s.name}</b><span class="proto udp">UDP</span></span>
+      <span class="msg">{"name":"${s.name}","active":${s.active ?? 0},…}</span>
+      <span class="age">${dead ? (s.process ? "silent" : "stopped") : age == null ? "" : "every 1 s"}</span></div>`;
+  }).join(""));
+}
+let beatT = 0;
+setInterval(() => { if (!S || REDUCED) return; document.querySelectorAll(".hbdot").forEach(d => { const s = S.servers.find(x => x.name === d.dataset.s); if (s && s.alive){ d.classList.remove("beat"); void d.offsetWidth; d.classList.add("beat"); } }); }, 1000);
+
+const HOW = {
+  least_loaded:"The controller picks the server with the fewest downloads, skipping servers that are down.",
+  round_robin:"The controller gives each new download to the next server in turn, skipping servers that are down.",
+  static:"The controller always picks srv1, even when it is down (the baseline to compare against)."};
+function routeWhy(d){
+  const u = Object.fromEntries(String(d.link_util||"").split(/\s+/).filter(Boolean).map(x => x.split("=")));
+  const slow = /s3/.test(d.path||""), fast = ["s1-s2","s2-s4"];
+  if (!slow) return `<b>fast route</b>, the shortest one`;
+  const cut = fast.filter(k => u[k] === "DOWN"), busy = fast.filter(k => u[k] && u[k] !== "DOWN" && parseInt(u[k]) >= 70);
+  if (cut.length) return `<b>slow route</b>, because ${cut.map(k => k.replace("-", "–")).join(" and ")} is cut`;
+  if (busy.length) return `<b>slow route</b>, because ${busy.map(k => `${k.replace("-", "–")} is ${u[k]} busy`).join(" and ")}`;
+  return `<b>slow route</b>`;
+}
+function renderDecisions(){
+  setHTML($("how"), `<li>Heartbeats tell the controller how busy each server is, and port counters how busy each link is.</li>
+    <li>A new TCP connection reaches s1, which asks the controller.</li><li>${HOW[S.lb_policy] || ""} Route: ${PATH_NAME[S.path_policy] || ""}.</li>`);
+  const ds = (S.decisions||[]).slice(0, 4);
+  setHTML($("decs"), ds.length ? ds.map(d => {
+    const loads = String(d.loads||"").split(/\s+/).filter(Boolean).map(x => {
+      const m = /^(srv\d)=(\w+)\((\d+)\)/.exec(x); return m ? {name:m[1], up:m[2] === "UP", n:+m[3]} : null; }).filter(Boolean);
+    return `<div class="dec" style="border-left-color:${SRVC[d.server]||"#7B8896"}">
+      <div class="big">${esc(d.client)} → <span style="color:${SRVC[d.server]}">${esc(d.server)}</span></div>
+      <div class="meta">route ${esc(route(d.path))}<span class="tagc">${esc(LB_NAME[d.policy] || d.policy || "")}</span></div>
+      <div class="loads">${loads.map(l => `<span class="${l.name === d.server ? "pick" : !l.up ? "down" : ""}" style="${l.name === d.server ? "background:" + (l.up ? SRVC[l.name] : "#D64545") : ""}">${l.name}: ${l.up ? l.n + " busy" : "down"}</span>`).join("")}</div>
+      <div class="why">${routeWhy(d)}</div>
+    </div>`; }).join("") : `<div class="empty">No choices yet. Each new download shows up here with the server loads the controller saw.</div>`);
+}
+
+let seenRules = null, rulesBusy = false, SW = 1;
+function nameOf(F, ip){ return (F.hosts && F.hosts[ip]) || ip; }
+const SWLEAD = {1:"s1 swaps the shared address for the chosen server, and back on the reply. Read live from Open vSwitch.",
+  2:"s2 is on the fast route. While downloads use the fast route, their rules are here.",
+  3:"s3 is on the slow route. Cut s1–s2 or jam it, and the moved downloads' rules appear here.",
+  4:"s4 is the servers' switch. It sends each download's replies toward s2 or s3."};
+document.querySelectorAll(".swtabs button").forEach(b => b.onclick = () => {
+  SW = +b.dataset.sw; seenRules = null;
+  document.querySelectorAll(".swtabs button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  $("swName").textContent = "s" + SW; $("swLead").textContent = SWLEAD[SW]; $("rawCmd").textContent = `ovs-ofctl dump-flows s${SW}`;
+  $("rules")._h = null; loadRules();
+});
+function renderRouteRules(F){
+  const pr = F.rules.filter(r => r.priority === 20 || r.priority === 10);
+  const key = r => r.priority + "|" + r.match.join(",");
+  const prev = seenRules; seenRules = new Set(pr.map(key));
+  const port = a => { const o = (/output:(\d+)/.exec(a)||[])[1]; return (F.ports && F.ports[o]) || `port ${o}`; };
+  setHTML($("rules"), pr.length ? pr.map(r => {
+    const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
+    const what = r.priority === 20 ? `One download: ${esc(nameOf(F, m.nw_src))} → ${esc(nameOf(F, m.nw_dst))}${m.tp_src ? ` (port ${esc(m.tp_src === "9000" ? m.tp_dst : m.tp_src)})` : ""}`
+                                  : `Anything for ${esc(nameOf(F, m.nw_dst))}`;
+    return `<div class="rule ${prev && !prev.has(key(r)) ? "fresh" : ""}"><div class="big">${what}</div>
+      <div>Send it to <b>${esc(port(r.actions))}</b>.</div>
+      <div class="meta">${r.priority === 20 ? "per-download route" : "normal route"} · ${Number(r.n_packets).toLocaleString()} packets · removed after ${r.idle_timeout} s unused</div></div>`;
+  }).join("") : `<div class="empty">No route rules in s${SW} right now. ${SW === 3 ? "Cut s1–s2 or jam the fast route, then download." : "Start a download."}</div>`);
+}
+async function loadRules(){
+  if (rulesBusy) return; rulesBusy = true;
+  try {
+    const sw = SW, F = await (await fetch(`/api/flows?sw=${sw}`, {cache:"no-store"})).json();
+    if (sw !== SW) return;
+    if (F.error){ setHTML($("rules"), `<div class="empty">Couldn't read s${sw}'s rules: ${esc(F.error)}</div>`); return; }
+    const raw = F.rules.map(r => `priority=${r.priority} ${r.match.join(",")} n_packets=${r.n_packets}${r.idle_timeout ? " idle_timeout=" + r.idle_timeout : ""} actions=${r.actions}`).join("\n");
+    if ($("raw")._h !== raw){ $("raw").textContent = raw; $("raw")._h = raw; }
+    if (sw !== 1){
+      renderRouteRules(F);
+      setHTML($("fixed"), `${F.rules.length} rules in s${sw} in total, including the table-miss rule that sends unknown packets to the controller.`);
+      return;
+    }
+    const swap = F.rules.filter(r => r.priority === 30);
+    const fwd = swap.filter(r => /ip_dst/.test(r.actions));
+    const key = r => r.match.join(",");
+    const prev = seenRules; seenRules = new Set(fwd.map(key));
+    setHTML($("rules"), fwd.length ? fwd.map(r => {
+      const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
+      const ip = (/set_field:([\d.]+)->ip_dst/.exec(r.actions)||[])[1], srv = nameOf(F, ip), cli = nameOf(F, m.nw_src);
+      const back = swap.find(b => /ip_src/.test(b.actions) && b.match.includes(`nw_dst=${m.nw_src}`) && b.match.includes(`tp_dst=${m.tp_src}`));
+      return `<div class="rule ${prev && !prev.has(key(r)) ? "fresh" : ""}">
+        <div class="big">${esc(cli)}: 10.0.0.100 → <span style="color:${SRVC[srv]||"inherit"}">${esc(srv)}</span></div>
+        <div>Going out: change the address to ${esc(ip)}.${back ? ` Coming back: relabel as 10.0.0.100.` : ""}</div>
+        <div class="meta">port ${esc(m.tp_src)} · ${Number(r.n_packets).toLocaleString()} packets matched · removed after ${r.idle_timeout} s unused</div>
+      </div>`; }).join("") : `<div class="empty">No address-swap rules right now. They appear when a download starts and stay 40 s after it ends.</div>`);
+    const miss = F.rules.filter(r => r.priority === 0).length, routes = F.rules.filter(r => r.priority === 10 || r.priority === 20).length;
+    setHTML($("fixed"), `Also in s1: <b>${miss}</b> table-miss rule (unknown packets go to the controller) and <b>${routes}</b> forwarding rules. ${F.rules.length} rules in total.`);
+  } catch(e){ setHTML($("rules"), `<div class="empty">Couldn't load the rules.</div>`); }
+  finally { rulesBusy = false; }
+}
+setInterval(loadRules, 1500); loadRules();
+
+function renderResults(){
+  const sm = S.summary || {}, reqs = S.requests || [];
+  const pending = Object.values(S.clients||{}).filter(b => b.busy).reduce((a, b) => a + (b.total - b.done), 0);
+  $("rDone").textContent = `${sm.ok || 0} of ${(sm.total || 0) + pending}`;
+  // the 404 test is not a failure of the network
+  
+  $("rTime").textContent = ms(sm.avg_ttc_ms);
+  $("rMbps").textContent = sm.avg_mbps != null ? sm.avg_mbps.toFixed(2) + " Mbps" : "–";
+  const errs = reqs.filter(r => /ERR/.test(r.error || "")).length;
+  $("rErr").textContent = errs;
+  $("rErr").parentElement.className = "card" + (errs ? " good" : "");
+  $("rRetry").textContent = `${sm.retries || 0} · ${(sm.failed || 0) - errs}`;
+  $("rRetry").parentElement.className = "card" + ((sm.failed || 0) - errs > 0 ? " bad" : "");
+}
+function renderTop(){
+  const L = $("live"), sim = S.mode === "sim";
+  L.className = "live" + (!S.controller_online ? " off" : sim ? " sim" : "");
+  L.querySelector("span").textContent = !S.controller_online ? "Controller not responding" : sim ? "Practice mode (no VM)" : "Live: Mininet + Ryu";
+  const anyBusy = Object.values(S.clients||{}).some(b => b.busy);
+  $("go1").disabled = anyBusy;
+  $("polpill").innerHTML = S.restarting ? "Controller restarting…" : `<b>${esc(LB_NAME[S.lb_policy] || S.lb_policy)}</b> · ${esc(PATH_NAME[S.path_policy] || S.path_policy)}`;
+  setHTML($("srvTog"), S.servers.map(x => `<button class="btn ${x.process ? "" : "bad"}" data-srv="${x.name}">${x.process ? "■ Stop" : "▶ Start"} ${x.name}<small>${!x.process ? "stopped" : x.alive ? "running" : "starting…"}</small></button>`).join(""));
+  setHTML($("linkTog"), LINKS.map(([a,b]) => { const l = S.links.find(x => x.a === a && x.b === b) || {up:true};
+    return `<button class="btn ${l.up ? "line" : "bad"}" data-a="${a}" data-b="${b}">${l.up ? "✂ Cut" : "↺ Restore"} s${a}–s${b}<small>${a === 1 && b === 2 || a === 2 ? "fast route" : "slow route"}</small></button>`; }).join(""));
+  $("floodBtn").textContent = S.flood.on ? `Stop flood (${S.flood.mbps} Mbps)` : "Start flood";
+  $("floodBtn").className = "btn" + (S.flood.on ? " bad" : "");
+  if (document.activeElement !== $("lbSel") && document.activeElement !== $("pathSel") && !pickedPolicy){ $("lbSel").value = S.lb_policy; $("pathSel").value = S.path_policy; }
+  $("applyPol").disabled = S.restarting || anyBusy;
+  const sc = S.scenario, running = sc && !sc.done;
+  setHTML($("scen"), Object.entries(S.scenarios || {}).map(([k, v]) => `<button data-sc="${k}" class="${running && sc.name === k ? "on" : ""}" ${running || anyBusy || S.restarting ? "disabled" : ""}>${esc(v.title)}<span>${esc(v.text.split(";")[0].split(".")[0])}</span></button>`).join("")
+    + (running ? `<button data-sc="stop" style="justify-content:center;color:var(--bad)">■ Stop the test</button>` : ""));
+  const pg = $("prog");
+  if (sc && (running || sc.elapsed < 240)){
+    const info = S.scenarios[sc.name] || {};
+    pg.innerHTML = `<b>${esc(sc.title)} · ${running ? Math.round(sc.elapsed) + " s" : "finished"}</b>${esc(sc.step)}<div style="margin-top:4px;color:#6B4700">Watch: ${esc(info.show || "")}</div>`;
+    pg.classList.remove("hidden");
+  } else pg.classList.add("hidden");
+  document.querySelectorAll(".trio button").forEach(b => { b.disabled = !!S.clients?.[b.dataset.client]?.busy; });
+  const st = $("status");
+  if (S.restarting){ st.textContent = "Controller restarting with the new rules…"; st.classList.remove("hidden"); }
+  else if (anyBusy){ st.textContent = "Downloads running… watch the map."; st.classList.remove("hidden"); } else st.classList.add("hidden");
+}
+
+// ---- rule log pop-up ----
+const kb = b => b >= 1e6 ? (b/1e6).toFixed(2) + " MB" : b >= 1e3 ? (b/1e3).toFixed(1) + " KB" : b + " B";
+let logTimer = null, logCount = 0;
+async function loadLog(){
+  try {
+    const L = await (await fetch("/api/rulelog", {cache:"no-store"})).json();
+    const rows = L.rules || [], live = rows.filter(r => !r.removed).length;
+    logCount = rows.length; $("logCount").textContent = rows.length ? `(${rows.length})` : "";
+    if (!$("logDlg").open) return;
+    $("logStats").innerHTML = `<b>${rows.length}</b> rules logged · <b>${live}</b> in the switch now`;
+    $("logFile").textContent = L.file ? `Saved in ${L.file}` : "";
+    $("dlCsv").hidden = !L.file;
+    const raw = $("showRaw").checked;
+    setHTML($("logRows"), rows.length ? rows.map(r => {
+      const age = r.removed ? `<span class="pill off">removed after ${Math.round(r.removed - r.installed)} s</span>`
+                            : `<span class="pill on">in switch · ${Math.round(L.now - r.installed)} s</span>`;
+      return `<tr><td class="n">${r.id}</td><td class="n">${clock(r.installed)}</td>
+        <td><b>${esc(r.client)}</b> → 10.0.0.100 → <b style="color:${SRVC[r.server]||"inherit"}">${esc(r.server)}</b><br><span style="color:var(--ink3)">port ${esc(r.port)} · ${esc(r.server_ip)}</span></td>
+        <td class="n">${Number(r.out_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.out_bytes||0)}</span></td>
+        <td class="n">${Number(r.back_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.back_bytes||0)}</span></td>
+        <td>${age}</td></tr>` + (raw ? `<tr class="raw"><td></td><td colspan="5">${esc(r.raw_out)}<br>${esc(r.raw_back)}</td></tr>` : "");
+    }).join("") : `<tr><td colspan="6"><div class="empty">No rules yet. Run a download and they appear here.</div></td></tr>`);
+  } catch(e){ /* dashboard not reachable; the top badge says so */ }
+}
+function clock(t){ return new Date(t * 1000).toTimeString().slice(0, 8); }
+$("openLog").onclick = () => { $("logDlg").showModal(); loadLog(); clearInterval(logTimer); logTimer = setInterval(loadLog, 1500); };
+$("closeLog").onclick = () => $("logDlg").close();
+$("logDlg").addEventListener("close", () => clearInterval(logTimer));
+$("logDlg").addEventListener("click", e => { if (e.target === $("logDlg")) $("logDlg").close(); });
+$("showRaw").onchange = loadLog;
+setInterval(() => { if (!$("logDlg").open) loadLog(); }, 3000); loadLog();
+
+let pickedPolicy = false;
+$("lbSel").onchange = $("pathSel").onchange = () => { pickedPolicy = true; };
+$("applyPol").addEventListener("click", () => setTimeout(() => { pickedPolicy = false; }, 6000));
+
+/* ---- charts (SVG) ---- */
+const NSV = "http://www.w3.org/2000/svg", CW = 760, PADL = 42, PADR = 12;
+function el(tag, attrs, parent, txt){ const e = document.createElementNS(NSV, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (txt != null) e.textContent = txt; parent.appendChild(e); return e; }
+function domain(){ const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 120); return [Math.min(t0, t1 - 60), t1]; }
+const xs = (t, d) => PADL + (t - d[0]) / (d[1]-d[0]) * (CW - PADL - PADR);
+function axisX(svg, d, H, B){
+  for (let s = 0; s <= 120; s += 20){ const t = d[1] - s; if (t < d[0]) break;
+    el("text", {x:xs(t,d), y:H-B+16, "text-anchor":"middle", "font-size":12, fill:"#7B8896"}, svg, s ? `-${s} s` : "now"); }
+}
+function marks(svg, d, top, bottom){
+  for (const e of (S.events||[])) if (e.mark && e.t >= d[0]){
+    const x = xs(e.t, d);
+    el("line", {x1:x, x2:x, y1:top, y2:bottom, stroke:"#B9C4CF", "stroke-dasharray":"3 3"}, svg);
+    el("text", {x:x+3, y:top+10, "font-size":11, fill:"#7B8896"}, svg, e.mark);
+  }
+}
+function hover(box, svg, items){
+  let tip = box.querySelector(".tip"); if (!tip){ tip = document.createElement("div"); tip.className = "tip hidden"; box.appendChild(tip); }
+  svg.onmousemove = ev => {
+    const r = svg.getBoundingClientRect(), k = CW / r.width, x = (ev.clientX - r.left)*k, y = (ev.clientY - r.top)*k;
+    let best = null, bd = 18;
+    for (const it of items){ const dd = Math.hypot(it.x - x, it.y - y); if (dd < bd){ bd = dd; best = it; } }
+    if (!best){ tip.classList.add("hidden"); return; }
+    tip.textContent = best.text; tip.classList.remove("hidden");
+    tip.style.left = (best.x / k) + "px"; tip.style.top = (best.y / k) + "px";
+  };
+  svg.onmouseleave = () => tip.classList.add("hidden");
+}
+function drawUtil(){
+  const svg = $("utilSvg"); svg.innerHTML = "";
+  const H = 210, B = 22, T = 14, d = domain(), y = u => T + (H-T-B) * (1 - Math.min(1, u));
+  for (const f of [0, .5, 1]){ el("line", {x1:PADL, x2:CW-PADR, y1:y(f), y2:y(f), stroke:"#E7ECF1"}, svg);
+    el("text", {x:PADL-6, y:y(f)+4, "text-anchor":"end", "font-size":12, fill:"#7B8896"}, svg, `${f*100}%`); }
+  el("line", {x1:PADL, x2:CW-PADR, y1:y(S.util_threshold), y2:y(S.util_threshold), stroke:"#D64545", "stroke-dasharray":"5 4", "stroke-width":1.5}, svg);
+  marks(svg, d, T, H-B);
+  const hist = (S.util_history||[]).filter(h => h.t >= d[0]), items = [];
+  const series = [{name:"Fast route", color:"#1B2430", f:h => h.u[0]==null || h.u[1]==null ? null : Math.max(h.u[0], h.u[1])},
+                  {name:"Slow route", color:"#5B4BC4", f:h => h.u[2]==null || h.u[3]==null ? null : Math.max(h.u[2], h.u[3])}];
+  for (const sr of series){
+    let seg = [];
+    const flush = () => { if (seg.length > 1) el("polyline", {points:seg.join(" "), fill:"none", stroke:sr.color, "stroke-width":2.4, "stroke-linejoin":"round"}, svg); seg = []; };
+    for (const h of hist){ const v = sr.f(h); if (v == null){ flush(); continue; }
+      const px = xs(h.t, d), py = y(v); seg.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      items.push({x:px, y:py, text:`${sr.name}: ${Math.round(v*100)}% busy at ${clock(h.t)}`}); }
+    flush();
+    const lastH = [...hist].reverse().find(h => sr.f(h) != null);
+    if (lastH) el("circle", {cx:xs(lastH.t, d), cy:y(sr.f(lastH)), r:4, fill:sr.color, stroke:"#fff", "stroke-width":2}, svg);
+    else if (hist.length) el("text", {x:CW-PADR, y: sr.name === "Fast route" ? T+12 : T+28, "text-anchor":"end", "font-size":12.5, fill:"#D64545", "font-weight":700}, svg, `${sr.name}: cut`);
+  }
+  axisX(svg, d, H, B); hover($("utilChart"), svg, items);
+}
+function drawReqs(){
+  const svg = $("reqSvg"); svg.innerHTML = "";
+  const H = 200, B = 22, T = 8, d = domain(), rows = (S.requests||[]).filter(r => r.end >= d[0] && r.file !== "missing.bin");
+  const maxS = Math.max(4, ...rows.map(r => (r.ttc_ms||0)/1000)) * 1.12, step = maxS > 40 ? 10 : maxS > 16 ? 5 : maxS > 8 ? 2 : 1;
+  const y = v => T + (H-T-B) * (1 - v/maxS);
+  for (let v = 0; v <= maxS; v += step){ el("line", {x1:PADL, x2:CW-PADR, y1:y(v), y2:y(v), stroke:"#E7ECF1"}, svg);
+    el("text", {x:PADL-6, y:y(v)+4, "text-anchor":"end", "font-size":12, fill:"#7B8896"}, svg, `${v} s`); }
+  marks(svg, d, T, H-B);
+  const items = [];
+  for (const r of rows){
+    const px = xs(r.end, d), py = y((r.ttc_ms||0)/1000);
+    if (r.status === "ok"){
+      el("circle", {cx:px, cy:py, r:6, fill:SRVC[r.served_by] || "#1B2430", stroke:"#fff", "stroke-width":2}, svg);
+      if (r.attempts > 1) el("circle", {cx:px, cy:py, r:10, fill:"none", stroke:"#1B2430", "stroke-width":1.3}, svg);
+    } else el("path", {d:`M${px-6},${py-6}L${px+6},${py+6}M${px-6},${py+6}L${px+6},${py-6}`, stroke:"#D64545", "stroke-width":2.8, "stroke-linecap":"round"}, svg);
+    items.push({x:px, y:py, text: r.status === "ok" ? `${r.client}: ${r.file} from ${r.served_by} in ${(r.ttc_ms/1000).toFixed(1)} s, ${r.mbps} Mbps${r.attempts > 1 ? `, after ${r.attempts} tries` : ""}` : `${r.client}: failed after ${r.attempts} tries`});
+  }
+  if (!rows.length) el("text", {x:(PADL+CW)/2, y:H/2, "text-anchor":"middle", "font-size":14, fill:"#4A5866"}, svg, "No finished downloads yet");
+  axisX(svg, d, H, B); hover($("reqChart"), svg, items);
+  setHTML($("reqKey"), S.servers.map(x => `<span><i style="background:${SRVC[x.name]};height:10px;width:10px;border-radius:50%"></i>from ${x.name}</span>`).join("")
+    + `<span><i style="background:#fff;border:1.5px solid #1B2430;height:10px;width:10px;border-radius:50%"></i>needed a retry</span><span style="color:var(--bad);font-weight:700">✕ failed</span>`);
+}
+
+/* ---- comparison table ---- */
+function renderCompare(){
+  const rows = (S.requests||[]).filter(r => r.file !== "missing.bin");
+  if (!rows.length){ setHTML($("cmp"), `<div class="empty">No finished downloads yet.</div>`); return; }
+  const groups = {};
+  for (const r of rows){
+    const k = `${r.lb}|${r.route}|${(r.cond||[]).join(",")}`;
+    (groups[k] = groups[k] || {lb:r.lb, route:r.route, cond:r.cond||[], rows:[]}).rows.push(r);
+  }
+  const G = Object.values(groups).map(g => {
+    const ok = g.rows.filter(r => r.status === "ok"), t = ok.map(r => r.ttc_ms).filter(v => v != null), m = ok.map(r => r.mbps).filter(v => v != null);
+    return Object.assign(g, {n:g.rows.length, ok:ok.length, pct: 100*ok.length/g.rows.length,
+      ttc: t.length ? t.reduce((a,b)=>a+b,0)/t.length : null, mbps: m.length ? m.reduce((a,b)=>a+b,0)/m.length : null,
+      retries: g.rows.reduce((a,r) => a + Math.max(0, (r.attempts||1)-1), 0)});
+  });
+  const many = G.length > 1, best = (f, lo) => { const v = G.map(g => g[f]).filter(x => x != null); return v.length ? (lo ? Math.min(...v) : Math.max(...v)) : null; };
+  const bt = best("ttc", true), bm = best("mbps"), bp = best("pct");
+  setHTML($("cmp"), `<table class="cmp"><thead><tr><th>Controller setting</th><th>Network</th><th class="n">Done</th><th class="n">Avg time</th><th class="n">Avg speed</th><th class="n">Retries</th></tr></thead><tbody>` +
+    G.map(g => `<tr><td><b>${esc(LB_NAME[g.lb] || g.lb)}</b><br><span style="color:var(--ink3)">${esc(PATH_NAME[g.route] || g.route)}</span></td>
+      <td>${g.cond.length ? g.cond.map(c => `<span class="cond">${esc(c)}</span>`).join("") : `<span class="cond ok">normal</span>`}</td>
+      <td class="n ${many && g.pct === bp ? "best" : ""}">${g.ok}/${g.n}</td>
+      <td class="n ${many && g.ttc === bt ? "best" : ""}">${ms(g.ttc)}</td>
+      <td class="n ${many && g.mbps === bm ? "best" : ""}">${g.mbps != null ? g.mbps.toFixed(2) + " Mbps" : "–"}</td>
+      <td class="n">${g.retries}</td></tr>`).join("") + `</tbody></table>`);
+}
+
+/* ---- controller timeline ---- */
+function plain(e){
+  const t = e.text;
+  if (e.kind === "health") return /DOWN/.test(t) ? ["bad","server", t.replace("[HEALTH] ", "").replace("is DOWN", "marked down:").replace(/\(no report.*\)/, "no heartbeat for 3 s, new clients go elsewhere")]
+                                                 : ["good","server", t.replace("[HEALTH] ", "").replace(/is UP.*/, "is back: heartbeats received")];
+  if (e.kind === "link") return /DOWN/.test(t) ? ["bad","link", t.replace("[LINK] ", "").replace(/is DOWN.*/, "is cut: old rules deleted, downloads moved to the other route")]
+                                               : ["good","link", t.replace("[LINK] ", "").replace(/is UP.*/, "is back: new downloads may use it again")];
+  if (e.kind === "monitor") return [/no longer/.test(t) ? "good" : "mon", "load", t.replace("[MONITOR] ", "")];
+  if (e.kind === "reroute") return ["rr", "reroute", t.replace("[REROUTE] ", "")];
+  if (e.kind === "decision") return null;
+  if (e.kind === "action" || e.kind === "scenario") return ["act", e.kind === "scenario" ? "test" : "you", t];
+  if (e.kind === "ctrl" && /ready|START/.test(t)) return ["act", "controller", t.replace("[START] ", "started: ")];
+  if (e.kind === "warn" || e.kind === "error") return ["bad", e.kind, t];
+  return null;
+}
+function renderTimeline(){
+  const evs = (S.events||[]).filter(e => e.t >= S.chart_since - 1).map(e => [e, plain(e)]).filter(x => x[1]).slice(-60).reverse();
+  setHTML($("tl"), evs.length ? evs.map(([e, [k, tag, txt]]) => `<li><time>${clock(e.t)}</time><span><span class="k ${k}">${esc(tag)}</span>${esc(txt)}</span></li>`).join("")
+    : `<li><span></span><span class="empty" style="display:block">Nothing yet. Crash a server, cut a link or start the flood.</span></li>`);
+}
+
+/* ---- terminal copy ---- */
+let termN = -1;
+function renderTerm(){
+  const L = S.terminal || [], box = $("term");
+  const key = L.length ? L[L.length-1].t + "|" + L.length : "0";
+  if (key === termN) return; termN = key;
+  const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+  box.innerHTML = L.length ? L.map(l => {
+    const who = l.who === "you" || l.who === "output" ? "" : `<span class="${l.who}">[${esc(l.who)}]</span> `;
+    return `<span class="t">${clock(l.t)}</span> ${who}<span class="${l.who}">${esc(l.text)}</span>`;
+  }).join("\n") : `<span class="t">Waiting for activity. Click a button above, or type a command at mininet&gt; in the Ubuntu terminal.</span>`;
+  if ($("follow").checked && (atEnd || true)) box.scrollTop = box.scrollHeight;
+  $("termLead").innerHTML = S.terminal_echo === false ? "Terminal echo is off (<code>--quiet-terminal</code>); this copy still shows what would be printed."
+    : "The same lines as the Ubuntu terminal running <code>demo.py</code>: your clicks as mininet&gt; commands, the controller's decisions, and the clients' output.";
+}
+
+/* ---- measured experiments ---- */
+function bars(rows, field, fmt, colorFn){
+  const vals = rows.map(r => r[field]).filter(v => v != null), max = Math.max(...vals, 1e-9);
+  return `<div class="bars">` + rows.map(r => { const v = r[field], w = v == null ? 0 : 100*v/max;
+    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val" style="${w >= 40 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`; }).join("") + `</div>`;
+}
+async function loadResults(){
+  let R; try { R = await (await fetch("/api/results")).json(); } catch(e){ R = {}; }
+  if (!R.rows){ $("resLead").innerHTML = `No measured results yet. In the VM run <code>sudo python3 tests/run_experiments.py</code>, then <code>python3 tests/make_graphs.py</code>.`; return; }
+  $("resLead").textContent = `Batch ${R.batch}${R.reps ? `, ${R.reps} runs of each setting` : ""}. Same requests and conditions every time; only the controller's rules changed.`;
+  const get = (sc, cfg) => { const r = R.rows.find(x => x.scenario === sc && x.config === cfg); if (!r) return null;
+    const n = k => r[k] === "" || r[k] == null ? null : +r[k];
+    return {key:cfg, label:cfg, req:n("requests"), ok:n("completed"), extra:n("extra_attempts"), mbps:n("mean_throughput_mbps"), ttc:n("mean_time_to_content_ms"), maxttc:n("max_time_to_content_ms")}; };
+  const nameLb = r => (r.label = LB_NAME[r.key] || r.key, r);
+  const col = r => ({static:"#9AA6B2", round_robin:"#5B4BC4", least_loaded:"#2A78D6", path_delay:"#9AA6B2", path_congestion:"#2A78D6"}[r.key] || "#1B2430");
+  const cards = [];
+  const conc = ["static","round_robin","least_loaded"].map(c => get("concurrent", c)).filter(Boolean).map(nameLb);
+  if (conc.length){ const a = conc.find(r => r.key === "static"), b = conc.find(r => r.key === "least_loaded");
+    cards.push(`<div class="rcard"><h3>Three clients at once</h3><p class="claim">${a && b && a.mbps ? `<b>${(b.mbps/a.mbps).toFixed(1)}×</b> faster with “Least busy server” than “Always srv1”` : ""}</p>
+      <div class="metric">Average speed per download (higher is better)</div>${bars(conc, "mbps", v => v.toFixed(1) + " Mbps", col)}
+      <div class="metric">Average wait for 5 MB (lower is better)</div>${bars(conc, "ttc", v => (v/1000).toFixed(1) + " s", col)}</div>`); }
+  const cong = ["path_delay","path_congestion"].map(c => get("congestion", c)).filter(Boolean).map(r => (r.label = r.key === "path_delay" ? "Shortest route only" : "Avoid busy links", r));
+  if (cong.length){ const a = cong.find(r => r.key === "path_delay"), b = cong.find(r => r.key === "path_congestion");
+    cards.push(`<div class="rcard"><h3>Fast route jammed</h3><p class="claim">${a && b && b.maxttc ? `<b>${(a.maxttc/b.maxttc).toFixed(1)}×</b> shorter longest wait when busy links are avoided` : ""}</p>
+      <div class="metric">Longest wait (lower is better)</div>${bars(cong, "maxttc", v => (v/1000).toFixed(1) + " s", col)}
+      <div class="metric">Retries needed</div>${bars(cong, "extra", v => String(v), col)}</div>`); }
+  const sf = ["static","least_loaded"].map(c => get("serverfail", c)).filter(Boolean).map(nameLb);
+  if (sf.length){ sf.forEach(r => r.pct = r.req ? 100*r.ok/r.req : 0);
+    cards.push(`<div class="rcard"><h3>A server crashes mid-run</h3><p class="claim">${sf.map(r => `${r.label}: <b>${r.ok} of ${r.req}</b>`).join(" · ")}</p>
+      <div class="metric">Downloads finished</div>${bars(sf, "pct", v => v.toFixed(0) + "%", col)}</div>`); }
+  const lf = get("linkfail", "least_loaded");
+  if (lf) cards.push(`<div class="rcard"><h3>Fast link cut, then repaired</h3><p class="claim"><b>${lf.ok} of ${lf.req}</b> finished, <b>${lf.extra}</b> retries, ${lf.mbps?.toFixed(1)} Mbps average</p>
+      <div class="metric">Downloads finished</div>${bars([{label:"Least busy server", key:"least_loaded", pct: lf.req ? 100*lf.ok/lf.req : 0}], "pct", v => v.toFixed(0) + "%", col)}</div>`);
+  $("resCards").innerHTML = cards.join("");
+  const nice = f => f.split("/").pop().replace(/\.png$/, "").replace(/^\d+[ab]?_/, "").replace(/_/g, " ");
+  $("gallery").innerHTML = (R.graphs||[]).map(g => `<a href="/${g}" target="_blank" rel="noopener"><img src="/${g}" alt="${esc(nice(g))}" loading="lazy">${esc(nice(g))}</a>`).join("");
+}
+loadResults();
+
+async function refresh(){
+  try { S = await (await fetch("/api/state", {cache:"no-store"})).json(); }
+  catch(e){ $("live").className = "live off"; $("live").querySelector("span").textContent = "Dashboard not reachable"; return; }
+  onState(); renderTop(); renderSockets(); renderDecisions(); renderResults();
+  drawUtil(); drawReqs(); renderCompare(); renderTimeline(); renderTerm();
+}
+setInterval(refresh, 700); refresh();
+</script>
+</body>
+</html>

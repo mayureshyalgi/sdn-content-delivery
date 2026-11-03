@@ -64,8 +64,15 @@ class Console:
         self.at_prompt = False          # True while mininet> is waiting for input
         self.enabled = True
         self.color = sys.stdout.isatty()
+        self.lines = deque(maxlen=300)  # copy of the terminal for the D2 page
+
+    def note(self, who, text):
+        """Keep a line for the page without printing it (it is already on the screen)."""
+        with self.lock:
+            self.lines.append({"t": time.time(), "who": who, "text": text})
 
     def say(self, who, text):
+        self.note(who, text)
         if not self.enabled:
             return
         tag = f"[{who}]"
@@ -223,6 +230,10 @@ class Backend:
         self.restarting = False
         self.rule_log = []            # every address-swap rule seen in s1, oldest first
         self.rule_live = {}           # "client_ip:port" -> its entry while it is in the switch
+        self.policy_log = []          # (since, lb_policy, path_policy)
+        self.cond_log = []            # (since, ["server down", "link cut", "congestion"])
+        self._hot = {}                # (a, b) -> link was above the congestion threshold
+        self._conn_path = {}          # "client:port" -> last path seen, to spot reroutes
 
     # ---- events ------------------------------------------------------------
     def event(self, kind, text, mark=None):
@@ -230,6 +241,82 @@ class Backend:
         mark: short label to draw on the charts' time axis (actions only)."""
         with self.lock:
             self.events.append({"t": now(), "kind": kind, "text": text, "mark": mark})
+
+    def _echo(self, who, text, kind=None):
+        """One line for the terminal and the same line for the page."""
+        CONSOLE.say(who, text)
+        self.event(kind or ("echo_" + who), text)
+
+    # ---- D2: what the network was like, and what the controller did about it --
+    def track_conditions(self):
+        """Called once a second: record policy and failure periods, and report congestion
+        and reroutes in the terminal (the controller reacts to both, but logs neither)."""
+        try:
+            st = self.state()
+        except Exception:
+            return
+        t = now()
+        with self.lock:
+            cur = (self.lb_policy, self.path_policy)
+            if not self.policy_log or tuple(self.policy_log[-1][1:]) != cur:
+                self.policy_log.append((t,) + cur)
+            conds = []
+            if any(not s["process"] or not s["alive"] for s in st["servers"]):
+                conds.append("server down")
+            if any(not l["up"] for l in st["links"]):
+                conds.append("link cut")
+            if st["flood"]["on"]:
+                conds.append("congestion")
+            if not self.cond_log or self.cond_log[-1][1] != conds:
+                self.cond_log.append((t, conds))
+                self.cond_log = self.cond_log[-500:]
+        for l in st["links"]:
+            key, pct = (l["a"], l["b"]), round(l["util"] * 100)
+            hot = bool(l["up"] and l["util"] >= UTIL_THRESHOLD)
+            if hot != self._hot.get(key, False):
+                self._hot[key] = hot
+                if not l["up"]:
+                    continue          # a cut link is reported by [LINK] instead
+                name = f"s{l['a']}-s{l['b']}"
+                if hot:
+                    react = ("new downloads avoid it" if self.path_policy == "congestion"
+                             else "not avoided: route policy is 'delay' (shortest route only)")
+                    self._echo("controller", f"[MONITOR] {name} is congested ({pct}% busy) -> {react}",
+                               kind="monitor")
+                else:
+                    self._echo("controller", f"[MONITOR] {name} is no longer congested ({pct}% busy)",
+                               kind="monitor")
+        seen = set()
+        for c in st.get("connections", []):
+            key = f"{c.get('client')}:{c.get('port')}"
+            path = "-".join(f"s{n}" for n in (c.get("path") or []))
+            seen.add(key)
+            old = self._conn_path.get(key)
+            if old and path and old != path:
+                self._echo("controller", f"[REROUTE] {key} ({c.get('server')}) moved from {old} to {path}",
+                           kind="reroute")
+            if path:
+                self._conn_path[key] = path
+        for key in [k for k in self._conn_path if k not in seen]:
+            del self._conn_path[key]
+
+    def _tag(self, rows):
+        """Add the policy in force when each request started, and the failures during it."""
+        with self.lock:
+            pl, cl = list(self.policy_log), list(self.cond_log)
+        first = pl[0] if pl else (0, self.lb_policy, self.path_policy)
+        for r in rows:
+            p = next((x for x in reversed(pl) if x[0] <= r["start"]), first)
+            r["lb"], r["route"] = p[1], p[2]
+            conds = set()
+            before = next((x for x in reversed(cl) if x[0] <= r["start"]), None)
+            if before:
+                conds.update(before[1])
+            for t, c in cl:
+                if r["start"] < t <= r["end"]:
+                    conds.update(c)
+            r["cond"] = sorted(conds)
+        return rows
 
     # ---- actions (implemented by subclasses) ---------------------------------
     def request(self, client, file, count): raise NotImplementedError
@@ -367,41 +454,56 @@ class Backend:
 
         def step(text):
             sc["step"] = text
+            CONSOLE.say("dashboard", f"guided demo '{title}': {text}")
+
+        def cmd(**body):
+            for c in web_commands(body):
+                CONSOLE.say("dashboard", f"guided demo = mininet> {c}")
+                self.event("web", c)
 
         try:
             if name == "concurrent":
                 step("3 clients downloading")
+                cmd(action="request", client="all", file="large.bin", count=3)
                 for h in CLIENTS:
                     self.request(h, "large.bin", 3, quiet=True)
                 self.event("action", "h1, h2, h3: 3 × large.bin each, all at once")
             elif name == "serverfail":
                 step("3 clients downloading")
+                cmd(action="request", client="all", file="large.bin", count=4)
                 for h in CLIENTS:
                     self.request(h, "large.bin", 4, quiet=True)
                 self.event("action", "h1, h2, h3: 4 × large.bin each")
                 step("waiting to kill srv1 at 6 s")
                 if at(6):
+                    cmd(action="server", name="srv1", op="stop")
                     self.server("srv1", False)
                     step("srv1 killed; restart at 30 s")
                 if at(30):
+                    cmd(action="server", name="srv1", op="start")
                     self.server("srv1", True)
                     step("srv1 restarted")
             elif name == "linkfail":
                 step("h1 downloading")
+                cmd(action="request", client="h1", file="large.bin", count=6)
                 self.request("h1", "large.bin", 6, quiet=True)
                 self.event("action", "h1: 6 × large.bin")
                 step("cutting s1–s2 at 6 s")
                 if at(6):
+                    cmd(action="link", a="s1", b="s2", op="down")
                     self.link(1, 2, False)
                     step("s1–s2 down; restoring at 18 s")
                 if at(18):
+                    cmd(action="link", a="s1", b="s2", op="up")
                     self.link(1, 2, True)
                     step("s1–s2 restored")
             elif name == "congestion":
                 step("flood starting")
+                cmd(action="flood", op="start", mbps=25)
                 self.flood(True, 25)
                 step("flood running; h1 starts at 6 s")
                 if at(6):
+                    cmd(action="request", client="h1", file="large.bin", count=3)
                     self.request("h1", "large.bin", 3, quiet=True)
                     self.event("action", "h1: 3 × large.bin", "h1 starts")
                     step("h1 downloading through the flood")
@@ -412,6 +514,7 @@ class Backend:
                 if not self.clients_busy():
                     break
             if name == "congestion":
+                cmd(action="flood", op="stop")
                 self.flood(False)
             if cancel.is_set():
                 self.event("scenario", f"Scenario stopped: {title}")
@@ -440,6 +543,8 @@ class Backend:
                     "name": sc["name"], "title": SCENARIOS[sc["name"]]["title"],
                     "elapsed": round(now() - sc["t0"], 1), "step": sc["step"], "done": sc["done"]},
                 "scenarios": SCENARIOS,
+                "terminal": list(CONSOLE.lines)[-120:],
+                "terminal_echo": CONSOLE.enabled,
             }
 
 
@@ -756,11 +861,6 @@ class LiveBackend(Backend):
             self._echo("controller", f"[LB] {d['client']}:{d['port']} -> {d['server']} via {d['path']}"
                                      f"  (loads: {d['loads']})")
 
-    def _echo(self, who, text):
-        """One line for the terminal and the same line for the page's terminal mirror."""
-        CONSOLE.say(who, text)
-        self.event("echo_" + who, text)
-
     def _tail_client_outputs(self):
         """Echo the output of clients started from the web page, line by line."""
         for c in CLIENTS:
@@ -841,7 +941,7 @@ class LiveBackend(Backend):
         flood_on = self.flood_proc is not None and self.flood_proc.poll() is None
         out["flood"] = {"on": flood_on, "mbps": self.flood_mbps if flood_on else 0}
         rows = self._requests()
-        out["requests"] = [r for r in rows if r["end"] >= out["chart_since"]]
+        out["requests"] = self._tag([r for r in rows if r["end"] >= out["chart_since"]])
         out["summary"] = summarize(out["requests"])
         out["clients"] = {}
         for c in CLIENTS:
@@ -1013,6 +1113,11 @@ class SimBackend(Backend):
     def clients_busy(self):
         return bool(self.jobs)
 
+    def event(self, kind, text, mark=None):
+        super().event(kind, text, mark)
+        if kind in ("health", "link", "warn") or (kind == "ctrl" and text.startswith("[")):
+            CONSOLE.say("controller", text)
+
     # ---- model ---------------------------------------------------------------
     def _path(self, src, dst, congestion):
         dist, prev, todo = {src: 0}, {}, {src}
@@ -1080,6 +1185,8 @@ class SimBackend(Backend):
                                "path_policy": self.path_policy, "loads": self._loads(),
                                "link_util": self._util_text()})
         self.event("decision", f"{job['client']} → {server} via {route_name(path)}")
+        CONSOLE.say("controller", f"[LB] {job['client']}:{port} -> {server} via {route_name(path)}"
+                                  f"  (loads: {self._loads()})")
         if not self.srv[server]["process"]:
             self._attempt_failed(job, "connection refused" if self.lb_policy != "static"
                                  else "timed out")
@@ -1104,6 +1211,7 @@ class SimBackend(Backend):
 
     def _attempt_failed(self, job, why):
         req = job["current"]
+        CONSOLE.say("client", f"[{job['client']}] request attempt {req['attempts']} failed: {why}")
         if req["attempts"] >= 3:
             self._finish(job, ok=False, why=why)
         else:
@@ -1121,6 +1229,13 @@ class SimBackend(Backend):
         job["done"] += 1
         job["current"] = None
         job["next_at"] = t
+        n, c = job["done"], job["client"]
+        if ok:
+            CONSOLE.say("client", f"[{c}] #{n} {job['file']} from {server}: {FILES[job['file']]} bytes, "
+                                  f"response {total_ms} ms, throughput {mbps} Mbps"
+                                  + (f" after {req['attempts']} attempts" if req["attempts"] > 1 else ""))
+        else:
+            CONSOLE.say("client", f"[{c}] #{n} {job['file']} failed: {why}")
 
     def _rates(self):
         """Share each bottleneck among the TCP downloads crossing it (the flood takes its share first)."""
@@ -1244,7 +1359,7 @@ class SimBackend(Backend):
                                    "path": d["path"], "age": round(t - d["begin"], 1),
                                    "mbps": round(d["rate"], 2), "active": True} for d in self.dls]
             out["flood"] = {"on": bool(self.flood_mbps), "mbps": self.flood_mbps}
-            out["requests"] = [r for r in self.rows if r["end"] >= out["chart_since"]]
+            out["requests"] = self._tag([dict(r) for r in self.rows if r["end"] >= out["chart_since"]])
             out["summary"] = summarize(out["requests"])
             out["clients"] = {}
             for c in CLIENTS:
@@ -1325,6 +1440,8 @@ def make_handler(backend):
             path = self.path.split("?")[0]
             if path in ("/", "/d1"):
                 self.send_file(os.path.join(HERE, "d1.html"), "text/html; charset=utf-8")
+            elif path in ("/d2", "/d2.html"):
+                self.send_file(os.path.join(HERE, "d2.html"), "text/html; charset=utf-8")
             elif path in ("/full", "/index.html"):
                 self.send_file(os.path.join(HERE, "index.html"), "text/html; charset=utf-8")
             elif path == "/api/state":
@@ -1531,6 +1648,7 @@ def EchoCLI(net, backend):
             CONSOLE.at_prompt = False
             if line.strip() and line.strip() != "EOF":
                 backend.event("terminal", "mininet> " + line.strip())
+                CONSOLE.note("you", "mininet> " + line.strip())
             for t in tees:
                 t.buf = []
             return line
@@ -1542,6 +1660,7 @@ def EchoCLI(net, backend):
             lines = [l.rstrip() for l in text.splitlines() if l.strip()]
             if line.strip() and lines:
                 backend.event("terminal_out", "\n".join(lines[-15:]))
+                CONSOLE.note("output", "\n".join(lines[-15:]))
             CONSOLE.at_prompt = not stop
             return super().postcmd(stop, line)
 
@@ -1591,15 +1710,17 @@ def main():
     def rule_tracker():
         while True:
             backend.track_rules()
+            backend.track_conditions()
             time.sleep(1)
     threading.Thread(target=rule_tracker, daemon=True).start()
 
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(backend))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    print(f"\n  Dashboard ({backend.mode}): http://localhost:{args.port}")
+    print(f"\n  Dashboard ({backend.mode}): http://localhost:{args.port}      (D1 page)")
+    print(f"                       http://localhost:{args.port}/d2   (D2 page: failures, congestion, comparison)")
     if args.host == "0.0.0.0":
         for ip in lan_addresses():
-            print(f"  From another computer (e.g. your Mac): http://{ip}:{args.port}")
+            print(f"  From another computer (e.g. your Mac): http://{ip}:{args.port}  and  http://{ip}:{args.port}/d2")
     elif args.host not in ("127.0.0.1", "localhost"):
         print(f"  Also at http://{args.host}:{args.port}")
     else:
