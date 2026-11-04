@@ -13,630 +13,689 @@
   --page:#EEF2F5; --paper:#FFFFFF; --ink:#1B2430; --ink2:#4A5866; --ink3:#7B8896;
   --rule:#D5DDE5; --rule2:#E7ECF1; --track:#E3E8EE;
   --signal:#C98500; --signalbg:#FFF4DC;
-  --srv1:#2A78D6; --srv2:#EB6834; --srv3:#1BAF7A; --slow:#5B4BC4;
+  --srv1:#2A78D6; --srv2:#EB6834; --srv3:#1BAF7A;
   --bad:#D64545; --badbg:#FCE9E7; --good:#1E7A55; --goodbg:#E1F3EA;
   --font:"Atkinson Hyperlegible","Segoe UI","Ubuntu","Noto Sans",Arial,sans-serif;
   --code:"Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 var(--font)}
-button,select,input{font:inherit;color:inherit}
-code{font-family:var(--code);font-size:.9em}
+button{font:inherit;color:inherit}
+code,.mono{font-family:var(--code);font-size:.92em}
 .num{font-variant-numeric:tabular-nums}
 .hidden{display:none !important}
 :focus-visible{outline:3px solid var(--srv1);outline-offset:2px;border-radius:4px}
 
-/* ---------- top bar ---------- */
-.bar{display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap;padding:14px 24px;background:var(--paper);border-bottom:1px solid var(--rule)}
-.bar h1{font-size:22px;line-height:1.1;margin:0;font-weight:700;letter-spacing:-.01em}
-.bar .tag{color:var(--ink2);font-size:15px;flex:1;min-width:260px}
+/* top bar */
+.bar{display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;padding:14px 24px;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar h1{font-size:22px;line-height:1.1;margin:0}
+.bar h1 em{font-style:normal;color:var(--signal)}
+.bar .sp{flex:1}
 .live{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:5px 12px;border-radius:999px;background:var(--goodbg);color:var(--good)}
 .live i{width:9px;height:9px;border-radius:50%;background:currentColor}
-.live.off{background:var(--badbg);color:var(--bad)} .live.busy{background:var(--signalbg);color:var(--signal)} .live.sim{background:var(--signalbg);color:#8A5B00}
-.rulesbtn{border:1px solid var(--rule);background:var(--paper);border-radius:8px;padding:5px 12px;cursor:pointer;text-align:left;font-size:14px;line-height:1.3}
-.rulesbtn small{display:block;color:var(--ink3);font-size:12.5px}
-.rulesbtn b{font-weight:700}
-.rulesbtn:hover{border-color:var(--ink3)}
-.simnote{background:var(--signalbg);color:#6B4700;padding:8px 24px;font-size:14.5px;border-bottom:1px solid #F0D9A3}
+.live.off{background:var(--badbg);color:var(--bad)} .live.sim{background:var(--signalbg);color:#8A5B00}
+.bar a{color:var(--ink2);font-size:14.5px}
 
-/* ---------- main layout ---------- */
-.shell{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;padding:20px 24px 40px;max-width:1600px;margin:0 auto;align-items:start}
-@media (max-width:1150px){.shell{grid-template-columns:minmax(0,1fr)}.guide{order:2}.mainc{order:1}}
-@media (max-width:600px){.shell{padding:12px 12px 32px}.bar{padding:12px}}
-
-/* ---------- guide ---------- */
-.guide{display:flex;flex-direction:column;gap:16px}
+.wrap{max-width:1500px;margin:0 auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:20px}
+@media (max-width:600px){.wrap{padding:12px}.bar{padding:12px}}
 .box{background:var(--paper);border:1px solid var(--rule);border-radius:12px}
-.intro{padding:14px 16px;font-size:15px;color:var(--ink2)}
-.intro b{color:var(--ink)}
-.intro p{margin:0 0 6px}
-.intro .x{float:right;border:0;background:none;cursor:pointer;color:var(--ink3);font-size:20px;line-height:1;padding:0 2px}
-.gh{font-size:18px;font-weight:700;margin:0;padding:14px 16px 4px}
-.gsub{margin:0;padding:0 16px 8px;color:var(--ink2);font-size:14px}
-.demo{display:grid;grid-template-columns:34px 1fr;gap:2px 12px;padding:12px 16px;border-top:1px solid var(--rule2);align-items:start}
-.demo .n{grid-row:1/4;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-weight:700;font-size:15px}
-.demo.done .n{background:var(--ink);color:#fff}
-.demo.on{background:var(--signalbg)}
-.demo.on .n{border-color:var(--signal);color:var(--signal)}
-.demo h3{margin:0;font-size:16.5px;font-weight:700}
-.demo p{margin:0;color:var(--ink2);font-size:14px;line-height:1.4}
-.demo .go{justify-self:start;margin-top:8px}
-.demo .watch{margin-top:6px;font-size:14px;color:#6B4700;line-height:1.4}
-.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:15px;white-space:nowrap}
-.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* steps + map */
+.top{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1000px){.top{grid-template-columns:minmax(0,1fr)}}
+.steps{padding:6px 0}
+.step{padding:14px 18px;border-bottom:1px solid var(--rule2)}
+.step:last-child{border-bottom:0}
+.step .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:14px;margin-right:8px}
+.step h2{display:flex;align-items:center;margin:0 0 6px;font-size:17px}
+.step p{margin:0 0 10px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;padding:7px 16px;cursor:pointer;font-weight:700;font-size:15px}
+.btn svg{width:13px;height:13px;fill:currentColor}
+.btn:hover:not(:disabled){background:#2B3949;border-color:#2B3949}
 .btn.line{background:var(--paper);color:var(--ink);border-color:var(--rule)}
-.btn.line:hover:not(:disabled){border-color:var(--ink)}
-.btn.bad{background:var(--paper);color:var(--bad);border-color:#EBB4AE}
-.btn.good{background:var(--paper);color:var(--good);border-color:#A9D5C1}
-.btn.small{padding:3px 10px;font-size:14px;border-width:1.5px}
+.btn.line:hover:not(:disabled){background:var(--paper);border-color:var(--ink)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
-.btn:not(:disabled):not(.line):not(.bad):not(.good):hover{background:#2B3949;border-color:#2B3949}
+.status{font-size:14px;color:#6B4700;background:var(--signalbg);border-radius:8px;padding:6px 10px;margin-top:10px}
 
-/* try it yourself */
-details.try{border-top:1px solid var(--rule2)}
-details.try > summary{list-style:none;cursor:pointer;padding:12px 16px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center}
-details.try > summary::-webkit-details-marker{display:none}
-details.try > summary::after{content:"";width:9px;height:9px;border-right:2.5px solid var(--ink2);border-bottom:2.5px solid var(--ink2);transform:rotate(45deg);margin-top:-4px;transition:transform .2s}
-details.try[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
-details.try > summary small{display:block;font-weight:400;color:var(--ink2);font-size:13.5px}
-.tbody{padding:0 16px 14px}
-.tbody h4{margin:12px 0 6px;font-size:14.5px;font-weight:700}
-.tbody h4:first-child{margin-top:0}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.row + .row{margin-top:6px}
-.row .lab{flex:1;min-width:110px;font-size:15px}
-.row .lab small{color:var(--ink3);font-size:13px}
-select,input[type=number]{border:1.5px solid var(--rule);border-radius:7px;padding:5px 7px;background:#fff;min-width:0;font-size:15px}
-input[type=number]{width:60px}
-.pill{font-size:12.5px;font-weight:700;padding:1px 8px;border-radius:999px;white-space:nowrap}
-.pill.good{background:var(--goodbg);color:var(--good)} .pill.bad{background:var(--badbg);color:var(--bad)} .pill.warn{background:var(--signalbg);color:#8A5B00}
-.hint{font-size:13.5px;color:var(--ink2);margin:6px 0 0;line-height:1.4}
-.reset{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--rule2);flex-wrap:wrap}
-
-/* ---------- map ---------- */
-.mainc{display:flex;flex-direction:column;gap:16px;min-width:0}
-.map{overflow:hidden}
-.maphead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 18px 0}
+.map{overflow:hidden;position:relative}
+.maphead{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px 14px;padding:14px 18px 0}
 .maphead h2{margin:0;font-size:18px}
-.maphead span{font-size:13.5px;color:var(--ink3)}
-.canvas-wrap{position:relative}
 #stage{display:block;width:100%;height:auto}
-.stip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13.5px;line-height:1.4;padding:7px 10px;border-radius:7px;white-space:pre;z-index:5;transform:translate(-50%,calc(-100% - 14px));box-shadow:0 6px 18px rgba(27,36,48,.25)}
-.key{display:flex;flex-wrap:wrap;gap:6px 20px;padding:10px 18px 14px;font-size:13.5px;color:var(--ink2);border-top:1px solid var(--rule2)}
+.key{display:flex;flex-wrap:wrap;gap:6px 22px;padding:10px 18px 14px;font-size:14px;color:var(--ink2);border-top:1px solid var(--rule2)}
 .key span{display:inline-flex;align-items:center;gap:7px}
-.key i{flex:none;display:inline-block}
-.k-dot{width:10px;height:10px;border-radius:50%;background:conic-gradient(var(--srv1) 0 33%,var(--srv2) 0 66%,var(--srv3) 0);box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px var(--ink3)}
-.k-hb{width:9px;height:9px;background:var(--ink3);transform:rotate(45deg)}
-.k-sig{width:9px;height:9px;background:var(--signal)}
-.k-busy{width:20px;height:6px;border-radius:3px;background:var(--bad)}
-.k-flood{width:18px;border-top:3px dotted var(--ink3)}
+.key i{display:inline-block;flex:none}
 
-/* story */
-.story{padding:16px 18px}
-.story h2{margin:0 0 8px;font-size:18px}
-.now{font-size:20px;line-height:1.4;margin:0;max-width:72ch}
-.now .why{display:block;font-size:15.5px;color:var(--ink2);margin-top:4px}
-.earlier{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--rule2)}
-.earlier li{display:grid;grid-template-columns:70px 1fr;gap:10px;font-size:14.5px;color:var(--ink2);padding:3px 0}
-.earlier time{color:var(--ink3);font-variant-numeric:tabular-nums}
-.tone-bad{color:var(--bad) !important} .tone-good{color:var(--good) !important}
+/* rubric tag on each panel */
+.rub{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ink2);background:#EEF2F5;border:1px solid var(--rule);border-radius:999px;padding:1px 10px;white-space:nowrap}
 
-/* server strip */
-.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.2fr);gap:12px}
-@media (max-width:1000px){.strip{grid-template-columns:repeat(3,minmax(0,1fr))}.strip .sum{grid-column:1/-1}}
-@media (max-width:640px){.strip{grid-template-columns:minmax(0,1fr)}}
-.srv{padding:12px 14px;border-left:6px solid var(--c)}
-.srv.isdown{border-left-color:var(--bad);border-left-style:dashed}
-.srv .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.srv .name{font-weight:700;font-size:17px}
-.srv .big{font-size:30px;font-weight:700;line-height:1.1;margin-top:4px}
-.srv .big small{font-size:14px;color:var(--ink2);font-weight:400;margin-left:6px}
-.srv .meta{font-size:13.5px;color:var(--ink2);margin-top:2px}
-.sum{padding:12px 14px}
-.sum .name{font-weight:700;font-size:17px}
-.sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:6px}
-.sumgrid .v{font-size:22px;font-weight:700;line-height:1.15}
-.sumgrid .v small{font-size:13.5px;color:var(--ink2);font-weight:400;margin-left:3px}
-.sumgrid .k{font-size:13px;color:var(--ink2)}
+/* three evidence panels */
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+@media (max-width:1250px){.three{grid-template-columns:minmax(0,1fr)}}
+.panel{padding:16px 18px 18px}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.ph h2{margin:0;font-size:18px}
+.lead{margin:0 0 12px;color:var(--ink2);font-size:14.5px;line-height:1.45}
+.empty{color:var(--ink3);font-size:14.5px;padding:14px;border:1.5px dashed var(--rule);border-radius:10px;text-align:center}
+.sub{font-size:13px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px}
 
-/* ---------- details tabs ---------- */
-.details{padding:0}
-.tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--rule);flex-wrap:wrap}
-.tabs button{border:0;background:none;padding:9px 14px 10px;cursor:pointer;font-weight:700;font-size:15.5px;color:var(--ink3);border-bottom:3px solid transparent;margin-bottom:-1px}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
-.tabs button:hover{color:var(--ink)}
-.panel{padding:16px 18px}
-.panel .lead{margin:0 0 12px;color:var(--ink2);font-size:15px;max-width:80ch}
+/* socket messages */
+.ex{border:1px solid var(--rule2);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.ex .ln{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:7px 10px;font-size:14px;align-items:baseline}
+.ex .ln + .ln{border-top:1px solid var(--rule2)}
+.ex .who{font-weight:700;white-space:nowrap}
+.ex .msg{font-family:var(--code);font-size:13.5px;background:#F4F6F9;border-radius:5px;padding:1px 7px;justify-self:start;word-break:break-all}
+.ex .ln.err .msg{background:var(--badbg);color:var(--bad);font-weight:600}
+.ex .ln.ok .msg{background:var(--goodbg);color:var(--good);font-weight:600}
+.ex .note{grid-column:2;color:var(--ink3);font-size:13px}
+.proto{font-size:11.5px;font-weight:700;border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.proto.tcp{background:#E6EEF8;color:#245FA8} .proto.udp{background:var(--signalbg);color:#8A5B00}
+.wait{color:#6B4700}
+.hb{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:13.5px;padding:5px 0;border-top:1px solid var(--rule2)}
+.hb:first-of-type{border-top:0}
+.hb .msg{font-family:var(--code);font-size:13px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .age{color:var(--ink3);font-size:13px;white-space:nowrap}
+.hb.dead .age{color:var(--bad);font-weight:700}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.beat{animation:beat .9s ease-out}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(201,133,0,.6)}100%{box-shadow:0 0 0 8px rgba(201,133,0,0)}}
+.conc{font-size:14px;margin:0 0 10px;padding:7px 10px;border-radius:8px;background:#F4F6F9}
+.conc b{font-size:16px}
 
-/* charts */
-.chart{position:relative;margin-bottom:10px}
-.chart svg{width:100%;height:auto;display:block;overflow:visible}
-.chart h3{font-size:15.5px;font-weight:700;margin:0}
-.chart .ck{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13.5px;color:var(--ink2);margin:2px 0 4px}
-.chart .ck i{display:inline-block;width:16px;vertical-align:middle;margin-right:6px;border-top:3px solid}
-.chart .ck .sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
-.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:5;transform:translate(-50%,-115%)}
-.halo{paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+/* controller decisions */
+.dec{border:1px solid var(--rule2);border-left:5px solid var(--ink3);border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.dec .big{font-size:17px;font-weight:700}
+.dec .meta{font-size:13.5px;color:var(--ink2)}
+.loads{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.loads span{font-size:13px;border:1px solid var(--rule);border-radius:6px;padding:1px 8px;color:var(--ink2)}
+.loads span.pick{color:#fff;font-weight:700;border-color:transparent}
+.how{list-style:none;padding:0;margin:0 0 12px;counter-reset:h}
+.how li{counter-increment:h;position:relative;padding:2px 0 2px 28px;font-size:14px;color:var(--ink2);line-height:1.4}
+.how li::before{content:counter(h);position:absolute;left:0;top:3px;width:19px;height:19px;border-radius:50%;background:var(--signalbg);color:#8A5B00;font-weight:700;font-size:12px;display:grid;place-items:center}
 
-/* tables */
-.tablewrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14.5px}
-th{text-align:left;font-weight:700;color:var(--ink2);font-size:13.5px;padding:7px 8px;border-bottom:1.5px solid var(--rule);white-space:nowrap}
-td{padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top}
-td.r,th.r{text-align:right;white-space:nowrap}
-td.code{font-family:var(--code);font-size:12.5px;color:var(--ink2);overflow-wrap:anywhere;min-width:160px;max-width:300px}
-td.what{min-width:240px;max-width:420px}
-.sq{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
-.empty{color:var(--ink2);padding:14px 0}
-.kind{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap;background:var(--rule2);color:var(--ink2)}
-.kind.nat{background:var(--signalbg);color:#8A5B00}
-.kind.path{background:#E2EDFB;color:#1D5CAB}
-.kind.route{background:#ECE9FA;color:var(--slow)}
-@keyframes fresh{from{background:#FFE7A8}to{background:transparent}}
-tr.fresh td{animation:fresh 4s ease-out}
-.swtabs{display:inline-flex;gap:4px;background:var(--rule2);padding:3px;border-radius:8px;margin-bottom:10px}
-.swtabs button{border:0;background:none;padding:4px 16px;border-radius:6px;cursor:pointer;font-weight:700}
-.swtabs button[aria-selected="true"]{background:var(--paper);box-shadow:0 1px 0 var(--rule)}
-.meta2{font-size:14px;color:var(--ink2);margin:0 0 8px}
-
-/* log */
-.logcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px}
-@media (max-width:1000px){.logcols{grid-template-columns:minmax(0,1fr)}}
-.log{max-height:430px;overflow-y:auto}
-.ev{display:grid;grid-template-columns:68px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--rule2);font-size:14px}
-.ev:first-child{border-top:0}
-.ev time{color:var(--ink3);font-variant-numeric:tabular-nums}
-.ev .t{word-break:break-word}
-.ev.ctrl .t,.ev.decision .t{font-family:var(--code);font-size:13px;color:var(--ink2)}
-.ev.action .t,.ev.scenario .t{font-weight:700}
-.ev.link .t,.ev.error .t,.ev.warn .t,.ev.isdown .t{color:var(--bad)}
-.ev.health .t{color:var(--good);font-family:var(--code);font-size:13px}
-.ev.health.isdown .t{color:var(--bad)}
-.h3{font-size:15.5px;font-weight:700;margin:0 0 6px}
+/* rules */
+.rule{border:1px solid var(--rule2);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:14px}
+.rule .big{font-weight:700;font-size:15px}
+.rule .meta{color:var(--ink3);font-size:13px}
+.rule.fresh{animation:fresh 2s ease-out}
+@keyframes fresh{0%{background:var(--signalbg)}100%{background:#fff}}
+.fixed{font-size:13.5px;color:var(--ink2);margin-top:10px;padding-top:10px;border-top:1px solid var(--rule2)}
+details.raw{margin-top:10px;font-size:13.5px}
+details.raw summary{cursor:pointer;color:var(--ink2)}
+details.raw pre{font-family:var(--code);font-size:12px;background:#F4F6F9;border-radius:8px;padding:8px 10px;overflow:auto;max-height:240px;margin:8px 0 0;white-space:pre}
 
 /* results */
-.rgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-@media (max-width:900px){.rgrid{grid-template-columns:minmax(0,1fr)}}
-.res{border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
-.res h3{margin:0;font-size:16.5px}
-.res .claim{margin:4px 0 10px;font-size:15.5px}
-.res .claim b{font-size:22px}
-.bars{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center;font-size:14.5px}
-.bars .track{height:24px;background:var(--rule2);border-radius:5px;position:relative}
-.bars .fill{height:100%;border-radius:5px;min-width:2px}
-.bars .val{position:absolute;left:8px;top:2px;font-weight:700;font-size:14px}
-.res .metric{font-size:13.5px;color:var(--ink2);margin:10px 0 4px;font-weight:700}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
-.gallery a{display:block;border:1px solid var(--rule);border-radius:10px;padding:8px;color:var(--ink);text-decoration:none;font-size:14px;background:#fff}
-.gallery img{width:100%;height:auto;display:block;border-radius:5px;margin-bottom:6px}
+.res{padding:16px 18px 18px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:8px}
+@media (max-width:800px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:#F4F6F9;border-radius:10px;padding:12px 14px}
+.card .v{font-size:28px;font-weight:700;line-height:1.1}
+.card .l{font-size:14px;color:var(--ink2)}
+.card.bad .v{color:var(--bad)} .card.good .v{color:var(--good)}
 
-/* policy dialog */
-dialog{border:0;border-radius:14px;padding:0;max-width:520px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(27,36,48,.3);color:var(--ink)}
-dialog::backdrop{background:rgba(27,36,48,.45)}
-.dlg{padding:20px 22px}
-.dlg h2{margin:0 0 4px;font-size:20px}
-.dlg > p{margin:0 0 14px;color:var(--ink2);font-size:15px}
-.dlg fieldset{border:0;padding:0;margin:0 0 14px}
-.dlg legend{font-weight:700;font-size:15.5px;margin-bottom:6px}
-.opt{display:grid;grid-template-columns:22px 1fr;gap:2px 8px;padding:8px 10px;border:1.5px solid var(--rule);border-radius:9px;margin-bottom:6px;cursor:pointer}
-.opt:has(input:checked){border-color:var(--ink);background:#F6F8FA}
-.opt input{margin:4px 0 0}
-.opt b{font-size:15px}
-.opt span{grid-column:2;font-size:13.5px;color:var(--ink2)}
-.dlg .actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
-
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:9px;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:30;max-width:90vw}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:8px;font-size:15px;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.bad{background:var(--bad)}
+.trio{display:flex;gap:8px;flex-wrap:wrap}
+.trio .btn{padding:7px 0;width:58px;justify-content:center}
+.pick{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink2);margin:0 0 10px}
+.pick select{font:inherit;font-size:14.5px;padding:4px 8px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
+.play{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:5px 11px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink2)}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn.sm{padding:5px 12px;font-size:14px}
+/* rule log pop-up */
+.logbtn{margin:0 0 12px}
+dialog.log{border:0;border-radius:14px;padding:0;width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 24px 60px rgba(27,36,48,.35);color:var(--ink)}
+dialog.log::backdrop{background:rgba(27,36,48,.45)}
+.lhead{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 12px;border-bottom:1px solid var(--rule2)}
+.lhead h2{margin:0;font-size:19px}
+.lhead p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.lhead .sp{flex:1}
+.x{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--ink2);padding:0 4px}
+.ltools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px 20px;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--rule2)}
+.ltools a{color:var(--srv1);font-weight:700}
+.lbody{overflow:auto;max-height:calc(100vh - 220px)}
+table.lt{border-collapse:collapse;width:100%;font-size:14px}
+.lt th{position:sticky;top:0;background:#F4F6F9;text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);padding:8px 12px;border-bottom:1px solid var(--rule)}
+.lt td{padding:8px 12px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.lt td.n{font-variant-numeric:tabular-nums;white-space:nowrap}
+.lt .raw td{padding-top:0;font-family:var(--code);font-size:12px;color:var(--ink2);word-break:break-all}
+.pill{display:inline-block;font-size:12.5px;font-weight:700;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.pill.on{background:var(--goodbg);color:var(--good)} .pill.off{background:#EEF2F5;color:var(--ink3)}
+/* ---- section bar (scrolls within this page) ---- */
+.jump{position:sticky;top:0;z-index:15;display:flex;gap:4px;flex-wrap:wrap;padding:8px 24px;background:rgba(238,242,245,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule)}
+.jump a{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;color:var(--ink);text-decoration:none;font-size:14.5px;font-weight:700}
+.jump a b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px}
+.jump a:hover,.jump a.here{background:var(--paper);box-shadow:0 0 0 1px var(--rule)}
+.jump a.here b{background:var(--signal)}
+section[id^="s-"],div[id^="s-"]{scroll-margin-top:62px}
+.kbd{font-size:13px;color:var(--ink3)}
+@media (max-width:600px){.jump{padding:6px 12px}.jump a{padding:4px 8px;font-size:13.5px}.kbd{display:none}}
+.stip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13.5px;line-height:1.4;padding:7px 10px;border-radius:7px;white-space:pre;z-index:5;transform:translate(-50%,calc(-100% - 14px));box-shadow:0 6px 18px rgba(27,36,48,.25)}
+dialog.lb{border:0;padding:0;border-radius:12px;max-width:min(1200px,calc(100vw - 32px));background:#fff;box-shadow:0 24px 60px rgba(27,36,48,.35)}
+dialog.lb::backdrop{background:rgba(27,36,48,.6)}
+dialog.lb img{display:block;max-width:100%;max-height:calc(100vh - 120px)}
+dialog.lb .lbh{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-weight:700}
+.gallery button{all:unset;cursor:zoom-in;display:block;font-size:13px;color:var(--ink2)}
+.gallery button:focus-visible{outline:3px solid var(--srv1);outline-offset:2px;border-radius:6px}
+.more{border:0;background:none;color:var(--srv1);font-weight:700;cursor:pointer;padding:2px 0;font-size:14px}
+.rub + .rub{margin-left:4px}
+.rubs{display:flex;gap:4px;flex-wrap:wrap}
+/* ---- D2 additions ---- */
+.polpill{font-size:14px;color:var(--ink2);background:#EEF2F5;border:1px solid var(--rule);border-radius:999px;padding:3px 12px}
+.polpill b{color:var(--ink)}
+.grp{padding:12px 18px 2px;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--rule2)}
+.grp.d2{color:#8A5B00;background:var(--signalbg);border-top:1px solid #F0D9A3;border-bottom-color:#F0D9A3;padding-bottom:10px}
+.step .n.d2{background:var(--signal)}
+.tog{display:flex;gap:8px;flex-wrap:wrap}
+.tog .btn{padding:6px 12px;font-size:14.5px}
+.btn.bad{background:var(--badbg);color:var(--bad);border-color:#EBB4AE}
+.btn.bad:hover:not(:disabled){background:#F8D9D5;border-color:var(--bad)}
+.tog small{display:block;font-weight:400;font-size:12px;opacity:.8}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pick.col{flex-direction:column;align-items:stretch;gap:3px;margin:0 0 8px}
+.pick.col select{width:100%}
+.scen{display:flex;flex-direction:column;gap:6px}
+.scen button{display:flex;justify-content:space-between;align-items:center;text-align:left;border:1px solid var(--rule);background:#fff;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:14.5px;font-weight:700}
+.scen button:hover:not(:disabled){border-color:var(--ink)}
+.scen button:disabled{opacity:.45;cursor:not-allowed}
+.scen button span{font-weight:400;color:var(--ink3);font-size:13px}
+.scen button.on{background:var(--signalbg);border-color:var(--signal)}
+.prog{font-size:14px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--signalbg);color:#6B4700}
+.prog b{display:block;color:var(--ink)}
+.prog .bar2{height:5px;border-radius:3px;background:#F0D9A3;margin-top:6px;overflow:hidden}
+.prog .bar2 i{display:block;height:100%;background:var(--signal)}
+.top .map{position:sticky;top:60px}
+@media (max-width:1000px){.top .map{position:static}}
+.swtabs{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin:0 0 10px}
+.swtabs button{border:0;background:#fff;padding:4px 12px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink2)}
+.swtabs button + button{border-left:1px solid var(--rule)}
+.swtabs button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.dec .why{font-size:13.5px;color:var(--ink2);margin-top:4px}
+.dec .why b{color:var(--ink)}
+.loads span.down{color:var(--bad);border-color:#EBB4AE;background:var(--badbg)}
+.tagc{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 6px;margin-left:6px;vertical-align:1px;background:#EEF2F5;color:var(--ink2)}
+.tagc.slow{background:#ECE9FA;color:#4A3BB0}
+.tagc.hot{background:var(--badbg);color:var(--bad)}
+/* conditions row */
+.two{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1100px){.two{grid-template-columns:minmax(0,1fr)}}
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.ckey{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13.5px;color:var(--ink2);margin-top:6px}
+.ckey i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:4px;margin-right:6px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:13px;padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:5;transform:translate(-50%,-125%)}
+.tl{max-height:330px;overflow:auto;margin:0;padding:0;list-style:none}
+.tl li{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--rule2);font-size:14px;line-height:1.4}
+.tl li:first-child{border-top:0}
+.tl time{color:var(--ink3);font-variant-numeric:tabular-nums;font-size:13px}
+.tl .k{display:inline-block;font-size:11.5px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:6px;vertical-align:1px}
+.k.bad{background:var(--badbg);color:var(--bad)} .k.good{background:var(--goodbg);color:var(--good)}
+.k.mon{background:var(--signalbg);color:#8A5B00} .k.act{background:#E6EEF8;color:#245FA8} .k.rr{background:#ECE9FA;color:#4A3BB0}
+/* terminal */
+.term{background:#14191F;color:#D7DEE5;font-family:var(--code);font-size:13px;line-height:1.5;border-radius:10px;padding:10px 14px;height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.term .t{color:#6E7B88}
+.term .dashboard{color:#6FD3E0} .term .controller{color:#F2C86B} .term .client{color:#C9D3DD} .term .you{color:#9BE29B;font-weight:600} .term .output{color:#AAB6C2}
+.thead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.thead label{font-size:14px;color:var(--ink2)}
+/* results */
+.cards.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1000px){.cards.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.res .two{margin-top:16px}
+table.cmp{border-collapse:collapse;width:100%;font-size:14px}
+.cmp th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink3);padding:6px 8px;border-bottom:1px solid var(--rule)}
+.cmp td{padding:7px 8px;border-bottom:1px solid var(--rule2);vertical-align:top}
+.cmp td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmp th.n{text-align:right}
+.cmp td.best{font-weight:700;color:var(--good)}
+.cmp .cond{display:inline-block;font-size:12px;font-weight:700;border-radius:4px;padding:0 6px;margin:1px 4px 1px 0;background:var(--badbg);color:var(--bad)}
+.cmp .cond.ok{background:var(--goodbg);color:var(--good)}
+.hint{font-size:13.5px;color:var(--ink3);margin:8px 0 0}
+details.meas{margin-top:16px;border-top:1px solid var(--rule2);padding-top:12px}
+details.meas > summary{cursor:pointer;font-weight:700;font-size:16.5px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
+.rcard{border:1px solid var(--rule2);border-radius:10px;padding:12px 14px}
+.rcard h3{margin:0 0 4px;font-size:16px}
+.rcard .claim{margin:0 0 8px;font-size:14.5px}
+.metric{font-size:13px;color:var(--ink3);margin:8px 0 4px}
+.bars{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;align-items:center;font-size:13.5px}
+.bars .track{position:relative;height:20px;background:#F1F4F7;border-radius:5px}
+.bars .fill{height:100%;border-radius:5px}
+.bars .val{position:absolute;top:0;left:8px;line-height:20px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:14px}
+.gallery a{display:block;font-size:13px;color:var(--ink2);text-decoration:none}
+.gallery img{width:100%;border:1px solid var(--rule);border-radius:8px;display:block;margin-bottom:4px;background:#fff}
+@media (prefers-reduced-motion: reduce){.beat,.rule.fresh{animation:none}}
 </style>
 </head>
 <body>
+
 <header class="bar">
   <h1>SDN content delivery</h1>
-  <span class="tag">Three servers, three clients, and a controller that picks the best server and route for every download.</span>
-  <span class="live off" id="live"><i></i><span id="liveText">Connecting…</span></span>
-  <button class="rulesbtn" id="rulesBtn" aria-haspopup="dialog"><small>Controller rules (click to change)</small><b id="rulesText">–</b></button>
+  <span class="live" id="live"><i></i><span>Connecting…</span></span>
+  <span class="polpill" id="polpill"></span>
+  <span class="sp"></span>
+  <span class="kbd">Point at the map for details · click a link or server to break it · P pause</span>
 </header>
-<div class="simnote hidden" id="simNote">Practice mode: this is a simulation of the network for rehearsing. Numbers are estimates. In the VM, run <code>sudo python3 dashboard/demo.py</code> for the real one.</div>
+<nav class="jump" aria-label="Sections of this page">
+  <a href="#s-demo"><b>1</b> Run the demo</a>
+  <a href="#s-evidence"><b>2</b> Messages, choices, rules</a>
+  <a href="#s-network"><b>3</b> Link load &amp; events</a>
+  <a href="#s-term"><b>4</b> Terminal</a>
+  <a href="#s-results"><b>5</b> Results &amp; comparison</a>
+</nav>
 
-<div class="shell">
-  <!-- ================= GUIDE ================= -->
-  <nav class="guide" aria-label="Guided demos and controls">
-    <div class="box intro" id="intro">
-      <button class="x" id="introClose" aria-label="Hide these tips">×</button>
-      <p><b>How to use this page</b></p>
-      <p>1. Press <b>Play</b> on a demo below.</p>
-      <p>2. Watch the map: coloured dots are files moving from a server to a client.</p>
-      <p>3. Read <b>What just happened</b> under the map for the reason.</p>
-    </div>
-
-    <div class="box">
-      <h2 class="gh">Guided demos</h2>
-      <p class="gsub">Best in this order. Each takes about half a minute.</p>
-      <div id="demos"></div>
-
-      <details class="try" id="tryIt">
-        <summary><span>Try it yourself<small>Send downloads, break things, change the rules</small></span></summary>
-        <div class="tbody">
-          <h4>Send downloads</h4>
-          <div class="row">
-            <select id="rqClient" aria-label="Which client"><option value="all">All three clients</option><option value="h1">Client h1</option><option value="h2">Client h2</option><option value="h3">Client h3</option></select>
-            <select id="rqFile" aria-label="File size"><option value="large.bin">5 MB file</option><option value="medium.bin" selected>1 MB file</option><option value="small.bin">10 KB file</option></select>
-          </div>
-          <div class="row">
-            <span class="lab">How many each</span>
-            <input id="rqCount" type="number" min="1" max="50" value="3" aria-label="How many downloads each">
-            <button class="btn small" id="rqSend">Send</button>
-          </div>
-          <p class="hint" id="clientProgress"></p>
-
-          <h4>Crash or restart a server</h4>
-          <div id="srvCtl"></div>
-
-          <h4>Cut or repair a link</h4>
-          <div id="linkCtl"></div>
-
-          <h4>Jam the fast route</h4>
-          <div class="row">
-            <span class="lab">Background traffic <small id="floodState">off</small></span>
-            <input id="floodMbps" type="number" min="1" max="100" value="25" aria-label="Flood speed in Mbps"><span>Mbps</span>
-            <button class="btn small line" id="floodBtn">Start</button>
-          </div>
-          <p class="hint">A UDP flood from <b>gen</b> to <b>sink</b>, which are not content servers. It fills the fast route so you can see the controller avoid it.</p>
+<main class="wrap">
+  <div class="top" id="s-demo">
+    <section class="box steps" aria-label="Demo steps">
+      <div class="grp">Basics · requests, concurrency, errors</div>
+      <div class="step">
+        <h2><span class="n">1</span>Three clients at once</h2>
+        <p>h1, h2 and h3 each download 5 MB files at the same moment, all from one address: <code>10.0.0.100</code>.</p>
+        <div class="row2">
+          <button class="btn" id="go1"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>Run</button>
+          <label class="pick" style="margin:0">files each
+            <select id="count1"><option value="1">1</option><option value="3" selected>3</option><option value="5">5</option><option value="10">10</option></select>
+          </label>
         </div>
-      </details>
-
-      <div class="reset">
-        <button class="btn line small" id="resetBtn">Fix everything</button>
-        <button class="btn line small" id="clearBtn">Clear the charts</button>
       </div>
-    </div>
-  </nav>
+      <div class="step">
+        <h2><span class="n">2</span>One client at a time</h2>
+        <p>Pick a client. It sends <code>GET</code> to <code>10.0.0.100</code> and receives the file from the server the controller chooses.</p>
+        <label class="pick">File
+          <select id="file1">
+            <option value="small.txt">small.txt · 1 KB</option>
+            <option value="medium.bin">medium.bin · 1 MB</option>
+            <option value="large.bin" selected>large.bin · 5 MB</option>
+          </select>
+        </label>
+        <div class="trio" data-file="file1">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n">3</span>Ask for a missing file</h2>
+        <p>The client asks for <code>missing.bin</code>. The server answers <code>ERR 404</code> and nothing crashes.</p>
+        <div class="trio" data-file="missing.bin">
+          <button class="btn" data-client="h1">h1</button><button class="btn" data-client="h2">h2</button><button class="btn" data-client="h3">h3</button>
+        </div>
+      </div>
+      <div class="grp d2">Failures, congestion and policies</div>
+      <div class="step">
+        <h2><span class="n d2">4</span>Crash a server</h2>
+        <p>Stops the server program. Its heartbeats stop, and after 3 s the controller marks it down and sends new clients to the others.</p>
+        <div class="tog" id="srvTog"></div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">5</span>Cut a link</h2>
+        <p>The switch tells the controller, which deletes the old rules and moves every download to the other route.</p>
+        <div class="tog" id="linkTog"></div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">6</span>Jam the fast route</h2>
+        <p><code>gen</code> floods UDP to <code>sink</code> through s4 → s2 → s1. The controller measures every link each 2 s; above 70% busy counts as congested.</p>
+        <div class="row2">
+          <button class="btn" id="floodBtn">Start flood</button>
+          <label class="pick" style="margin:0"><select id="floodMbps"><option value="15">15 Mbps</option><option value="25" selected>25 Mbps</option><option value="40">40 Mbps</option></select></label>
+        </div>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">7</span>Change the controller's rules</h2>
+        <p>Restarts the controller (about 5 s). Clear results, run the same test again, and compare below.</p>
+        <label class="pick col">Server choice
+          <select id="lbSel"><option value="least_loaded">Least busy server (least_loaded)</option><option value="round_robin">Take turns (round_robin)</option><option value="static">Always srv1 (static)</option></select>
+        </label>
+        <label class="pick col">Route choice
+          <select id="pathSel"><option value="congestion">Avoid busy links (congestion)</option><option value="delay">Shortest route only (delay)</option></select>
+        </label>
+        <button class="btn" id="applyPol">Apply</button>
+      </div>
+      <div class="step">
+        <h2><span class="n d2">8</span>Guided tests</h2>
+        <p>Each one runs by itself and repeats the automated experiments.</p>
+        <div class="scen" id="scen"></div>
+        <div class="prog hidden" id="prog"></div>
+      </div>
+      <div class="step">
+        <div class="row2"><button class="btn line" id="reset">Fix everything</button><button class="btn line" id="clear">Clear results</button></div>
+        <div class="status hidden" id="status"></div>
+      </div>
+    </section>
 
-  <!-- ================= MAIN ================= -->
-  <main class="mainc">
     <section class="box map" aria-labelledby="h-map">
-      <div class="maphead"><h2 id="h-map">The network, live</h2><span>Point at anything on the map for details</span></div>
-      <div class="canvas-wrap">
-        <canvas id="stage" role="img" aria-label="Network map: clients on the left, servers on the right, controller on top, with live traffic"></canvas>
-        <div class="stip hidden" id="stip"></div>
-      </div>
+      <div class="maphead"><h2 id="h-map">The network</h2>
+        <div class="play">
+          <button class="btn line sm" id="pause" aria-pressed="false" title="Freeze the packets (P)">Pause</button>
+          <button class="btn line sm hidden" id="stepBtn" title="Move the packets a little (→)">Step ▸</button>
+          <span class="rub">D1 Architecture · 2</span>
+          <span class="seg" role="group" aria-label="Animation speed">
+            <button data-speed="0.1" aria-pressed="false">⅒×</button><button data-speed="0.25" aria-pressed="false">¼×</button><button data-speed="0.5" aria-pressed="false">½×</button><button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button>
+          </span>
+        </div></div>
+      <div class="stip hidden" id="stip"></div>
+      <canvas id="stage" role="img" aria-label="Network map: three clients on the left, three servers on the right, four switches in the middle and the controller on top"></canvas>
       <div class="key">
-        <span><i class="k-dot"></i>File data, in the colour of the server sending it</span>
-        <span><i class="k-hb"></i>Server heartbeat to the controller (every second)</span>
-        <span><i class="k-sig"></i>Controller deciding and installing rules</span>
-        <span><i class="k-busy"></i>Link 70% busy or more, or cut</span>
-        <span><i class="k-flood"></i>Background traffic</span>
+        <span><i style="width:10px;height:10px;border-radius:50%;background:#2A78D6;border:1.5px solid #fff;box-shadow:0 0 0 1px #2A78D6"></i>file data (TCP), coloured by server</span>
+        <span><i style="width:9px;height:9px;background:#C98500;transform:rotate(45deg)"></i>switch ↔ controller (OpenFlow)</span>
+        <span><i style="width:9px;height:9px;background:#1BAF7A;transform:rotate(45deg)"></i>server heartbeat (UDP, every 1 s)</span>
+        <span><i style="width:7px;height:7px;border-radius:50%;background:#8E9AA8"></i>background flood (UDP)</span>
+        <span><i style="width:18px;height:6px;border-radius:3px;background:#D64545"></i>link over 70% busy</span>
       </div>
     </section>
+  </div>
 
-    <section class="box story" aria-labelledby="h-story" aria-live="polite">
-      <h2 id="h-story">What just happened</h2>
-      <p class="now" id="now">Nothing yet. Press <b>Play</b> on a demo to start.</p>
-      <ul class="earlier" id="earlier"></ul>
+  <div class="three" id="s-evidence">
+    <section class="box panel" aria-labelledby="h-sock">
+      <div class="ph"><h2 id="h-sock">Socket messages</h2><span class="rubs"><span class="rub">D1 Sockets · 4</span><span class="rub">D2 Functionality · 4</span></span></div>
+      <p class="lead">Our own text protocol over raw sockets. Each server gives every connection its own thread.</p>
+      <div class="conc" id="conc"></div>
+      <div id="tcp"></div>
+      <div class="sub">UDP heartbeats → controller 10.0.0.254:5555</div>
+      <div id="udp"></div>
     </section>
 
-    <section class="strip" id="strip" aria-label="Content servers"></section>
-
-    <section class="box details" aria-label="Details">
-      <div class="tabs" role="tablist">
-        <button role="tab" aria-selected="true" data-tab="time">Over time</button>
-        <button role="tab" aria-selected="false" data-tab="rules">Switch rules</button>
-        <button role="tab" aria-selected="false" data-tab="log">Activity log</button>
-        <button role="tab" aria-selected="false" data-tab="results">Measured results</button>
-      </div>
-
-      <div class="panel" id="p-time">
-        <p class="lead">Dotted vertical lines mark what you did, so you can see the effect right after it.</p>
-        <div class="chart" id="utilChart">
-          <h3>How busy each route is</h3>
-          <div class="ck"><span><i style="border-color:var(--ink)"></i>Fast route (through s2)</span><span><i style="border-color:var(--slow)"></i>Slow route (through s3)</span><span><i style="border-color:var(--bad);border-top-style:dashed;border-top-width:2px"></i>70%: the controller treats it as congested</span></div>
-          <svg id="utilSvg" viewBox="0 0 760 200" role="img" aria-label="Route utilisation over time"></svg>
-        </div>
-        <div class="chart" id="reqChart">
-          <h3>How long each download took (seconds)</h3>
-          <div class="ck" id="reqKey"></div>
-          <svg id="reqSvg" viewBox="0 0 760 190" role="img" aria-label="Download time for each request"></svg>
-        </div>
-      </div>
-
-      <div class="panel hidden" id="p-rules">
-        <p class="lead">These are the real forwarding rules inside each switch, read live with <code>ovs-ofctl dump-flows</code>. The controller adds rules for every new download and they expire when idle. New rules flash yellow.</p>
-        <div class="swtabs" role="tablist" aria-label="Switch">
-          <button data-sw="1" aria-selected="true">s1</button><button data-sw="2" aria-selected="false">s2</button><button data-sw="3" aria-selected="false">s3</button><button data-sw="4" aria-selected="false">s4</button>
-        </div>
-        <p class="meta2" id="flowMeta">Loading…</p>
-        <div class="tablewrap"><table>
-          <thead><tr><th>Type</th><th>What it does</th><th class="r">Priority</th><th>Matches</th><th>Then</th><th class="r">Packets</th><th class="r">Expires after</th></tr></thead>
-          <tbody id="flowRows"></tbody>
-        </table></div>
-      </div>
-
-      <div class="panel hidden" id="p-log">
-        <div class="logcols">
-          <div>
-            <p class="h3">Everything, newest first</p>
-            <div class="log" id="log"></div>
-          </div>
-          <div>
-            <p class="h3">Controller decisions</p>
-            <div class="tablewrap"><table>
-              <thead><tr><th>Time</th><th>Client</th><th>Sent to</th><th>Route</th><th>Server loads it saw</th></tr></thead>
-              <tbody id="decRows"></tbody>
-            </table></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel hidden" id="p-results">
-        <p class="lead" id="resLead">Measured by the automated experiment runner, with identical conditions for every setting.</p>
-        <div class="rgrid" id="resCards"></div>
-        <div class="gallery" id="gallery"></div>
-      </div>
+    <section class="box panel" aria-labelledby="h-ctrl">
+      <div class="ph"><h2 id="h-ctrl">Controller's choice</h2><span class="rubs"><span class="rub">D1 Socket–SDN · 3</span><span class="rub">D2 Dynamic SDN · 6</span></span></div>
+      <ol class="how" id="how"></ol>
+      <div id="decs"></div>
+      <button class="more hidden" id="decMore"></button>
     </section>
-  </main>
-</div>
 
-<dialog id="rulesDlg" aria-labelledby="dlgTitle">
-  <form method="dialog" class="dlg" id="rulesForm">
-    <h2 id="dlgTitle">Controller rules</h2>
-    <p>How the controller chooses a server and a route. Changing them restarts the controller, which takes about 10 seconds.</p>
-    <fieldset>
-      <legend>Choosing a server</legend>
-      <label class="opt"><input type="radio" name="lb" value="least_loaded"><b>Least busy server</b><span>The server with the fewest downloads right now. <code>least_loaded</code></span></label>
-      <label class="opt"><input type="radio" name="lb" value="round_robin"><b>Take turns</b><span>srv1, srv2, srv3, srv1… skipping servers that are down. <code>round_robin</code></span></label>
-      <label class="opt"><input type="radio" name="lb" value="static"><b>Always srv1</b><span>No smart choice at all. The baseline to compare against. <code>static</code></span></label>
-    </fieldset>
-    <fieldset>
-      <legend>Choosing a route</legend>
-      <label class="opt"><input type="radio" name="path" value="congestion"><b>Avoid busy links</b><span>Take the slow route when the fast one is 70% busy or more. <code>congestion</code></span></label>
-      <label class="opt"><input type="radio" name="path" value="delay"><b>Shortest route only</b><span>Always the fastest route on paper, even when it is jammed. <code>delay</code></span></label>
-    </fieldset>
-    <div class="actions">
-      <button class="btn line" value="cancel" formnovalidate>Cancel</button>
-      <button class="btn" id="applyRules" value="apply">Restart with these rules</button>
+    <section class="box panel" aria-labelledby="h-rules">
+      <div class="ph"><h2 id="h-rules">Rules in switch <span id="swName">s1</span></h2><span class="rubs"><span class="rub">D1 Mininet + SDN · 4</span><span class="rub">D2 Dynamic SDN · 6</span></span></div>
+      <div class="swtabs" role="group" aria-label="Switch"><button data-sw="1" aria-pressed="true">s1</button><button data-sw="2" aria-pressed="false">s2</button><button data-sw="3" aria-pressed="false">s3</button><button data-sw="4" aria-pressed="false">s4</button></div>
+      <p class="lead" id="swLead">s1 swaps the shared address for the chosen server, and back on the reply. Read live from Open vSwitch.</p>
+      <button class="btn line sm logbtn" id="openLog">Open rule log <span id="logCount"></span></button>
+      <div id="rules"></div>
+      <div class="fixed" id="fixed"></div>
+      <details class="raw"><summary>Show the raw rules (<span id="rawCmd">ovs-ofctl dump-flows s1</span>)</summary><pre id="raw"></pre></details>
+    </section>
+  </div>
+
+  <div class="two" id="s-network">
+    <section class="box panel" aria-labelledby="h-load">
+      <div class="ph"><h2 id="h-load">Link load, live</h2><span class="rub">D2 Robustness · 4</span></div>
+      <p class="lead">How busy each route is, measured by the controller from the switches' port counters every 2 s. Above the red line it counts as congested.</p>
+      <div class="chart" id="utilChart"><svg id="utilSvg" viewBox="0 0 760 210" role="img" aria-label="Link load over time"></svg></div>
+      <div class="ckey"><span><i style="background:#1B2430"></i>fast route (s1–s2–s4)</span><span><i style="background:#5B4BC4"></i>slow route (s1–s3–s4)</span><span><i style="background:#D64545;height:0;border-top:2px dashed #D64545"></i>70% congestion line</span><span style="color:var(--ink3)">grey marks: what you did</span></div>
+    </section>
+    <section class="box panel" aria-labelledby="h-tl">
+      <div class="ph"><h2 id="h-tl">What the controller noticed</h2><span class="rub">D2 Dynamic SDN · 6</span></div>
+      <label class="pick" style="margin:0 0 6px;font-size:13.5px"><input type="checkbox" id="tlDec"> also list every server choice</label>
+      <ul class="tl" id="tl"></ul>
+    </section>
+  </div>
+
+  <section class="box panel" aria-labelledby="h-term" id="s-term">
+    <div class="thead"><div class="ph" style="margin:0"><h2 id="h-term">Terminal</h2><span class="rub">D2 Demo · 6</span></div>
+      <span class="lead" style="margin:0" id="termLead">The same lines as the Ubuntu terminal running <code>demo.py</code>: your clicks as mininet&gt; commands, the controller's decisions, and the clients' output.</span>
+      <label><input type="checkbox" id="follow" checked> follow</label></div>
+    <div class="term" id="term" tabindex="0" aria-label="Terminal output"></div>
+  </section>
+
+  <section class="box res" aria-labelledby="h-res" id="s-results">
+    <div class="ph"><h2 id="h-res">Results and comparison</h2><span class="rubs"><span class="rub">D1 Initial testing · 2</span><span class="rub">D2 Performance · 5</span></span></div>
+    <div class="cards five">
+      <div class="card"><div class="v num" id="rDone">0</div><div class="l">requests served OK</div></div>
+      <div class="card"><div class="v num" id="rTime">–</div><div class="l">average response time</div></div>
+      <div class="card"><div class="v num" id="rMbps">–</div><div class="l">average throughput</div></div>
+      <div class="card"><div class="v num" id="rRetry">0</div><div class="l">retried · failed</div></div>
+      <div class="card"><div class="v num" id="rErr">0</div><div class="l">errors handled cleanly</div></div>
     </div>
-  </form>
+    <div class="two">
+      <div>
+        <div class="sub" style="margin-top:0">Every request (response time)</div>
+        <div class="chart" id="reqChart"><svg id="reqSvg" viewBox="0 0 760 200" role="img" aria-label="Response time of each request"></svg></div>
+        <div class="ckey" id="reqKey"></div>
+      </div>
+      <div>
+        <div class="sub" style="margin-top:0">Compare: same requests, different rules and conditions</div>
+        <div id="cmp"></div>
+        <p class="hint">Each row groups the requests made under one controller setting and one network condition. Run step 1 with two settings (step 7) to compare them side by side.</p>
+      </div>
+    </div>
+    <details class="meas" id="meas" open><summary>Measured experiments (automated runner)</summary>
+      <p class="lead" id="resLead" style="margin-top:8px"></p>
+      <div class="rgrid" id="resCards"></div>
+      <div class="gallery" id="gallery"></div>
+    </details>
+  </section>
+</main>
+<dialog class="log" id="logDlg" aria-labelledby="logTitle">
+  <div class="lhead">
+    <div><h2 id="logTitle">Rule log · switch s1</h2>
+      <p>Every address-swap rule the controller installed in s1 during this session, read from Open vSwitch once a second. Rules stay here after the switch removes them.</p></div>
+    <span class="sp"></span>
+    <button class="x" id="closeLog" aria-label="Close">×</button>
+  </div>
+  <div class="ltools">
+    <span id="logStats"></span>
+    <label><input type="checkbox" id="showRaw"> Show the raw OpenFlow rules</label>
+    <a href="/api/rulelog.csv" download="s1_rules.csv" id="dlCsv">Download CSV</a>
+    <span id="logFile"></span>
+  </div>
+  <div class="lbody"><table class="lt">
+    <thead><tr><th>#</th><th>Installed</th><th>Connection</th><th>Request rule<br>(client → server)</th><th>Reply rule<br>(server → client)</th><th>Status</th></tr></thead>
+    <tbody id="logRows"></tbody>
+  </table></div>
 </dialog>
-
+<dialog class="lb" id="lb" aria-label="Graph"><div class="lbh"><span id="lbT"></span><button class="x" id="lbX" aria-label="Close">×</button></div><img id="lbI" alt=""></dialog>
 <div class="toast hidden" id="toast" role="status"></div>
 
 <script>
 const $ = id => document.getElementById(id);
-const NS = "http://www.w3.org/2000/svg";
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const SRVC = {srv1:"#2A78D6", srv2:"#EB6834", srv3:"#1BAF7A"};
-const colorOf = s => SRVC[s] || "#7B8896";
+const SRVIP = {srv1:"10.0.0.11", srv2:"10.0.0.12", srv3:"10.0.0.13"};
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SIZE = {"large.bin":"5 MB", "medium.bin":"1 MB", "small.txt":"1 KB"};
 const LB_NAME = {least_loaded:"Least busy server", round_robin:"Take turns", static:"Always srv1"};
 const PATH_NAME = {congestion:"avoid busy links", delay:"shortest route only"};
-const FILE_NAME = {"large.bin":"5 MB", "medium.bin":"1 MB", "small.bin":"10 KB"};
-const DEMOS = [   // order matters: it is the suggested demo sequence
-  {key:"concurrent", backend:"Three clients at once", title:"Spread the load", text:"All three clients download at the same time.",
-   watch:"Each client is sent to a different server, so nobody waits in line. Try it again with the rules set to “Always srv1” to see the difference.",
-   watchStatic:"All three clients are sent to srv1 and share it, so every download is slower. Switch the rules back to “Least busy server” to compare."},
-  {key:"linkfail", backend:"Link cut", title:"Cut the fast link", text:"h1 is downloading when the s1–s2 cable is cut, then repaired.",
-   watch:"The dots jump to the slow route through s3 and keep flowing. No download fails."},
-  {key:"congestion", backend:"Congested path", title:"Jam the fast route", text:"Background traffic fills the fast route, then h1 starts downloading.",
-   watch:"The fast route turns red and h1’s file goes the long way round through s3, avoiding the jam."},
-  {key:"serverfail", backend:"Server crash", title:"Crash a server", text:"Three clients download while srv1 is crashed, then restarted.",
-   watch:"srv1’s heartbeats stop. Within 3 seconds the controller marks it down and sends everyone to srv2 and srv3.",
-   watchStatic:"srv1’s heartbeats stop and the controller marks it down, but the “Always srv1” rule keeps sending clients there, so their downloads fail."},
-];
-let S = null, busyAction = false, doneDemos = new Set();
-
-function setHTML(node, html){ if (node._h !== html){ node.innerHTML = html; node._h = html; } }  // only touch the DOM when content changed
-function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } }
-function el(tag, attrs, parent, text){
-  const n = document.createElementNS(NS, tag);
-  for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) n.setAttribute(k, attrs[k]);
-  if (text !== undefined) n.textContent = text;
-  if (parent) parent.appendChild(n);
-  return n;
-}
-const clock = t => new Date(t*1000).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+const LINKS = [[1,2],[2,4],[1,3],[3,4]];     // same order as the controller's link list
+let S = null, busy = false;
+function setHTML(node, html){ if (node._h !== html){ node.innerHTML = html; node._h = html; } }
+const ms = v => v == null ? "–" : v >= 1000 ? (v/1000).toFixed(1) + " s" : Math.round(v) + " ms";
 const route = p => String(p||"").split("-").filter(Boolean).join(" → ");
+
 function toast(msg, bad){
-  const t = $("toast"); t.textContent = msg; t.classList.toggle("bad", !!bad); t.classList.remove("hidden");
-  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hidden"), bad ? 5000 : 2400);
+  const t = $("toast"); t.textContent = msg; t.className = "toast" + (bad ? " bad" : "");
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add("hidden"), bad ? 5000 : 2200);
 }
-async function act(body, okMsg){
-  if (busyAction) return;
-  busyAction = true;
+async function act(body, msg){
+  if (busy) return; busy = true;
   try {
-    const r = await fetch("/api/action", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
-    const d = await r.json();
-    if (d.ok) toast(okMsg || d.message); else toast(d.message || "That didn't work", true);
+    const d = await (await fetch("/api/action", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)})).json();
+    if (d.ok) toast(msg || d.message); else toast(d.message || "That didn't work", true);
   } catch(e){ toast("Can't reach the dashboard. Is demo.py still running in the VM?", true); }
-  busyAction = false;
-  refresh();
+  busy = false; refresh();
 }
+$("go1").onclick = () => { const n = +$("count1").value; act({action:"request", client:"all", file:"large.bin", count:n}, `h1, h2 and h3 are downloading ${n} file${n>1?"s":""} each`); };
+document.querySelectorAll(".trio").forEach(row => row.querySelectorAll("button").forEach(b => {
+  b.onclick = () => {
+    const c = b.dataset.client, src = row.dataset.file;
+    const file = src === "missing.bin" ? src : $(src).value;
+    act({action:"request", client:c, file, count:1}, `${c} asked 10.0.0.100 for ${file}`);
+  };
+}));
+$("clear").onclick = () => { act({action:"clear"}, "Cleared"); seenRules = null; };
+$("reset").onclick = () => act({action:"reset"}, "Fixing everything: links up, servers running, flood off");
+$("floodBtn").onclick = () => act(S && S.flood.on ? {action:"flood", op:"stop"} : {action:"flood", op:"start", mbps:+$("floodMbps").value});
+$("applyPol").onclick = () => act({action:"policy", lb:$("lbSel").value, path:$("pathSel").value}, "Restarting the controller with the new rules…");
+document.getElementById("srvTog").addEventListener("click", e => {
+  const b = e.target.closest("button[data-srv]"); if (!b || !S) return;
+  const s = S.servers.find(x => x.name === b.dataset.srv);
+  act({action:"server", name:s.name, op: s.process ? "stop" : "start"});
+});
+document.getElementById("linkTog").addEventListener("click", e => {
+  const b = e.target.closest("button[data-a]"); if (!b || !S) return;
+  const l = S.links.find(x => x.a === +b.dataset.a && x.b === +b.dataset.b);
+  act({action:"link", a:"s"+l.a, b:"s"+l.b, op: l.up ? "down" : "up"});
+});
+document.getElementById("scen").addEventListener("click", e => {
+  const b = e.target.closest("button[data-sc]"); if (!b) return;
+  if (b.dataset.sc === "stop") act({action:"scenario_stop"}); else act({action:"scenario", name:b.dataset.sc});
+});
 
-/* ================================================================
-   MAP (canvas): drawn like a metro map
-   ================================================================ */
-const W = 1000, H = 560;
-const C = {
-  paper:"#FFFFFF", ink:"#1B2430", ink2:"#4A5866", ink3:"#7B8896", track:"#E3E8EE",
-  busy:"#D64545", ok:"#1E7A55", signal:"#C98500", chan:"#E2B860", flood:"#8E9AA8", srv:SRVC
-};
+/* ================= MAP ================= */
+const W = 1000, H = 540;
+const C = {ink:"#1B2430", ink2:"#4A5866", ink3:"#7B8896", track:"#E3E8EE", signal:"#C98500", chan:"#E2B860", bad:"#D64545", ok:"#1E7A55", flood:"#8E9AA8", slow:"#5B4BC4"};
 const POS = {
-  controller:[500,62],
-  s1:[300,300], s2:[500,192], s3:[500,412], s4:[700,300],
-  h1:[96,192], h2:[96,300], h3:[96,408], sink:[210,500],
-  srv1:[904,192], srv2:[904,300], srv3:[904,408], gen:[790,500]
+  controller:[500,52],
+  s1:[300,300], s2:[500,175], s3:[500,425], s4:[700,300],
+  h1:[96,170], h2:[96,300], h3:[96,430], sink:[220,500],
+  srv1:[904,170], srv2:[904,300], srv3:[904,430], gen:[780,500]
 };
-const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["sink","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"],["gen","s4"]];
-const CHAN_CP = {s1:[320,120], s2:null, s3:[650,250], s4:[680,120]};
-const CTRL_ANCHOR = [500,92];
-
+const HOSTLINK = [["h1","s1"],["h2","s1"],["h3","s1"],["srv1","s4"],["srv2","s4"],["srv3","s4"]];
+const CHAN_CP = {s1:[310,110], s2:null, s3:[640,230], s4:[690,110]};
+const ANCHOR = [500,80];
 const canvas = $("stage"), ctx = canvas.getContext("2d");
 let scale = 1, dpr = 1;
 function resize(){
   const w = canvas.parentElement.clientWidth || 800;
   dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * H / W * dpr);
-  canvas.style.height = (w * H / W) + "px";
-  scale = w / W;
+  canvas.width = Math.round(w*dpr); canvas.height = Math.round(w*H/W*dpr);
+  canvas.style.height = (w*H/W) + "px"; scale = w/W;
 }
-new ResizeObserver(resize).observe(canvas.parentElement);
-resize();
+new ResizeObserver(resize).observe(canvas.parentElement); resize();
 
-function geom(pts){
-  const lens = [0];
-  for (let i=1;i<pts.length;i++) lens.push(lens[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
-  return {pts, lens, total: lens[lens.length-1] || 1};
-}
-function at(g, d){
-  d = Math.max(0, Math.min(g.total, d));
-  let i = 1; while (i < g.lens.length-1 && g.lens[i] < d) i++;
-  const seg = g.lens[i] - g.lens[i-1] || 1, f = (d - g.lens[i-1]) / seg, a = g.pts[i-1], b = g.pts[i];
-  return [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f];
-}
+function geom(pts){ const L=[0]; for (let i=1;i<pts.length;i++) L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1])); return {pts, L, total:L[L.length-1]||1}; }
+function at(g, d){ d=Math.max(0,Math.min(g.total,d)); let i=1; while(i<g.L.length-1 && g.L[i]<d) i++; const f=(d-g.L[i-1])/((g.L[i]-g.L[i-1])||1), a=g.pts[i-1], b=g.pts[i]; return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f]; }
 function offsetPts(names, off){
   const P = names.map(n => POS[n]); if (!off) return P.map(p => p.slice());
   const out = [];
   for (let i=0;i<P.length-1;i++){
-    const [p,q] = [P[i],P[i+1]], dx=q[0]-p[0], dy=q[1]-p[1], L=Math.hypot(dx,dy)||1, nx=-dy/L*off, ny=dx/L*off;
-    const a=[p[0]+nx,p[1]+ny], b=[q[0]+nx,q[1]+ny];
+    const p=P[i], q=P[i+1], dx=q[0]-p[0], dy=q[1]-p[1], L=Math.hypot(dx,dy)||1, nx=-dy/L*off, ny=dx/L*off, a=[p[0]+nx,p[1]+ny], b=[q[0]+nx,q[1]+ny];
     if (i===0) out.push(a); else { const pr=out[out.length-1]; out[out.length-1]=[(pr[0]+a[0])/2,(pr[1]+a[1])/2]; }
     out.push(b);
   }
   return out;
 }
 function chanPts(sw, up){
-  const a = CTRL_ANCHOR, b = POS[sw], cp = CHAN_CP[sw], pts = [];
-  for (let i=0;i<=20;i++){
-    const t = i/20;
-    if (!cp){ pts.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]); continue; }
-    pts.push([(1-t)*(1-t)*a[0] + 2*(1-t)*t*cp[0] + t*t*b[0], (1-t)*(1-t)*a[1] + 2*(1-t)*t*cp[1] + t*t*b[1]]);
-  }
+  const a = ANCHOR, b = POS[sw], cp = CHAN_CP[sw], pts = [];
+  for (let i=0;i<=20;i++){ const t=i/20;
+    pts.push(cp ? [(1-t)*(1-t)*a[0]+2*(1-t)*t*cp[0]+t*t*b[0], (1-t)*(1-t)*a[1]+2*(1-t)*t*cp[1]+t*t*b[1]] : [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]); }
   return up ? pts.reverse() : pts;
 }
-const linkOf = (a,b) => S && S.links.find(l => (l.a===a&&l.b===b)||(l.a===b&&l.b===a));
+let parts = [], fx = [], flash = {}, ctrlPulse = 0, seenDec = new Set(), first = true;
+const acc = {};
+function addLabel(o){   // one label per spot: a newer one replaces the older
+  fx = fx.filter(f => !(f.kind === "label" && Math.abs(f.x - o.x) < 5 && Math.abs(f.y - o.y) < 5));
+  fx.push(Object.assign({kind:"label", t:0, life:3.4}, o));
+}
+function addPart(pts, o){ if (!REDUCED) parts.push(Object.assign({g:geom(pts), d:0, speed:230, r:3.4, color:"#fff", shape:"dot"}, o)); }
+
+function active(){
+  if (!S) return [];
+  return (S.connections||[]).filter(c => c.path && c.path.length).map((c,i) => {
+    const on = c.active !== undefined ? c.active : !!S.clients?.[c.client]?.busy;
+    return Object.assign({}, c, {on});
+  });
+}
+function onState(){
+  for (const d of (S.decisions||[]).slice().reverse()){
+    const key = `${d.t.toFixed(2)}|${d.client}|${d.port}`;
+    if (seenDec.has(key)) continue;
+    seenDec.add(key);
+    if (first) continue;
+    const path = String(d.path||"").split("-").filter(Boolean);
+    addPart([POS[d.client], POS.s1], {color:C.ink, r:3.6, speed:320, shape:"sq", onArrive(){
+      addPart(chanPts("s1", true), {color:C.signal, r:5, shape:"sq", speed:400, label:"PACKET_IN: new download, which server?", onArrive(){
+        ctrlPulse = 1;
+        for (const sw of path) addPart(chanPts(sw, false), {color:C.signal, r:4.5, shape:"dia", speed:440, label: sw==="s1" ? "FLOW_MOD: install rules" : null, onArrive(){ flash[sw] = {t:0}; }});
+        fx.push({kind:"vip", t:0, life:3.4, text:`10.0.0.100 → ${d.server}`, color:SRVC[d.server]});
+      }});
+    }});
+  }
+  if (seenDec.size > 300) seenDec = new Set([...seenDec].slice(-150));
+  // D2: a moved download flashes its new route
+  for (const c of S.connections || []){
+    const key = `${c.client}:${c.port}`, pk = (c.path||[]).join("-");
+    if (conPath[key] && pk && conPath[key] !== pk && !first){
+      const names = [c.client, ...c.path.map(n => "s"+n), c.server];
+      fx.push({kind:"pathflash", t:0, life:2.6, names, color:C.signal});
+      addLabel({x:500, y:332, text:`${c.client} moved to ${c.path.map(n=>"s"+n).join(" → ")}`, color:C.ink});
+    }
+    if (pk) conPath[key] = pk;
+  }
+  // D2: link and server events from the controller
+  for (const e of S.events || []){
+    if (e.t <= seenEvT) continue;
+    seenEvT = Math.max(seenEvT, e.t);
+    if (first) continue;
+    const m = e.text.match(/s(\d)[-–]s(\d)/);
+    if (e.kind === "link" && m){
+      const a = POS["s"+m[1]], b = POS["s"+m[2]], down = /DOWN/.test(e.text);
+      fx.push({kind:"burst", t:0, life:1.1, x:(a[0]+b[0])/2, y:(a[1]+b[1])/2, color: down ? C.bad : C.ok, n: down ? 22 : 12});
+    }
+    const sm = e.text.match(/srv\d/);
+    if (sm && e.kind === "health"){
+      const p = POS[sm[0]], bad = /DOWN/.test(e.text);
+      fx.push({kind: bad ? "burst" : "ring", t:0, life:1.1, x:p[0], y:p[1], color: bad ? C.bad : C.ok, n:24, r0:30, r1:70});
+      addLabel({x:p[0]-50, y:p[1]-44, text: bad ? "controller: marked down" : "controller: back up", color: bad ? C.bad : C.ok});
+    }
+    if (e.kind === "monitor" && m && /congested \(/.test(e.text)){
+      addLabel({x:500, y:272, text:`controller: s${m[1]}–s${m[2]} congested`, color:C.bad});
+    }
+  }
+  first = false;
+}
+const conPath = {};
+let seenEvT = 0;
 function floodRoute(){
-  if (!S) return null;
-  const up = (a,b) => { const l = linkOf(a,b); return l && l.up; };
+  const up = (a,b) => { const l = S.links.find(x => x.a === a && x.b === b); return l && l.up; };
   if (up(2,4) && up(1,2)) return ["gen","s4","s2","s1","sink"];
   if (up(3,4) && up(1,3)) return ["gen","s4","s3","s1","sink"];
   return null;
 }
-
-let parts = [], fx = [];
-const spawnAcc = {}, conPath = {}, flash = {};
-let seenDec = new Set(), seenEvT = 0, firstState = true, ctrlPulse = 0;
-function addPart(pts, o){ if (REDUCED) return; parts.push(Object.assign({g:geom(pts), d:0, speed:230, r:3.4, color:"#fff", shape:"dot"}, o)); }
-function addFx(o){ fx.push(Object.assign({t:0, life:1.2}, o)); }
-function flashNode(n, color){ flash[n] = {t:0, color}; }
-
-function activeConnections(){
-  if (!S) return [];
-  const conns = (S.connections||[]).filter(c => c.path && c.path.length);
-  if (conns.some(c => c.active !== undefined)) return conns.map((c,i) => Object.assign({}, c, {idx:i}));
-  const newest = {};
-  for (const c of conns) if (!newest[c.client] || c.age < newest[c.client].age) newest[c.client] = c;
-  return conns.map((c,i) => Object.assign({}, c, {idx:i, active: !!(S.clients?.[c.client]?.busy && newest[c.client] === c)}));
-}
-function connRate(c, all){
-  if (c.mbps != null) return c.mbps;
-  let best = 9.4;
-  const fr = floodRoute();
-  for (let i=0;i<c.path.length-1;i++){
-    const l = linkOf(c.path[i], c.path[i+1]); if (!l) continue;
-    const pair = [c.path[i], c.path[i+1]].join();
-    const share = all.filter(o => o.active && o.path.join().includes(pair)).length || 1;
-    let used = l.mbps;
-    if (S.flood.on && fr && fr.includes("s"+l.a) && fr.includes("s"+l.b)) used = Math.max(0, used - Math.min(20, S.flood.mbps));
-    if (used > 0.2) best = Math.min(best, used / share);
-  }
-  return Math.max(0.4, best);
-}
-
-function onState(){
-  for (const d of (S.decisions || []).slice().reverse()){
-    const key = `${d.t.toFixed(2)}|${d.client}|${d.port}`;
-    if (seenDec.has(key)) continue;
-    seenDec.add(key);
-    if (firstState) continue;
-    const path = String(d.path||"").split("-").filter(Boolean);
-    addPart(offsetPts([d.client,"s1"],0), {color:C.ink, r:3.4, speed:320, shape:"sq", onArrive(){
-      addPart(chanPts("s1", true), {color:C.signal, r:5, shape:"sq", speed:420, label:"new download: which server?", onArrive(){
-        ctrlPulse = 1;
-        for (const sw of path) addPart(chanPts(sw, false), {color:C.signal, r:4.5, shape:"dia", speed:460, label: sw==="s1" ? "install rules" : null, onArrive(){ flashNode(sw, C.signal); }});
-        addFx({kind:"vip", life:3.4, text:`shared address ${S.vip} → ${d.server}`, color:C.srv[d.server]});
-        addFx({kind:"pathflash", life:1.6, names:[d.client, ...path, d.server], color:C.srv[d.server] || C.ink});
-      }});
-    }});
-  }
-  if (seenDec.size > 400) seenDec = new Set([...seenDec].slice(-200));
-  for (const c of S.connections || []){
-    const key = `${c.client}:${c.port}`, pk = (c.path||[]).join("-");
-    if (conPath[key] && conPath[key] !== pk && !firstState){
-      const names = [c.client, ...c.path.map(n=>"s"+n), c.server];
-      addFx({kind:"pathflash", life:2.4, names, color:C.signal, width:11});
-      parts = parts.filter(p => p.conn !== `d:${key}`);
-      const mid = POS["s"+c.path[Math.floor(c.path.length/2)]];
-      addFx({kind:"label", life:3, x:mid[0], y:mid[1]+(mid[1]>300?44:-40), text:`${c.client} moved to the route ${c.path.map(n=>"s"+n).join(" → ")}`, color:C.ink});
-    }
-    conPath[key] = pk;
-  }
-  for (const e of S.events || []){
-    if (e.t <= seenEvT) continue;
-    if (!firstState){
-      const m = e.text.match(/s(\d)[-–]s(\d)/);
-      if ((e.kind === "link" || (e.kind === "action" && /^Link/.test(e.text))) && m){
-        const a = POS["s"+m[1]], b = POS["s"+m[2]], mid = [(a[0]+b[0])/2,(a[1]+b[1])/2], down = /DOWN|down/.test(e.text);
-        addFx({kind:"burst", life: down ? 1.1 : .9, x:mid[0], y:mid[1], color: down ? C.busy : C.ok, n: down ? 22 : 12});
-      }
-      const sm = e.text.match(/srv\d/);
-      if (sm && (e.kind === "health" || e.kind === "action") && /killed|DOWN|started|UP/.test(e.text)){
-        const p = POS[sm[0]], bad = /DOWN|killed/.test(e.text);
-        addFx({kind: bad ? "burst" : "ring", life: bad ? 1.1 : 1, x:p[0], y:p[1], color: bad ? C.busy : C.ok, n:24, r0:30});
-        if (e.kind === "health") addFx({kind:"label", life:3.2, x:p[0]+30, y:p[1]+68, text: bad ? "controller: marked down" : "controller: back up", color: bad ? C.busy : C.ok, align:"right"});
-      }
-      if (e.kind === "action" && /flood started/i.test(e.text)) addFx({kind:"ring", life:1, x:POS.gen[0], y:POS.gen[1], color:C.flood, r0:22});
-      if (e.kind === "action" && /Restarting controller/.test(e.text)) addFx({kind:"ring", life:1.4, x:POS.controller[0], y:POS.controller[1], color:C.signal, r0:60, r1:110});
-    }
-    seenEvT = Math.max(seenEvT, e.t);
-  }
-  firstState = false;
-}
-
-let hbClock = 0;
+let hb = 0;
 function spawn(dt){
   if (!S || REDUCED) return;
-  const conns = activeConnections();
-  conns.forEach((c, i) => {
-    if (!c.active) return;
-    const names = [c.client, ...c.path.map(n=>"s"+n), c.server];
-    const off = (i - (conns.length-1)/2) * 7, key = `d:${c.client}:${c.port}`, rate = connRate(c, conns);
-    spawnAcc[key] = (spawnAcc[key] || 0) + dt * (2 + rate * 1.1);
-    while (spawnAcc[key] >= 1){ spawnAcc[key] -= 1; addPart(offsetPts(names.slice().reverse(), -off), {color:C.srv[c.server] || C.ink, r:3.6, speed:200 + rate*9, ring:true, conn:key}); }
+  const cs = active();
+  cs.forEach((c, i) => {
+    if (!c.on) return;
+    const names = [c.client, ...c.path.map(n => "s"+n), c.server], off = (i-(cs.length-1)/2)*7, k = `${c.client}:${c.port}`, rate = c.mbps ?? 6;
+    acc[k] = (acc[k]||0) + dt*(2 + rate*1.1);
+    while (acc[k] >= 1){ acc[k] -= 1; addPart(offsetPts(names.slice().reverse(), -off), {color:SRVC[c.server]||C.ink, r:3.6, speed:200+rate*9, ring:true}); }
   });
   const fr = S.flood.on && floodRoute();
   if (fr){
-    spawnAcc.flood = (spawnAcc.flood || 0) + dt * Math.min(40, S.flood.mbps * 1.3);
-    while (spawnAcc.flood >= 1){ spawnAcc.flood -= 1; addPart(offsetPts(fr, (Math.random()-.5)*8), {color:C.flood, r:2.1, speed:300 + Math.random()*60, alpha:.8}); }
+    acc.flood = (acc.flood || 0) + dt * Math.min(40, S.flood.mbps * 1.3);
+    while (acc.flood >= 1){ acc.flood -= 1; addPart(offsetPts(fr, (Math.random()-.5)*8), {color:C.flood, r:2.1, speed:300 + Math.random()*60, alpha:.8}); }
   }
-  hbClock += dt;
-  if (hbClock >= 1){
-    hbClock -= 1;
+  hb += dt;
+  if (hb >= 1){
+    hb -= 1;
     S.servers.forEach((s, i) => {
       if (!s.process || !S.controller_online) return;
-      setTimeout(() => addPart(offsetPts([s.name,"s4"],0), {color:C.srv[s.name], r:4, shape:"dia", speed:260, onArrive(){
-        addPart(chanPts("s4", true), {color:C.srv[s.name], r:4, shape:"dia", speed:330, onArrive(){
-          addFx({kind:"ring", life:.6, x:POS.controller[0] + (i-1)*40, y:POS.controller[1]+26, color:C.srv[s.name], r0:4, r1:13});
+      setTimeout(() => addPart([POS[s.name], POS.s4], {color:SRVC[s.name], r:4, shape:"dia", speed:260, onArrive(){
+        addPart(chanPts("s4", true), {color:SRVC[s.name], r:4, shape:"dia", speed:330, onArrive(){
+          fx.push({kind:"ring", t:0, life:.6, x:POS.controller[0]+(i-1)*40, y:POS.controller[1]+24, color:SRVC[s.name], r0:4, r1:13});
         }});
-      }}), i * 230);
+      }}), i*230/SPEED);
     });
   }
 }
-
 function rr(x,y,w,h,r){ ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x,y,w,h,r); else ctx.rect(x,y,w,h); }
+// IP and MAC of every host, as set in topology/topo.py and controller/net_config.py
+const ADDR = {
+  h1:["10.0.0.1","00:00:00:00:00:01"], h2:["10.0.0.2","00:00:00:00:00:02"], h3:["10.0.0.3","00:00:00:00:00:03"],
+  srv1:["10.0.0.11","00:00:00:00:00:11"], srv2:["10.0.0.12","00:00:00:00:00:12"], srv3:["10.0.0.13","00:00:00:00:00:13"],
+};
+function addrs(name, x, y){
+  const [ip, mac] = ADDR[name];
+  ctx.font = `400 11.5px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`;
+  const w = ctx.measureText("MAC " + mac).width + 12;
+  ctx.fillStyle = "rgba(255,255,255,.92)"; rr(x-w/2, y-9, w, 33, 6); ctx.fill();   // keeps links from running through the text
+  text("IP  " + ip, x, y, {mono:true, size:12, weight:600, color:C.ink2});
+  text("MAC " + mac, x, y+15, {mono:true, size:11.5, color:C.ink3});
+}
 function text(t, x, y, o={}){
-  ctx.font = `${o.weight||700} ${o.size||14}px "Atkinson Hyperlegible", "Segoe UI", Ubuntu, Arial, sans-serif`;
+  ctx.font = o.mono ? `${o.weight||400} ${o.size||12}px "Atkinson Hyperlegible Mono","Ubuntu Mono","DejaVu Sans Mono",Menlo,monospace`
+                   : `${o.weight||700} ${o.size||14}px "Atkinson Hyperlegible","Segoe UI",Ubuntu,Arial,sans-serif`;
   ctx.textAlign = o.align || "center"; ctx.textBaseline = "middle";
   if (o.bg){
-    const w = ctx.measureText(t).width + 14, h = (o.size||14) + 10, bx = o.align==="left" ? x-7 : o.align==="right" ? x-w+7 : x-w/2;
+    const w = ctx.measureText(t).width + 14, h = (o.size||14) + 10, bx = o.align==="left" ? x-7 : x-w/2;
     ctx.fillStyle = o.bg; rr(bx, y-h/2, w, h, 6); ctx.fill();
     if (o.border){ ctx.strokeStyle = o.border; ctx.lineWidth = 1.5; ctx.stroke(); }
   }
@@ -644,534 +703,568 @@ function text(t, x, y, o={}){
 }
 function line(pts, color, width, dash, alpha=1){
   ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
-  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
-  ctx.stroke(); ctx.restore();
+  ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(...pts[0]); for (let i=1;i<pts.length;i++) ctx.lineTo(...pts[i]); ctx.stroke(); ctx.restore();
 }
-
 let clockT = 0;
 function draw(dt){
   clockT += dt;
   ctx.setTransform(dpr*scale,0,0,dpr*scale,0,0);
-  ctx.fillStyle = C.paper; ctx.fillRect(0,0,W,H);
-  if (!S){ text("Connecting to the dashboard…", W/2, H/2, {color:C.ink3, size:18, weight:400}); return; }
-  const thr = S.util_threshold, srvBy = Object.fromEntries(S.servers.map(s => [s.name, s]));
+  ctx.fillStyle = "#fff"; ctx.fillRect(0,0,W,H);
+  if (!S){ text("Connecting…", W/2, H/2, {color:C.ink3, size:18, weight:400}); return; }
 
-  text("Clients", POS.h1[0], 132, {size:15, color:C.ink3});
-  text("Content servers", POS.srv1[0]-6, 132, {size:15, color:C.ink3});
-
+  text("Clients", POS.h1[0], 118, {size:15, color:C.ink3});
+  text("Content servers", POS.srv1[0]-6, 118, {size:15, color:C.ink3});
   for (const sw of ["s1","s2","s3","s4"]) line(chanPts(sw,false), S.controller_online ? C.chan : "#E8C9C9", 2, [6,7], .9);
   for (const [h, sw] of HOSTLINK){
-    const s = srvBy[h], dead = s && !s.process;
-    line([POS[h], POS[sw]], dead ? C.busy : C.track, dead ? 3 : 8, dead ? [7,7] : null);
+    const s = S.servers.find(x => x.name === h), dead = s && !s.process;
+    line([POS[h], POS[sw]], dead ? C.bad : C.track, dead ? 3 : 8, dead ? [7,7] : null);
   }
+  line([POS.sink, POS.s1], C.track, 6, null, .8); line([POS.gen, POS.s4], C.track, 6, null, .8);
   for (const l of S.links){
     const a = POS["s"+l.a], b = POS["s"+l.b];
     if (!l.up){
-      line([a,b], C.track, 16, null, .6);
-      line([a,b], C.busy, 3, [10,8]);
-      const m = [(a[0]+b[0])/2,(a[1]+b[1])/2];
-      ctx.save(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(m[0],m[1],14,0,7); ctx.fill();
-      ctx.strokeStyle = C.busy; ctx.lineWidth = 4; ctx.lineCap="round";
-      ctx.beginPath(); ctx.moveTo(m[0]-7,m[1]-7); ctx.lineTo(m[0]+7,m[1]+7); ctx.moveTo(m[0]+7,m[1]-7); ctx.lineTo(m[0]-7,m[1]+7); ctx.stroke(); ctx.restore();
+      line([a,b], C.track, 16, null, .5); line([a,b], C.bad, 3, [10,8]);
       continue;
     }
-    const u = Math.min(1, l.util), hot = u >= thr;
+    const u = Math.min(1, l.util), hot = u >= S.util_threshold;
     line([a,b], C.track, 18);
     if (u > 0.01){
       ctx.save();
-      if (hot){ ctx.shadowColor = C.busy; ctx.shadowBlur = 10 + 6*Math.sin(clockT*5); }
-      line([a,b], hot ? C.busy : "#9DAEC0", 4 + 14*u, null, hot ? .9 : .55);
+      if (hot){ ctx.shadowColor = C.bad; ctx.shadowBlur = 10 + 6*Math.sin(clockT*5); }
+      line([a,b], hot ? C.bad : "#9DAEC0", 4 + 14*u, null, hot ? .9 : .55);
       ctx.restore();
     }
   }
-  const conns = activeConnections();
-  conns.forEach((c, i) => {
-    const names = [c.client, ...c.path.map(n=>"s"+n), c.server], off = (i - (conns.length-1)/2) * 7;
-    line(offsetPts(names, off), C.srv[c.server] || C.ink, c.active ? 3 : 2, c.active ? null : [3,6], c.active ? .55 : .35);
-  });
   for (const f of fx) if (f.kind === "pathflash"){
     const k = 1 - f.t/f.life;
-    line(offsetPts(f.names,0), f.color, (f.width||8) * (0.6 + .4*k), null, .6*k);
+    line(offsetPts(f.names, 0), f.color, 11*(0.6 + .4*k), null, .6*k);
   }
+  const cs = active();
+  cs.forEach((c, i) => {
+    const names = [c.client, ...c.path.map(n=>"s"+n), c.server], off = (i-(cs.length-1)/2)*7;
+    line(offsetPts(names, off), SRVC[c.server]||C.ink, c.on ? 3 : 2, c.on ? null : [3,6], c.on ? .55 : .3);
+  });
   for (const p of parts){
     const [x,y] = at(p.g, p.d);
-    ctx.save(); ctx.globalAlpha = p.alpha ?? 1; ctx.fillStyle = p.color;
-    if (p.shape === "sq"){ ctx.fillRect(x-p.r, y-p.r, p.r*2, p.r*2); }
-    else if (p.shape === "dia"){ ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2); ctx.strokeStyle="#fff"; ctx.lineWidth=1.2; ctx.strokeRect(-p.r,-p.r,p.r*2,p.r*2); }
-    else { ctx.beginPath(); ctx.arc(x,y,p.r,0,7); ctx.fill(); if (p.ring){ ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke(); } }
+    ctx.save(); ctx.fillStyle = p.color; ctx.globalAlpha = p.alpha ?? 1;
+    if (p.shape === "sq") ctx.fillRect(x-p.r, y-p.r, p.r*2, p.r*2);
+    else if (p.shape === "dia"){ ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2); ctx.strokeStyle="#fff"; ctx.lineWidth=1.2; ctx.strokeRect(-p.r,-p.r,p.r*2,p.r*2); }
+    else { ctx.beginPath(); ctx.arc(x,y,p.r,0,7); ctx.fill(); if (p.ring){ ctx.strokeStyle="#fff"; ctx.lineWidth=1.5; ctx.stroke(); } }
     ctx.restore();
-    if (p.label) text(p.label, x + 12, y - 12, {size:12.5, color:"#6B4700", align:"left", bg:"#FFF4DC", border:"#E9C77A"});
   }
-
-  {
-    const [x,y] = POS.controller, on = S.controller_online, k = ctrlPulse;
-    ctx.save();
-    if (k > 0){ ctx.shadowColor = C.signal; ctx.shadowBlur = 24*k; }
-    ctx.fillStyle = C.ink; rr(x-150, y-32, 300, 64, 12); ctx.fill();
-    if (!on){ ctx.strokeStyle = C.busy; ctx.lineWidth = 3; ctx.setLineDash([7,6]); ctx.stroke(); }
+  { // controller
+    const [x,y] = POS.controller, on = S.controller_online;
+    ctx.save(); if (ctrlPulse > 0){ ctx.shadowColor = C.signal; ctx.shadowBlur = 24*ctrlPulse; }
+    ctx.fillStyle = C.ink; rr(x-140, y-30, 280, 60, 12); ctx.fill();
+    if (!on){ ctx.strokeStyle = C.bad; ctx.lineWidth = 3; ctx.setLineDash([7,6]); ctx.stroke(); }
     ctx.restore();
-    text("SDN controller", x, y-11, {size:18, color: on ? "#FFD27A" : "#E7A3A3"});
-    text(S.restarting ? "restarting with new rules…" : on ? `${LB_NAME[S.lb_policy] || S.lb_policy}, ${PATH_NAME[S.path_policy] || S.path_policy}` : "not responding",
-         x, y+13, {size:13.5, weight:400, color:"#C9D3DD"});
+    text("SDN controller (Ryu)", x, y-10, {size:17, color: on ? "#FFD27A" : "#E7A3A3"});
+    text(S.restarting ? "restarting with new rules…" : on ? `${LB_NAME[S.lb_policy] || S.lb_policy} · ${PATH_NAME[S.path_policy] || S.path_policy}` : "not responding", x, y+12, {size:13, weight:400, color:"#C9D3DD"});
   }
   for (const n of ["s1","s2","s3","s4"]){
-    const [x,y] = POS[n], f = flash[n], k = f ? Math.max(0, 1 - f.t/1.0) : 0;
-    ctx.save();
-    if (k > 0){ ctx.shadowColor = f.color; ctx.shadowBlur = 20*k; }
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,27,0,7); ctx.fill();
-    ctx.strokeStyle = k > 0 ? f.color : C.ink; ctx.lineWidth = 5; ctx.stroke();
-    ctx.restore();
+    const [x,y] = POS[n], f = flash[n], k = f ? Math.max(0, 1-f.t) : 0;
+    ctx.save(); if (k > 0){ ctx.shadowColor = C.signal; ctx.shadowBlur = 20*k; }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,26,0,7); ctx.fill();
+    ctx.strokeStyle = k > 0 ? C.signal : C.ink; ctx.lineWidth = 5; ctx.stroke(); ctx.restore();
     text(n, x, y+1, {size:17});
   }
-  if (!fx.some(f => f.kind === "vip")) text("address swap happens here", POS.s1[0], POS.s1[1]+46, {size:12.5, weight:400, color:C.ink3, bg:"rgba(255,255,255,.92)"});
+  // route labels
+  text("fast route · 2 ms links", 500, POS.s2[1]-40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  text("slow route · 10 ms links", 500, POS.s3[1]+40, {size:13, color:C.ink2, bg:"#F1F4F7"});
+  const vip = fx.find(f => f.kind === "vip");
+  if (vip){ ctx.save(); ctx.globalAlpha = Math.min(1, (1-vip.t/vip.life)*2); text(vip.text, POS.s1[0], POS.s1[1]+46, {size:14, color:"#fff", bg:vip.color}); ctx.restore(); }
+  else text("address swap here", POS.s1[0], POS.s1[1]+46, {size:12.5, weight:400, color:C.ink3});
   for (const h of ["h1","h2","h3"]){
     const [x,y] = POS[h], b = S.clients?.[h];
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,24,0,7); ctx.fill();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
-    if (b && b.busy){ ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(x,y,31, clockT*3, clockT*3 + 1.6); ctx.stroke(); ctx.restore(); }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x,y,24,0,7); ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; ctx.stroke();
+    if (b && b.busy){ ctx.save(); ctx.strokeStyle = C.ink; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.beginPath(); ctx.arc(x,y,31,clockT*3,clockT*3+1.6); ctx.stroke(); ctx.restore(); }
     text(h, x, y+1, {size:16});
-    text(b && b.busy ? `downloading ${Math.min(b.done+1,b.total)} of ${b.total}` : "idle", x, y+44, {size:12.5, weight:400, color: b && b.busy ? C.ink : C.ink3});
+    text(b && b.busy ? `getting ${b.file || "file"}` : "idle", x, y+42, {size:12.5, weight:400, color: b && b.busy ? C.ink : C.ink3});
+    addrs(h, x, y+60);
   }
   for (const s of S.servers){
-    const [x,y] = POS[s.name], col = C.srv[s.name], up = s.alive;
-    ctx.save();
-    ctx.fillStyle = up ? col : "#fff";
-    rr(x-38, y-25, 76, 50, 10); ctx.fill();
-    if (!up){ ctx.strokeStyle = C.busy; ctx.lineWidth = 2.5; ctx.setLineDash([6,5]); ctx.stroke(); }
+    const [x,y] = POS[s.name], up = s.alive;
+    ctx.save(); ctx.fillStyle = up ? SRVC[s.name] : "#fff"; rr(x-38,y-25,76,50,10); ctx.fill();
+    if (!up){ ctx.strokeStyle = C.bad; ctx.lineWidth = 2.5; ctx.setLineDash([6,5]); ctx.stroke(); }
     ctx.restore();
-    text(s.name, x, y-4, {size:17, color: up ? "#fff" : C.busy});
-    if (up) for (let i=0;i<Math.min(6, s.active);i++){ ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x-22 + i*9, y+13, 3, 0, 7); ctx.fill(); }
-    const sub = !s.process ? "crashed" : !up ? "no heartbeat" : s.active === 1 ? "1 download" : `${s.active} downloads`;
-    text(sub, x, y+44, {size:12.5, weight: up ? 400 : 700, color: up ? C.ink2 : C.busy});
+    text(s.name, x, y-4, {size:17, color: up ? "#fff" : C.bad});
+    if (up) for (let i=0;i<Math.min(6,s.active);i++){ ctx.fillStyle="#fff"; ctx.beginPath(); ctx.arc(x-22+i*9, y+13, 3, 0, 7); ctx.fill(); }
+    text(!s.process ? "stopped" : !up ? "no heartbeat" : s.active === 1 ? "1 client" : `${s.active} clients`, x, y+42, {size:12.5, weight:400, color: up ? C.ink2 : C.bad});
+    addrs(s.name, x, y+60);
   }
   for (const n of ["gen","sink"]){
     const [x,y] = POS[n], on = S.flood.on;
-    ctx.fillStyle = on ? C.flood : "#fff"; rr(x-28, y-15, 56, 30, 15); ctx.fill();
+    ctx.fillStyle = on ? C.flood : "#fff"; rr(x-28,y-15,56,30,15); ctx.fill();
     ctx.strokeStyle = C.flood; ctx.lineWidth = 1.5; ctx.stroke();
     text(n, x, y+1, {size:13.5, color: on ? "#fff" : C.ink3});
   }
-  text(S.flood.on ? `background traffic: ${S.flood.mbps} Mbps` : "background traffic hosts (off)", 500, 520, {size:13, weight: S.flood.on ? 700 : 400, color: S.flood.on ? C.ink2 : C.ink3});
+  text(S.flood.on ? `background flood: ${S.flood.mbps} Mbps (UDP)` : "gen → sink: background traffic (off)", 500, 528, {size:13, weight: S.flood.on ? 700 : 400, color: S.flood.on ? C.ink2 : C.ink3});
   for (const l of S.links){
     const a = POS["s"+l.a], b = POS["s"+l.b], mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
-    let nx = -(b[1]-a[1]), ny = b[0]-a[0]; const L = Math.hypot(nx,ny); nx/=L; ny/=L;
-    if (nx*(mx-500) + ny*(my-300) < 0){ nx=-nx; ny=-ny; }
-    const hot = l.up && l.util >= thr, kind = l.delay_ms <= 2 ? "fast" : "slow";
-    const t = !l.up ? `${kind} link cut` : `${kind} · ${Math.round(l.util*100)}% busy`;
-    text(t, mx + nx*34, my + ny*34, {size:13, color: !l.up || hot ? "#fff" : C.ink2, bg: !l.up || hot ? C.busy : "#F1F4F7"});
+    if (!l.up){
+      ctx.save(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(mx,my,14,0,7); ctx.fill();
+      ctx.strokeStyle = C.bad; ctx.lineWidth = 4; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(mx-7,my-7); ctx.lineTo(mx+7,my+7); ctx.moveTo(mx+7,my-7); ctx.lineTo(mx-7,my+7); ctx.stroke(); ctx.restore();
+    }
+    let nx = -(b[1]-a[1]), ny = b[0]-a[0]; const L = Math.hypot(nx,ny); nx /= L; ny /= L;
+    if (nx*(mx-500) + ny*(my-300) < 0){ nx = -nx; ny = -ny; }
+    const hot = l.up && l.util >= S.util_threshold;
+    text(!l.up ? "cut" : `${Math.round(l.util*100)}%`, mx + nx*30, my + ny*30, {size:13, color: !l.up || hot ? "#fff" : C.ink2, bg: !l.up || hot ? C.bad : "#F1F4F7"});
   }
   for (const f of fx){
-    const k = f.t / f.life, a = 1 - k;
-    if (f.kind === "ring"){
-      ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = f.color; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||20) + ((f.r1||60) - (f.r0||20))*k, 0, 7); ctx.stroke(); ctx.restore();
-    } else if (f.kind === "burst"){
+    const k = f.t/f.life, a = 1-k;
+    if (f.kind === "burst"){
       if (!f.seeds) f.seeds = Array.from({length:f.n||18}, () => [Math.random()*Math.PI*2, 40 + Math.random()*70]);
       ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = f.color;
       for (const [ang, dist] of f.seeds){ const d = (f.r0||0) + dist*Math.sqrt(k); ctx.beginPath(); ctx.arc(f.x + Math.cos(ang)*d, f.y + Math.sin(ang)*d, 3*(1-k)+.8, 0, 7); ctx.fill(); }
-      ctx.strokeStyle = f.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||8) + 50*k, 0, 7); ctx.stroke();
-      ctx.restore();
-    } else if (f.kind === "vip"){
-      ctx.save(); ctx.globalAlpha = Math.min(1, a*2);
-      text(f.text, POS.s1[0], POS.s1[1]+48, {size:14, color:"#fff", bg:f.color || C.signal});
-      ctx.restore();
+      ctx.strokeStyle = f.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||8) + 50*k, 0, 7); ctx.stroke(); ctx.restore();
     } else if (f.kind === "label"){
       ctx.save(); ctx.globalAlpha = Math.min(1, a*2);
-      text(f.text, f.x, f.y, {size:13.5, color:f.color, bg:"#fff", border:f.color, align:f.align});
-      ctx.restore();
+      text(f.text, f.x, f.y, {size:13.5, color:f.color, bg:"#fff", border:f.color}); ctx.restore();
     }
   }
-  if (REDUCED) text("Animation is off because your system asks for reduced motion", W-14, H-14, {size:12.5, weight:400, color:C.ink3, align:"right"});
+  for (const p of parts) if (p.label){   // labels last, so nothing covers them
+    const [x,y] = at(p.g, p.d);
+    text(p.label, Math.min(x+12, W-290), Math.max(y-12, 100), {size:12.5, color:"#6B4700", align:"left", bg:"#FFF4DC", border:"#E9C77A"});
+  }
+  for (const f of fx) if (f.kind === "ring"){
+    const k = f.t/f.life; ctx.save(); ctx.globalAlpha = 1-k; ctx.strokeStyle = f.color; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(f.x, f.y, (f.r0||20) + ((f.r1||60)-(f.r0||20))*k, 0, 7); ctx.stroke(); ctx.restore();
+  }
+  if (PAUSED) text("Paused · Step ▸ moves the packets", 16, 24, {size:14, color:"#fff", bg:C.ink, align:"left"});
+  else if (SPEED !== 1) text(`${SPEED > 1 ? "Fast" : "Slow"} motion ${({0.5:"½",0.25:"¼",0.1:"1/10",2:"2"})[SPEED]}× (animation only)`, 16, 24, {size:13.5, color:"#6B4700", bg:"#FFF4DC", border:"#E9C77A", align:"left"});
 }
-
-let lastFrame = performance.now();
+let last = performance.now(), PAUSED = false, SPEED = 1;
+function setPaused(p){
+  PAUSED = p; const b = $("pause");
+  b.textContent = p ? "Resume" : "Pause"; b.setAttribute("aria-pressed", String(p));
+  $("stepBtn").classList.toggle("hidden", !p);
+}
+let stepLeft = 0;
+$("stepBtn").onclick = () => { stepLeft += 0.12; };
+$("pause").onclick = () => setPaused(!PAUSED);
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  SPEED = Number(b.dataset.speed);
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+});
+addEventListener("keydown", e => {
+  if (e.target.closest("input, select, textarea")) return;
+  if (e.key === "p" || e.key === "P"){ setPaused(!PAUSED); e.preventDefault(); }
+  if (e.key === "ArrowRight" && PAUSED){ stepLeft += 0.12; e.preventDefault(); }
+});
 function frame(now){
-  const dt = Math.min(0.1, (now - lastFrame)/1000); lastFrame = now;
+  const real = Math.min(.1, (now-last)/1000); last = now;
+  let dt = PAUSED ? 0 : real * SPEED;
+  if (PAUSED && stepLeft > 0){ dt = Math.min(stepLeft, real * 0.5); stepLeft -= dt; }
   spawn(dt);
-  for (const p of parts){ p.d += p.speed * dt; if (p.d >= p.g.total && !p.done){ p.done = true; p.onArrive && p.onArrive(); } }
-  parts = parts.filter(p => !p.done);
-  if (parts.length > 1400) parts = parts.slice(-1400);
-  for (const f of fx) f.t += dt;
-  fx = fx.filter(f => f.t < f.life);
+  for (const p of parts){ p.d += p.speed*dt; if (p.d >= p.g.total && !p.done){ p.done = true; p.onArrive && p.onArrive(); } }
+  parts = parts.filter(p => !p.done); if (parts.length > 1200) parts = parts.slice(-1200);
+  for (const f of fx) f.t += dt; fx = fx.filter(f => f.t < f.life);
   for (const k in flash){ flash[k].t += dt; if (flash[k].t > 1.2) delete flash[k]; }
   ctrlPulse = Math.max(0, ctrlPulse - dt*1.4);
-  draw(dt);
-  requestAnimationFrame(frame);
+  draw(dt); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
+// point at anything on the map for details
 canvas.addEventListener("mousemove", ev => {
   if (!S) return;
   const r = canvas.getBoundingClientRect(), x = (ev.clientX - r.left)/scale, y = (ev.clientY - r.top)/scale;
   const near = (n, rad) => Math.hypot(POS[n][0]-x, POS[n][1]-y) < rad;
   let tip = null;
-  for (const s of S.servers) if (near(s.name, 40))
-    tip = `${s.name}, a content server (${s.ip})\nProgram: ${s.process ? "running" : "crashed"}\nController sees it as: ${s.alive ? "up" : "down"}\nDownloads right now: ${s.active}\nLast heartbeat: ${s.last_report_age == null ? "never" : s.last_report_age + " s ago"}`;
-  for (const h of ["h1","h2","h3"]) if (near(h, 30)){ const b = S.clients?.[h]; tip = `${h}, a client (10.0.0.${h[1]})\nIt only knows one address: ${S.vip}\n${b && b.busy ? `Downloading: ${b.done} of ${b.total} finished` : "Idle"}`; }
-  for (const n of ["s1","s2","s3","s4"]) if (near(n, 32)) tip = {s1:"s1, the clients' switch\nRewrites the virtual address to the chosen server", s2:"s2, on the fast route\n2 ms per link", s3:"s3, on the slow route\n10 ms per link", s4:"s4, the servers' switch"}[n] + "\nIts rules are in the Switch rules tab below";
-  if (Math.abs(POS.controller[0]-x) < 150 && Math.abs(POS.controller[1]-y) < 34) tip = `The SDN controller (Ryu)\nServer choice: ${LB_NAME[S.lb_policy]}\nRoute choice: ${PATH_NAME[S.path_policy]}\nChecks link load every 2 s, heartbeats every 1 s`;
-  for (const n of ["gen","sink"]) if (near(n, 30)) tip = `${n}: makes background traffic, not a content server${S.flood.on ? `\nSending ${S.flood.mbps} Mbps now` : ""}`;
+  for (const v of S.servers) if (near(v.name, 40))
+    tip = `${v.name}, a content server (${v.ip}, ${v.delay_ms} ms away)\nProgram: ${v.process ? "running" : "stopped"}\nController sees it as: ${v.alive ? "up" : "down"}\nDownloads right now: ${v.active}`;
+  for (const h of ["h1","h2","h3"]) if (near(h, 30)){ const b = S.clients?.[h];
+    tip = `${h}, a client (${ADDR[h][0]})\nIt only knows one address: 10.0.0.100\n${b && b.busy ? `Downloading: ${b.done} of ${b.total} finished` : "Idle"}`; }
+  for (const n of ["s1","s2","s3","s4"]) if (near(n, 32))
+    tip = {s1:"s1, the clients' switch\nSwaps 10.0.0.100 for the chosen server", s2:"s2, on the fast route\n2 ms per link", s3:"s3, on the slow route\n10 ms per link", s4:"s4, the servers' switch"}[n] + "\nClick to see its rules";
+  if (Math.abs(POS.controller[0]-x) < 140 && Math.abs(POS.controller[1]-y) < 32)
+    tip = `The SDN controller (Ryu)\nServer choice: ${LB_NAME[S.lb_policy]}\nRoute choice: ${PATH_NAME[S.path_policy]}\nHeartbeats every 1 s, link load every 2 s`;
+  for (const n of ["gen","sink"]) if (near(n, 30)) tip = `${n}: makes background traffic, not a content server${S.flood.on ? `\nSending ${S.flood.mbps} Mbps now` : "\nStart it with step 6"}`;
   if (!tip) for (const l of S.links){
     const a = POS["s"+l.a], b = POS["s"+l.b], dx = b[0]-a[0], dy = b[1]-a[1];
     const t = Math.max(0, Math.min(1, ((x-a[0])*dx + (y-a[1])*dy)/(dx*dx+dy*dy)));
-    if (Math.hypot(a[0]+dx*t-x, a[1]+dy*t-y) < 14) tip = `Link s${l.a}–s${l.b}: ${l.delay_ms <= 2 ? "fast" : "slow"} route, ${l.delay_ms} ms, ${l.bw_mbps} Mbps\n${l.up ? `${Math.round(l.util*100)}% busy (${l.mbps} Mbps), measured by the controller` : "Cut"}`;
+    if (Math.hypot(a[0]+dx*t-x, a[1]+dy*t-y) < 14)
+      tip = `Link s${l.a}–s${l.b}: ${l.delay_ms <= 2 ? "fast" : "slow"} route, ${l.delay_ms} ms, ${l.bw_mbps} Mbps\n${l.up ? `${Math.round(l.util*100)}% busy (${l.mbps} Mbps), measured by the controller` : "Cut"}\nClick to ${l.up ? "cut" : "restore"} it`;
   }
   const st = $("stip");
   if (!tip){ st.classList.add("hidden"); canvas.style.cursor = "default"; return; }
-  st.textContent = tip; st.classList.remove("hidden"); canvas.style.cursor = "help";
-  st.style.left = (ev.clientX - r.left) + "px"; st.style.top = (ev.clientY - r.top) + "px";
+  st.textContent = tip; st.classList.remove("hidden"); canvas.style.cursor = "pointer";
+  const m = canvas.parentElement.getBoundingClientRect();
+  st.style.left = (ev.clientX - m.left) + "px"; st.style.top = (ev.clientY - m.top) + "px";
 });
 canvas.addEventListener("mouseleave", () => $("stip").classList.add("hidden"));
-
-/* ================================================================
-   WHAT JUST HAPPENED (plain-language story)
-   ================================================================ */
-function reasonFor(d){
-  if (d.policy === "static") return "the rules say always srv1";
-  if (d.policy === "round_robin") return "it was its turn";
-  const m = new RegExp(d.server + "=UP\\((\\d+)\\)").exec(d.loads || "");
-  return m ? `it had the fewest downloads (${m[1]})` : "it had the fewest downloads";
-}
-function routeWhy(d){
-  const p = String(d.path || "");
-  if (!p.includes("s3")) return "the fast route";
-  if (/s1-s2=DOWN|s2-s4=DOWN/.test(d.link_util || "")) return "the slow route, because the fast link is cut";
-  return d.path_policy === "congestion" ? "the slow route, because the fast route is jammed" : "the slow route";
-}
-function storyItems(){
-  const items = [];
-  for (const d of S.decisions || [])
-    items.push({t:d.t, text:`${d.client} asked for a file. The controller sent it to ${d.server}, because ${reasonFor(d)}, using ${routeWhy(d)} (${route(d.path)}).`});
-  for (const e of S.events || []){
-    const x = e.text; let s = null, tone = "";
-    if (e.kind === "scenario"){
-      const m = /Scenario (started|finished|stopped): ([^(]+?)\s*(\(|$)/.exec(x);
-      const demo = m && DEMOS.find(d => d.backend === m[2].trim());
-      s = m ? `Demo ${m[1]}: ${demo ? demo.title : m[2].trim()}.` : x;
-    }
-    else if (e.kind === "action"){
-      let m;
-      if ((m = /^Link s(\d)–s(\d) set (up|down)/.exec(x))) { s = m[3] === "down" ? `The s${m[1]}–s${m[2]} cable was cut.` : `The s${m[1]}–s${m[2]} cable was repaired.`; tone = m[3] === "down" ? "bad" : "good"; }
-      else if ((m = /^(srv\d) process killed/.exec(x))) { s = `${m[1]} crashed (its program was stopped).`; tone = "bad"; }
-      else if ((m = /^(srv\d) process started/.exec(x))) { s = `${m[1]}'s program is running again.`; tone = "good"; }
-      else if ((m = /UDP flood started: .*?(\d+) Mbps/.exec(x))) { s = `Background traffic started: ${m[1]} Mbps on the fast route.`; tone = "bad"; }
-      else if (/UDP flood stopped/.test(x)) { s = "Background traffic stopped."; tone = "good"; }
-      else if ((m = /^(h\d(?:, h\d, h\d)?): (\d+) × (\S+)/.exec(x))) s = `${m[1].includes(",") ? "All three clients" : m[1]} will download ${m[2]} file${m[2] === "1" ? "" : "s"} of ${FILE_NAME[m[3]] || m[3]}${m[1].includes(",") ? " each" : ""}.`;
-      else if ((m = /Restarting controller with policy (\S+), path (\S+)/.exec(x))) s = `The controller is restarting with new rules: ${LB_NAME[m[1]]}, ${PATH_NAME[m[2]]}.`;
-      else if (/Network reset/.test(x)) { s = "Everything was fixed: links repaired, servers running, background traffic off."; tone = "good"; }
-      else s = x;
-    }
-    else if (e.kind === "link"){
-      const m = /s(\d)-s(\d) is (DOWN|UP)/.exec(x);
-      if (m) { s = m[3] === "DOWN" ? `The switches told the controller the s${m[1]}–s${m[2]} link is down. It deleted the old rules and is moving traffic to another route.` : `The controller sees s${m[1]}–s${m[2]} working again and will use it for new routes.`; tone = m[3] === "DOWN" ? "bad" : "good"; }
-    }
-    else if (e.kind === "health"){
-      const m = /(srv\d) is (DOWN|UP)/.exec(x);
-      if (m) { s = m[2] === "DOWN" ? `${m[1]} stopped sending heartbeats. After 3 seconds the controller marked it down${S.lb_policy === "static" ? ", but the “Always srv1” rule keeps sending clients there anyway" : " and stopped sending clients to it"}.` : `${m[1]} is sending heartbeats, so the controller counts it as up.`; tone = m[2] === "DOWN" ? "bad" : "good"; }
-    }
-    else if (e.kind === "warn" && /rejected/.test(x)) { s = "A client was turned away: no server was up."; tone = "bad"; }
-    else if (e.kind === "error") { s = x; tone = "bad"; }
-    else if (e.kind === "ctrl" && /Controller ready/.test(x)) { s = "The controller is back with its new rules."; tone = "good"; }
-    if (s) items.push({t:e.t, text:s, tone});
-  }
-  return items.sort((a,b) => b.t - a.t);
-}
-function renderStory(){
-  const items = storyItems(), now = $("now");
-  if (!S.controller_online && !S.restarting){ now.innerHTML = `<span class="tone-bad">The controller isn't responding.</span><span class="why">Check the terminal in the VM where demo.py is running.</span>`; }
-  else if (!items.length){ now.innerHTML = `Nothing yet. Press <b>Play</b> on a demo to start.<span class="why">Or open “Try it yourself” to send downloads and break things on your own.</span>`; }
-  else {
-    const top = items[0], age = S.now - top.t;
-    now.innerHTML = `<span class="${top.tone ? "tone-" + top.tone : ""}">${esc(top.text)}</span><span class="why">${age < 2 ? "Just now" : age < 90 ? Math.round(age) + " seconds ago" : "At " + clock(top.t)}</span>`;
-  }
-  setHTML($("earlier"), items.slice(1, 6).map(i => `<li><time>${clock(i.t)}</time><span class="${i.tone ? "tone-" + i.tone : ""}">${esc(i.text)}</span></li>`).join(""));
-  $("earlier").classList.toggle("hidden", items.length < 2);
-}
-
-/* ================================================================
-   GUIDE + CONTROLS
-   ================================================================ */
-const PLAY = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>`;
-function renderGuide(){
-  const sc = S.scenario, running = sc && !sc.done;
-  if (sc && sc.done) doneDemos.add(sc.name);
-  const lock = running || S.restarting || !S.controller_online;
-  setHTML($("demos"), DEMOS.map((d, i) => {
-    const on = running && sc.name === d.key, done = doneDemos.has(d.key) && !on;
-    return `<div class="demo ${on ? "on" : ""} ${done ? "done" : ""}">
-      <span class="n" aria-hidden="true">${done ? "✓" : i+1}</span>
-      <h3>${esc(d.title)}</h3><p>${esc(d.text)}</p>
-      ${on ? `<p class="watch"><b>${sc.elapsed.toFixed(0)} s in.</b> Watch for: ${esc(S.lb_policy === "static" && d.watchStatic ? d.watchStatic : d.watch)}</p>
-             <button class="btn small bad go" data-act="stopsc">Stop</button>`
-           : `<button class="btn small go" data-sc="${d.key}" ${lock ? "disabled" : ""}>${PLAY}${done ? "Play again" : "Play"}</button>`}
-    </div>`;
-  }).join(""));
-  setHTML($("srvCtl"), S.servers.map(s => {
-    const st = !s.process ? `<span class="pill bad">crashed</span>` : s.alive ? `<span class="pill good">running</span>` : `<span class="pill warn">no heartbeat</span>`;
-    return `<div class="row"><span class="lab"><b>${s.name}</b> ${st}</span>${s.process ? `<button class="btn small bad" data-srv="${s.name}" data-op="stop" ${S.restarting?"disabled":""}>Crash it</button>` : `<button class="btn small good" data-srv="${s.name}" data-op="start">Restart</button>`}</div>`;
-  }).join(""));
-  setHTML($("linkCtl"), S.links.map(l => {
-    const kind = l.delay_ms <= 2 ? "fast" : "slow";
-    return `<div class="row"><span class="lab"><b>s${l.a}–s${l.b}</b> <small>${kind} route</small> ${l.up ? "" : `<span class="pill bad">cut</span>`}</span>${l.up ? `<button class="btn small bad" data-link="${l.a},${l.b}" data-op="down">Cut</button>` : `<button class="btn small good" data-link="${l.a},${l.b}" data-op="up">Repair</button>`}</div>`;
-  }).join(""));
-  $("floodState").textContent = S.flood.on ? `on, ${S.flood.mbps} Mbps` : "off";
-  $("floodState").style.color = S.flood.on ? "var(--bad)" : "";
-  const fb = $("floodBtn"); fb.textContent = S.flood.on ? "Stop" : "Start"; fb.className = "btn small " + (S.flood.on ? "bad" : "line");
-  $("rqSend").disabled = S.restarting || !S.controller_online;
-  const busy = Object.entries(S.clients || {}).filter(([,v]) => v.busy).map(([k,v]) => `${k}: ${v.done} of ${v.total} done`);
-  $("clientProgress").textContent = busy.length ? `Downloading now. ${busy.join(", ")}.` : "";
-}
-document.addEventListener("click", e => {
-  const t = e.target.closest("button"); if (!t || t.disabled) return;
-  if (t.dataset.sc) act({action:"scenario", name:t.dataset.sc}, "Demo started. Watch the map.");
-  else if (t.dataset.act === "stopsc") act({action:"scenario_stop"}, "Stopping the demo");
-  else if (t.dataset.srv) act({action:"server", name:t.dataset.srv, op:t.dataset.op}, t.dataset.op === "stop" ? `${t.dataset.srv} crashed` : `${t.dataset.srv} restarted`);
-  else if (t.dataset.link){ const [a,b] = t.dataset.link.split(","); act({action:"link", a:"s"+a, b:"s"+b, op:t.dataset.op}, t.dataset.op === "down" ? `Link s${a}–s${b} cut` : `Link s${a}–s${b} repaired`); }
-  else if (t.dataset.tab) showTab(t.dataset.tab);
-  else if (t.dataset.sw) selectSwitch(+t.dataset.sw);
-});
-$("rqSend").onclick = () => act({action:"request", client:$("rqClient").value, file:$("rqFile").value, count:+$("rqCount").value || 1}, "Downloads sent");
-$("floodBtn").onclick = () => act({action:"flood", op: S && S.flood.on ? "stop" : "start", mbps:+$("floodMbps").value || 25}, S && S.flood.on ? "Background traffic stopped" : "Background traffic started");
-$("resetBtn").onclick = () => act({action:"reset"}, "Everything fixed");
-$("clearBtn").onclick = () => act({action:"clear"}, "Charts cleared");
-if (store("introHidden") === "1") $("intro").classList.add("hidden");
-$("introClose").onclick = () => { $("intro").classList.add("hidden"); store("introHidden", "1"); };
-
-const dlg = $("rulesDlg");
-$("rulesBtn").onclick = () => {
+// click a switch to see its rules, a link to cut or restore it, a server to stop or start it
+canvas.addEventListener("click", ev => {
   if (!S) return;
-  dlg.querySelector(`input[name=lb][value=${S.lb_policy}]`).checked = true;
-  dlg.querySelector(`input[name=path][value=${S.path_policy}]`).checked = true;
-  dlg.showModal();
-};
-dlg.addEventListener("close", () => {
-  if (dlg.returnValue !== "apply") return;
-  const lb = dlg.querySelector("input[name=lb]:checked").value, path = dlg.querySelector("input[name=path]:checked").value;
-  if (S && lb === S.lb_policy && path === S.path_policy){ toast("Those are already the rules"); return; }
-  act({action:"policy", lb, path}, "Restarting the controller with the new rules");
+  const r = canvas.getBoundingClientRect(), x = (ev.clientX - r.left)/scale, y = (ev.clientY - r.top)/scale;
+  const near = (n, rad) => Math.hypot(POS[n][0]-x, POS[n][1]-y) < rad;
+  for (const n of [1,2,3,4]) if (near("s"+n, 32)){ document.querySelector(`.swtabs [data-sw="${n}"]`).click(); document.getElementById("h-rules").scrollIntoView({behavior:"smooth", block:"center"}); return; }
+  for (const v of S.servers) if (near(v.name, 40)){ act({action:"server", name:v.name, op: v.process ? "stop" : "start"}); return; }
+  for (const l of S.links){
+    const a = POS["s"+l.a], b = POS["s"+l.b], dx = b[0]-a[0], dy = b[1]-a[1];
+    const t = Math.max(0, Math.min(1, ((x-a[0])*dx + (y-a[1])*dy)/(dx*dx+dy*dy)));
+    if (Math.hypot(a[0]+dx*t-x, a[1]+dy*t-y) < 14){ act({action:"link", a:"s"+l.a, b:"s"+l.b, op: l.up ? "down" : "up"}); return; }
+  }
 });
 
-/* ================================================================
-   SERVER STRIP
-   ================================================================ */
-function renderStrip(){
-  const sm = S.summary || {}, per = {};
-  for (const r of S.requests || []) if (r.status === "ok"){ const p = per[r.served_by] ||= {n:0, mbps:0}; p.n++; p.mbps += r.mbps || 0; }
-  const cards = S.servers.map(s => {
-    const p = per[s.name];
-    const st = !s.process ? `<span class="pill bad">crashed</span>` : s.alive ? `<span class="pill good">running</span>` : `<span class="pill warn">no heartbeat</span>`;
-    const hb = s.last_report_age == null ? "never" : s.last_report_age < 1.5 ? "just now" : `${s.last_report_age.toFixed(0)} s ago`;
-    return `<div class="box srv ${s.alive ? "" : "isdown"}" style="--c:${colorOf(s.name)}">
-      <div class="top"><span class="name">${s.name}</span>${st}</div>
-      <div class="big num">${s.alive ? s.active : "–"}<small>downloading now</small></div>
-      <div class="meta num">Heartbeat ${hb}. Served ${p ? p.n : 0}${p ? `, about ${(p.mbps/p.n).toFixed(1)} Mbps each` : ""}.</div></div>`;
-  }).join("");
-  const v = (x, unit) => x == null ? "–" : `${x}<small>${unit}</small>`;
-  setHTML($("strip"), cards + `<div class="box sum"><span class="name">Downloads so far</span>
-    <div class="sumgrid">
-      <div><div class="v num">${sm.ok ?? 0}<small>of ${sm.total ?? 0} finished</small></div><div class="k">${sm.failed ? `<span class="tone-bad">${sm.failed} failed</span>` : "none failed"}${sm.retries ? `, ${sm.retries} retried` : ""}</div></div>
-      <div><div class="v num">${v(sm.avg_mbps, "Mbps")}</div><div class="k">average speed</div></div>
-      <div><div class="v num">${v(sm.avg_ttc_ms != null ? (sm.avg_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">average wait</div></div>
-      <div><div class="v num">${v(sm.max_ttc_ms != null ? (sm.max_ttc_ms/1000).toFixed(1) : null, "s")}</div><div class="k">longest wait</div></div>
-    </div></div>`);
+/* ================= PANELS ================= */
+function serverFor(r){
+  if (r.served_by && r.served_by !== "-") return r.served_by;
+  const d = (S.decisions||[]).find(d => d.client === r.client && d.t >= r.start - 1 && d.t <= (r.end || S.now) + 1);
+  return d ? d.server : null;
+}
+function lines(exs){
+  return exs.map(e => `<div class="ex">
+    <div class="ln"><span class="who">${e.client} → 10.0.0.100:9000<span class="proto tcp">TCP</span></span><code class="msg">GET ${esc(e.file)}</code></div>
+    ${e.reply}</div>`).join("");
+}
+function renderSockets(){
+  const reqs = (S.requests||[]).slice(-4).reverse();
+  const busyNow = Object.entries(S.clients||{}).filter(([,b]) => b.busy).map(([c,b]) => ({client:c, file:b.file || "file", reply:
+    `<div class="ln"><span class="who wait">${(() => { const d = (S.decisions||[]).find(d => d.client === c); return d ? d.server + " → " + c : "server → " + c; })()}</span><span class="wait">sending the file…</span></div>`}));
+  const done = reqs.map(r => {
+    const srv = serverFor(r), who = `${srv || "server"} → ${r.client}`;
+    if (r.status === "ok") return {client:r.client, file:r.file, reply:
+      `<div class="ln ok"><span class="who" style="color:${SRVC[srv]||"inherit"}">${esc(who)}</span><code class="msg">OK ${r.bytes || ""} ${esc(srv || "")}</code>
+       <span class="note">then ${SIZE[r.file] || "the file"} of data · ${ms(r.ttc_ms)} · ${r.mbps != null ? r.mbps.toFixed(2) + " Mbps" : ""}</span></div>`};
+    const err = /ERR \d+[^,;]*/.exec(r.error || "");
+    return {client:r.client, file:r.file, reply: err
+      ? `<div class="ln err"><span class="who">${esc(who)}</span><code class="msg">${esc(err[0])}</code><span class="note">the client prints the error and exits cleanly; the server keeps running</span></div>`
+      : `<div class="ln err"><span class="who">${esc(r.client)}</span><code class="msg">${esc(r.error || "failed")}</code></div>`};
+  });
+  const all = [...busyNow, ...done].slice(0, 4);
+  setHTML($("tcp"), all.length ? lines(all) : `<div class="empty">Press <b>Run</b> on step 1 to see the messages.</div>`);
+  const open = S.servers.reduce((a, s) => a + (s.active||0), 0);
+  setHTML($("conc"), `Open TCP connections right now: <b class="num">${open}</b>` + (open > 1 ? " · handled in parallel, one thread each" : ""));
+  setHTML($("udp"), S.servers.map(s => {
+    const dead = !s.alive, age = s.last_report_age;
+    return `<div class="hb ${dead ? "dead" : ""}"><span><i class="dot hbdot" data-s="${s.name}" style="background:${SRVC[s.name]}"></i><b>${s.name}</b><span class="proto udp">UDP</span></span>
+      <span class="msg">{"name":"${s.name}","active":${s.active ?? 0},…}</span>
+      <span class="age">${dead ? (s.process ? "silent" : "stopped") : age == null ? "" : "every 1 s"}</span></div>`;
+  }).join(""));
+}
+let beatT = 0;
+setInterval(() => { if (!S || REDUCED) return; document.querySelectorAll(".hbdot").forEach(d => { const s = S.servers.find(x => x.name === d.dataset.s); if (s && s.alive){ d.classList.remove("beat"); void d.offsetWidth; d.classList.add("beat"); } }); }, 1000);
+
+const HOW = {
+  least_loaded:"The controller picks the server with the fewest downloads, skipping servers that are down.",
+  round_robin:"The controller gives each new download to the next server in turn, skipping servers that are down.",
+  static:"The controller always picks srv1, even when it is down (the baseline to compare against)."};
+function routeWhy(d){
+  const u = Object.fromEntries(String(d.link_util||"").split(/\s+/).filter(Boolean).map(x => x.split("=")));
+  const slow = /s3/.test(d.path||""), fast = ["s1-s2","s2-s4"];
+  if (!slow) return `<b>fast route</b>, the shortest one`;
+  const cut = fast.filter(k => u[k] === "DOWN"), busy = fast.filter(k => u[k] && u[k] !== "DOWN" && parseInt(u[k]) >= 70);
+  if (cut.length) return `<b>slow route</b>, because ${cut.map(k => k.replace("-", "–")).join(" and ")} is cut`;
+  if (busy.length) return `<b>slow route</b>, because ${busy.map(k => `${k.replace("-", "–")} is ${u[k]} busy`).join(" and ")}`;
+  return `<b>slow route</b>`;
+}
+let decAll = false;
+$("decMore").onclick = () => { decAll = !decAll; $("decs")._h = null; renderDecisions(); };
+function renderDecisions(){
+  setHTML($("how"), `<li>Heartbeats tell the controller how busy each server is, and port counters how busy each link is.</li>
+    <li>A new TCP connection reaches s1, which asks the controller.</li><li>${HOW[S.lb_policy] || ""} Route: ${PATH_NAME[S.path_policy] || ""}.</li>`);
+  const all = S.decisions||[], ds = decAll ? all : all.slice(0, 4);
+  $("decMore").classList.toggle("hidden", all.length <= 4);
+  $("decMore").textContent = decAll ? "Show only the newest 4" : `Show all ${all.length} recent choices`;
+  setHTML($("decs"), ds.length ? ds.map(d => {
+    const loads = String(d.loads||"").split(/\s+/).filter(Boolean).map(x => {
+      const m = /^(srv\d)=(\w+)\((\d+)\)/.exec(x); return m ? {name:m[1], up:m[2] === "UP", n:+m[3]} : null; }).filter(Boolean);
+    return `<div class="dec" style="border-left-color:${SRVC[d.server]||"#7B8896"}">
+      <div class="big">${esc(d.client)} → <span style="color:${SRVC[d.server]}">${esc(d.server)}</span></div>
+      <div class="meta">route ${esc(route(d.path))}<span class="tagc">${esc(LB_NAME[d.policy] || d.policy || "")}</span></div>
+      <div class="loads">${loads.map(l => `<span class="${l.name === d.server ? "pick" : !l.up ? "down" : ""}" style="${l.name === d.server ? "background:" + (l.up ? SRVC[l.name] : "#D64545") : ""}">${l.name}: ${l.up ? l.n + " busy" : "down"}</span>`).join("")}</div>
+      <div class="why">${routeWhy(d)}</div>
+    </div>`; }).join("") : `<div class="empty">No choices yet. Each new download shows up here with the server loads the controller saw.</div>`);
 }
 
-/* ================================================================
-   CHARTS
-   ================================================================ */
-const CW = 760, PADL = 40, PADR = 10;
-function timeDomain(){ const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 180); return [Math.min(t0, t1 - 60), t1]; }
-function xScale(t, d){ return PADL + (t - d[0]) / (d[1]-d[0]) * (CW - PADL - PADR); }
+let seenRules = null, rulesBusy = false, SW = 1;
+function nameOf(F, ip){ return (F.hosts && F.hosts[ip]) || ip; }
+const SWLEAD = {1:"s1 swaps the shared address for the chosen server, and back on the reply. Read live from Open vSwitch.",
+  2:"s2 is on the fast route. While downloads use the fast route, their rules are here.",
+  3:"s3 is on the slow route. Cut s1–s2 or jam it, and the moved downloads' rules appear here.",
+  4:"s4 is the servers' switch. It sends each download's replies toward s2 or s3."};
+document.querySelectorAll(".swtabs button").forEach(b => b.onclick = () => {
+  SW = +b.dataset.sw; seenRules = null;
+  document.querySelectorAll(".swtabs button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  $("swName").textContent = "s" + SW; $("swLead").textContent = SWLEAD[SW]; $("rawCmd").textContent = `ovs-ofctl dump-flows s${SW}`;
+  $("rules")._h = null; loadRules();
+});
+function renderRouteRules(F){
+  const pr = F.rules.filter(r => r.priority === 20 || r.priority === 10);
+  const key = r => r.priority + "|" + r.match.join(",");
+  const prev = seenRules; seenRules = new Set(pr.map(key));
+  const port = a => { const o = (/output:(\d+)/.exec(a)||[])[1]; return (F.ports && F.ports[o]) || `port ${o}`; };
+  setHTML($("rules"), pr.length ? pr.map(r => {
+    const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
+    const what = r.priority === 20 ? `One download: ${esc(nameOf(F, m.nw_src))} → ${esc(nameOf(F, m.nw_dst))}${m.tp_src ? ` (port ${esc(m.tp_src === "9000" ? m.tp_dst : m.tp_src)})` : ""}`
+                                  : `Anything for ${esc(nameOf(F, m.nw_dst))}`;
+    return `<div class="rule ${prev && !prev.has(key(r)) ? "fresh" : ""}"><div class="big">${what}</div>
+      <div>Send it to <b>${esc(port(r.actions))}</b>.</div>
+      <div class="meta">${r.priority === 20 ? "per-download route" : "normal route"} · ${Number(r.n_packets).toLocaleString()} packets · removed after ${r.idle_timeout} s unused</div></div>`;
+  }).join("") : `<div class="empty">No route rules in s${SW} right now. ${SW === 3 ? "Cut s1–s2 or jam the fast route, then download." : "Start a download."}</div>`);
+}
+async function loadRules(){
+  if (rulesBusy) return; rulesBusy = true;
+  try {
+    const sw = SW, F = await (await fetch(`/api/flows?sw=${sw}`, {cache:"no-store"})).json();
+    if (sw !== SW) return;
+    if (F.error){ setHTML($("rules"), `<div class="empty">Couldn't read s${sw}'s rules: ${esc(F.error)}</div>`); return; }
+    const raw = F.rules.map(r => `priority=${r.priority} ${r.match.join(",")} n_packets=${r.n_packets}${r.idle_timeout ? " idle_timeout=" + r.idle_timeout : ""} actions=${r.actions}`).join("\n");
+    if ($("raw")._h !== raw){ $("raw").textContent = raw; $("raw")._h = raw; }
+    if (sw !== 1){
+      renderRouteRules(F);
+      setHTML($("fixed"), `${F.rules.length} rules in s${sw} in total, including the table-miss rule that sends unknown packets to the controller.`);
+      return;
+    }
+    const swap = F.rules.filter(r => r.priority === 30);
+    const fwd = swap.filter(r => /ip_dst/.test(r.actions));
+    const key = r => r.match.join(",");
+    const prev = seenRules; seenRules = new Set(fwd.map(key));
+    setHTML($("rules"), fwd.length ? fwd.map(r => {
+      const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
+      const ip = (/set_field:([\d.]+)->ip_dst/.exec(r.actions)||[])[1], srv = nameOf(F, ip), cli = nameOf(F, m.nw_src);
+      const back = swap.find(b => /ip_src/.test(b.actions) && b.match.includes(`nw_dst=${m.nw_src}`) && b.match.includes(`tp_dst=${m.tp_src}`));
+      return `<div class="rule ${prev && !prev.has(key(r)) ? "fresh" : ""}">
+        <div class="big">${esc(cli)}: 10.0.0.100 → <span style="color:${SRVC[srv]||"inherit"}">${esc(srv)}</span></div>
+        <div>Going out: change the address to ${esc(ip)}.${back ? ` Coming back: relabel as 10.0.0.100.` : ""}</div>
+        <div class="meta">port ${esc(m.tp_src)} · ${Number(r.n_packets).toLocaleString()} packets matched · removed after ${r.idle_timeout} s unused</div>
+      </div>`; }).join("") : `<div class="empty">No address-swap rules right now. They appear when a download starts and stay 40 s after it ends.</div>`);
+    const miss = F.rules.filter(r => r.priority === 0).length, routes = F.rules.filter(r => r.priority === 10 || r.priority === 20).length;
+    setHTML($("fixed"), `Also in s1: <b>${miss}</b> table-miss rule (unknown packets go to the controller) and <b>${routes}</b> forwarding rules. ${F.rules.length} rules in total.`);
+  } catch(e){ setHTML($("rules"), `<div class="empty">Couldn't load the rules.</div>`); }
+  finally { rulesBusy = false; }
+}
+setInterval(loadRules, 1500); loadRules();
+
+function renderResults(){
+  const sm = S.summary || {}, reqs = S.requests || [];
+  const pending = Object.values(S.clients||{}).filter(b => b.busy).reduce((a, b) => a + (b.total - b.done), 0);
+  $("rDone").textContent = `${sm.ok || 0} of ${(sm.total || 0) + pending}`;
+  // the 404 test is not a failure of the network
+  
+  $("rTime").textContent = ms(sm.avg_ttc_ms);
+  $("rMbps").textContent = sm.avg_mbps != null ? sm.avg_mbps.toFixed(2) + " Mbps" : "–";
+  const errs = reqs.filter(r => /ERR/.test(r.error || "")).length;
+  $("rErr").textContent = errs;
+  $("rErr").parentElement.className = "card" + (errs ? " good" : "");
+  $("rRetry").textContent = `${sm.retries || 0} · ${(sm.failed || 0) - errs}`;
+  $("rRetry").parentElement.className = "card" + ((sm.failed || 0) - errs > 0 ? " bad" : "");
+}
+function renderTop(){
+  const L = $("live"), sim = S.mode === "sim";
+  L.className = "live" + (!S.controller_online ? " off" : sim ? " sim" : "");
+  L.querySelector("span").textContent = !S.controller_online ? "Controller not responding" : sim ? "Practice mode (no VM)" : "Live: Mininet + Ryu";
+  const anyBusy = Object.values(S.clients||{}).some(b => b.busy);
+  $("go1").disabled = anyBusy;
+  $("polpill").innerHTML = S.restarting ? "Controller restarting…" : `<b>${esc(LB_NAME[S.lb_policy] || S.lb_policy)}</b> · ${esc(PATH_NAME[S.path_policy] || S.path_policy)}`;
+  setHTML($("srvTog"), S.servers.map(x => `<button class="btn ${x.process ? "" : "bad"}" data-srv="${x.name}">${x.process ? "■ Stop" : "▶ Start"} ${x.name}<small>${!x.process ? "stopped" : x.alive ? "running" : "starting…"}</small></button>`).join(""));
+  setHTML($("linkTog"), LINKS.map(([a,b]) => { const l = S.links.find(x => x.a === a && x.b === b) || {up:true};
+    return `<button class="btn ${l.up ? "line" : "bad"}" data-a="${a}" data-b="${b}">${l.up ? "✂ Cut" : "↺ Restore"} s${a}–s${b}<small>${a === 1 && b === 2 || a === 2 ? "fast route" : "slow route"}</small></button>`; }).join(""));
+  $("floodBtn").textContent = S.flood.on ? `Stop flood (${S.flood.mbps} Mbps)` : "Start flood";
+  $("floodBtn").className = "btn" + (S.flood.on ? " bad" : "");
+  if (document.activeElement !== $("lbSel") && document.activeElement !== $("pathSel") && !pickedPolicy){ $("lbSel").value = S.lb_policy; $("pathSel").value = S.path_policy; }
+  $("applyPol").disabled = S.restarting || anyBusy;
+  const sc = S.scenario, running = sc && !sc.done;
+  setHTML($("scen"), Object.entries(S.scenarios || {}).map(([k, v]) => `<button data-sc="${k}" class="${running && sc.name === k ? "on" : ""}" ${running || anyBusy || S.restarting ? "disabled" : ""}>${esc(v.title)}<span>${esc(v.text.split(";")[0].split(".")[0])}</span></button>`).join("")
+    + (running ? `<button data-sc="stop" style="justify-content:center;color:var(--bad)">■ Stop the test</button>` : ""));
+  const pg = $("prog");
+  if (sc && (running || sc.elapsed < 240)){
+    const info = S.scenarios[sc.name] || {};
+    pg.innerHTML = `<b>${esc(sc.title)} · ${running ? Math.round(sc.elapsed) + " s" : "finished"}</b>${esc(sc.step)}<div style="margin-top:4px;color:#6B4700">Watch: ${esc(info.show || "")}</div>`;
+    pg.classList.remove("hidden");
+  } else pg.classList.add("hidden");
+  document.querySelectorAll(".trio button").forEach(b => { b.disabled = !!S.clients?.[b.dataset.client]?.busy; });
+  const st = $("status");
+  if (S.restarting){ st.textContent = "Controller restarting with the new rules…"; st.classList.remove("hidden"); }
+  else if (anyBusy){ st.textContent = "Downloads running… watch the map."; st.classList.remove("hidden"); } else st.classList.add("hidden");
+}
+
+// ---- rule log pop-up ----
+const kb = b => b >= 1e6 ? (b/1e6).toFixed(2) + " MB" : b >= 1e3 ? (b/1e3).toFixed(1) + " KB" : b + " B";
+let logTimer = null, logCount = 0;
+async function loadLog(){
+  try {
+    const L = await (await fetch("/api/rulelog", {cache:"no-store"})).json();
+    const rows = L.rules || [], live = rows.filter(r => !r.removed).length;
+    logCount = rows.length; $("logCount").textContent = rows.length ? `(${rows.length})` : "";
+    if (!$("logDlg").open) return;
+    $("logStats").innerHTML = `<b>${rows.length}</b> rules logged · <b>${live}</b> in the switch now`;
+    $("logFile").textContent = L.file ? `Saved in ${L.file}` : "";
+    $("dlCsv").hidden = !L.file;
+    const raw = $("showRaw").checked;
+    setHTML($("logRows"), rows.length ? rows.map(r => {
+      const age = r.removed ? `<span class="pill off">removed after ${Math.round(r.removed - r.installed)} s</span>`
+                            : `<span class="pill on">in switch · ${Math.round(L.now - r.installed)} s</span>`;
+      return `<tr><td class="n">${r.id}</td><td class="n">${clock(r.installed)}</td>
+        <td><b>${esc(r.client)}</b> → 10.0.0.100 → <b style="color:${SRVC[r.server]||"inherit"}">${esc(r.server)}</b><br><span style="color:var(--ink3)">port ${esc(r.port)} · ${esc(r.server_ip)}</span></td>
+        <td class="n">${Number(r.out_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.out_bytes||0)}</span></td>
+        <td class="n">${Number(r.back_packets||0).toLocaleString()} packets<br><span style="color:var(--ink3)">${kb(r.back_bytes||0)}</span></td>
+        <td>${age}</td></tr>` + (raw ? `<tr class="raw"><td></td><td colspan="5">${esc(r.raw_out)}<br>${esc(r.raw_back)}</td></tr>` : "");
+    }).join("") : `<tr><td colspan="6"><div class="empty">No rules yet. Run a download and they appear here.</div></td></tr>`);
+  } catch(e){ /* dashboard not reachable; the top badge says so */ }
+}
+function clock(t){ return new Date(t * 1000).toTimeString().slice(0, 8); }
+$("openLog").onclick = () => { $("logDlg").showModal(); loadLog(); clearInterval(logTimer); logTimer = setInterval(loadLog, 1500); };
+$("closeLog").onclick = () => $("logDlg").close();
+$("logDlg").addEventListener("close", () => clearInterval(logTimer));
+$("logDlg").addEventListener("click", e => { if (e.target === $("logDlg")) $("logDlg").close(); });
+$("showRaw").onchange = loadLog;
+setInterval(() => { if (!$("logDlg").open) loadLog(); }, 3000); loadLog();
+
+let pickedPolicy = false;
+$("lbSel").onchange = $("pathSel").onchange = () => { pickedPolicy = true; };
+$("applyPol").addEventListener("click", () => setTimeout(() => { pickedPolicy = false; }, 6000));
+
+/* ---- charts (SVG) ---- */
+const NSV = "http://www.w3.org/2000/svg", CW = 760, PADL = 42, PADR = 12;
+function el(tag, attrs, parent, txt){ const e = document.createElementNS(NSV, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (txt != null) e.textContent = txt; parent.appendChild(e); return e; }
+function domain(){ const t1 = S.now, t0 = Math.max(S.chart_since, t1 - 120); return [Math.min(t0, t1 - 60), t1]; }
+const xs = (t, d) => PADL + (t - d[0]) / (d[1]-d[0]) * (CW - PADL - PADR);
 function axisX(svg, d, H, B){
-  const span = d[1]-d[0], step = span > 120 ? 30 : 15;
-  for (let s = 0; s <= span; s += step){
-    const x = xScale(d[1] - s, d); if (x < PADL) break;
-    el("text",{x,y:H-B+15,"text-anchor":"middle","font-size":12,fill:"#7B8896"},svg, s === 0 ? "now" : `${s} s ago`);
+  for (let s = 0; s <= 120; s += 20){ const t = d[1] - s; if (t < d[0]) break;
+    el("text", {x:xs(t,d), y:H-B+16, "text-anchor":"middle", "font-size":12, fill:"#7B8896"}, svg, s ? `-${s} s` : "now"); }
+}
+function marks(svg, d, top, bottom){
+  for (const e of (S.events||[])) if (e.mark && e.t >= d[0]){
+    const x = xs(e.t, d);
+    el("line", {x1:x, x2:x, y1:top, y2:bottom, stroke:"#B9C4CF", "stroke-dasharray":"3 3"}, svg);
+    el("text", {x:x+3, y:top+10, "font-size":11, fill:"#7B8896"}, svg, e.mark);
   }
 }
-function friendlyMark(m){
-  const demo = DEMOS.find(x => x.backend === m);
-  if (demo) return demo.title;
-  let k;
-  if ((k = /^flood (\d+)M$/.exec(m))) return `traffic ${k[1]} Mbps on`;
-  if (m === "flood off") return "traffic off";
-  if (m === "end") return "demo ended";
-  if (m === "reset") return "fixed everything";
-  if ((k = /^(srv\d) killed$/.exec(m))) return `${k[1]} crashed`;
-  if ((k = /^(srv\d) up$/.exec(m))) return `${k[1]} restarted`;
-  if ((k = /^(s\d–s\d) down$/.exec(m))) return `${k[1]} cut`;
-  if ((k = /^(s\d–s\d) up$/.exec(m))) return `${k[1]} repaired`;
-  if ((k = /^(h\d|all) ×(\d+)$/.exec(m))) return k[1] === "all" ? "downloads sent" : `${k[1]} downloads`;
-  if (m === "h1 starts") return "h1 downloads";
-  if (/\//.test(m)) return "new rules";
-  return m;
-}
-function eventMarks(svg, d, top, bottom, labels){
-  const marks = (S.events || []).filter(e => e.mark && e.t >= d[0]);
-  const rowsEnd = [-1e9, -1e9, -1e9];
-  for (const e of marks){
-    const x = xScale(e.t, d);
-    el("line",{x1:x,x2:x,y1:top,y2:bottom,stroke:"#1B2430","stroke-width":1,"stroke-dasharray":"2 3",opacity:.5},svg);
-    if (!labels) continue;
-    const label = friendlyMark(e.mark);
-    const w = label.length * 6.6 + 8, right = x + w > CW - PADR, x0 = right ? x - w : x, x1 = right ? x : x + w;
-    const row = rowsEnd.findIndex(end => end < x0);
-    if (row < 0 || row > 1) continue;            // two label rows above the plot; the line still shows
-    rowsEnd[row] = x1;
-    el("text",{x: right ? x-3 : x+3,y:top-18+row*14,"text-anchor": right ? "end" : "start","font-size":12,"font-weight":700,fill:"#1B2430"},svg,label);
-  }
-}
-function hover(container, svg, items){
-  const tip = container.querySelector(".tip") || container.appendChild(Object.assign(document.createElement("div"),{className:"tip hidden"}));
+function hover(box, svg, items){
+  let tip = box.querySelector(".tip"); if (!tip){ tip = document.createElement("div"); tip.className = "tip hidden"; box.appendChild(tip); }
   svg.onmousemove = ev => {
-    const r = svg.getBoundingClientRect(), k = CW / r.width, mx = (ev.clientX - r.left) * k, my = (ev.clientY - r.top) * k;
-    let best = null, bd = 18*k;
-    for (const it of items){ const dd = Math.hypot(it.x-mx, it.y-my); if (dd < bd){ bd = dd; best = it; } }
+    const r = svg.getBoundingClientRect(), k = CW / r.width, x = (ev.clientX - r.left)*k, y = (ev.clientY - r.top)*k;
+    let best = null, bd = 18;
+    for (const it of items){ const dd = Math.hypot(it.x - x, it.y - y); if (dd < bd){ bd = dd; best = it; } }
     if (!best){ tip.classList.add("hidden"); return; }
     tip.textContent = best.text; tip.classList.remove("hidden");
-    tip.style.left = (best.x / k + svg.offsetLeft) + "px"; tip.style.top = (best.y / k + svg.offsetTop) + "px";
+    tip.style.left = (best.x / k) + "px"; tip.style.top = (best.y / k) + "px";
   };
   svg.onmouseleave = () => tip.classList.add("hidden");
 }
 function drawUtil(){
   const svg = $("utilSvg"); svg.innerHTML = "";
-  const H = 200, B = 20, T = 38, d = timeDomain(), y = u => T + (H-T-B) * (1 - Math.min(1, u));
-  for (const f of [0, .5, 1]){
-    el("line",{x1:PADL,x2:CW-PADR,y1:y(f),y2:y(f),stroke:"#E7ECF1"},svg);
-    el("text",{x:PADL-6,y:y(f)+4,"text-anchor":"end","font-size":12,fill:"#7B8896"},svg,`${f*100}%`);
-  }
-  el("line",{x1:PADL,x2:CW-PADR,y1:y(S.util_threshold),y2:y(S.util_threshold),stroke:"#D64545","stroke-dasharray":"5 4","stroke-width":1.5},svg);
-  eventMarks(svg, d, T, H-B, true);
-  const hist = (S.util_history || []).filter(h => h.t >= d[0]);
-  const series = [
-    {name:"Fast route", color:"#1B2430", f:h => (h.u[0]==null||h.u[1]==null) ? null : Math.max(h.u[0],h.u[1])},
-    {name:"Slow route", color:"#5B4BC4", f:h => (h.u[2]==null||h.u[3]==null) ? null : Math.max(h.u[2],h.u[3])},
-  ];
-  const items = [];
-  for (const s of series){
+  const H = 210, B = 22, T = 14, d = domain(), y = u => T + (H-T-B) * (1 - Math.min(1, u));
+  for (const f of [0, .5, 1]){ el("line", {x1:PADL, x2:CW-PADR, y1:y(f), y2:y(f), stroke:"#E7ECF1"}, svg);
+    el("text", {x:PADL-6, y:y(f)+4, "text-anchor":"end", "font-size":12, fill:"#7B8896"}, svg, `${f*100}%`); }
+  el("line", {x1:PADL, x2:CW-PADR, y1:y(S.util_threshold), y2:y(S.util_threshold), stroke:"#D64545", "stroke-dasharray":"5 4", "stroke-width":1.5}, svg);
+  marks(svg, d, T, H-B);
+  const hist = (S.util_history||[]).filter(h => h.t >= d[0]), items = [];
+  const series = [{name:"Fast route", color:"#1B2430", f:h => h.u[0]==null || h.u[1]==null ? null : Math.max(h.u[0], h.u[1])},
+                  {name:"Slow route", color:"#5B4BC4", f:h => h.u[2]==null || h.u[3]==null ? null : Math.max(h.u[2], h.u[3])}];
+  for (const sr of series){
     let seg = [];
-    const flush = () => { if (seg.length > 1) el("polyline",{points:seg.join(" "),fill:"none",stroke:s.color,"stroke-width":2.2,"stroke-linejoin":"round"},svg); seg = []; };
-    for (const h of hist){
-      const v = s.f(h); if (v == null){ flush(); continue; }
-      const px = xScale(h.t, d), py = y(v);
-      seg.push(`${px.toFixed(1)},${py.toFixed(1)}`);
-      items.push({x:px, y:py, text:`${s.name}: ${Math.round(v*100)}% busy at ${clock(h.t)}`});
-    }
+    const flush = () => { if (seg.length > 1) el("polyline", {points:seg.join(" "), fill:"none", stroke:sr.color, "stroke-width":2.4, "stroke-linejoin":"round"}, svg); seg = []; };
+    for (const h of hist){ const v = sr.f(h); if (v == null){ flush(); continue; }
+      const px = xs(h.t, d), py = y(v); seg.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      items.push({x:px, y:py, text:`${sr.name}: ${Math.round(v*100)}% busy at ${clock(h.t)}`}); }
     flush();
-    const last = [...hist].reverse().find(h => s.f(h) != null);
-    if (last) el("circle",{cx:xScale(last.t,d),cy:y(s.f(last)),r:4,fill:s.color,stroke:"#fff","stroke-width":2},svg);
+    const lastH = [...hist].reverse().find(h => sr.f(h) != null);
+    if (lastH) el("circle", {cx:xs(lastH.t, d), cy:y(sr.f(lastH)), r:4, fill:sr.color, stroke:"#fff", "stroke-width":2}, svg);
+    else if (hist.length) el("text", {x:CW-PADR, y: sr.name === "Fast route" ? T+12 : T+28, "text-anchor":"end", "font-size":12.5, fill:"#D64545", "font-weight":700}, svg, `${sr.name}: cut`);
   }
-  axisX(svg, d, H, B);
-  hover($("utilChart"), svg, items);
+  axisX(svg, d, H, B); hover($("utilChart"), svg, items);
 }
-function drawRequests(){
+function drawReqs(){
   const svg = $("reqSvg"); svg.innerHTML = "";
-  const H = 190, B = 20, T = 8, d = timeDomain(), rows = (S.requests || []).filter(r => r.end >= d[0]);
-  const maxS = Math.max(5, ...rows.map(r => (r.ttc_ms||0)/1000)) * 1.12, step = maxS > 40 ? 10 : maxS > 16 ? 5 : maxS > 8 ? 2 : 1;
-  const y = s => T + (H-T-B) * (1 - s/maxS);
-  for (let s = 0; s <= maxS; s += step){
-    el("line",{x1:PADL,x2:CW-PADR,y1:y(s),y2:y(s),stroke:"#E7ECF1"},svg);
-    el("text",{x:PADL-6,y:y(s)+4,"text-anchor":"end","font-size":12,fill:"#7B8896"},svg,`${s}`);
-  }
-  eventMarks(svg, d, T, H-B, false);
+  const H = 200, B = 22, T = 8, d = domain(), rows = (S.requests||[]).filter(r => r.end >= d[0] && r.file !== "missing.bin");
+  const maxS = Math.max(4, ...rows.map(r => (r.ttc_ms||0)/1000)) * 1.12, step = maxS > 40 ? 10 : maxS > 16 ? 5 : maxS > 8 ? 2 : 1;
+  const y = v => T + (H-T-B) * (1 - v/maxS);
+  for (let v = 0; v <= maxS; v += step){ el("line", {x1:PADL, x2:CW-PADR, y1:y(v), y2:y(v), stroke:"#E7ECF1"}, svg);
+    el("text", {x:PADL-6, y:y(v)+4, "text-anchor":"end", "font-size":12, fill:"#7B8896"}, svg, `${v} s`); }
+  marks(svg, d, T, H-B);
   const items = [];
   for (const r of rows){
-    const px = xScale(r.end, d), py = y((r.ttc_ms||0)/1000);
-    const t = `${r.client}, ${FILE_NAME[r.file] || r.file}: ${r.status === "ok" ? `from ${r.served_by} in ${(r.ttc_ms/1000).toFixed(1)} s at ${r.mbps} Mbps${r.attempts>1?`, after ${r.attempts} tries`:""}` : `failed after ${r.attempts} tries`}`;
+    const px = xs(r.end, d), py = y((r.ttc_ms||0)/1000);
     if (r.status === "ok"){
-      el("circle",{cx:px,cy:py,r:6,fill:colorOf(r.served_by),stroke:"#fff","stroke-width":2},svg);
-      if (r.attempts > 1) el("circle",{cx:px,cy:py,r:10,fill:"none",stroke:"#1B2430","stroke-width":1.3},svg);
-    } else {
-      const s = 6;
-      el("path",{d:`M${px-s},${py-s}L${px+s},${py+s}M${px-s},${py+s}L${px+s},${py-s}`,stroke:"#D64545","stroke-width":2.8,"stroke-linecap":"round"},svg);
-    }
-    items.push({x:px, y:py, text:t});
+      el("circle", {cx:px, cy:py, r:6, fill:SRVC[r.served_by] || "#1B2430", stroke:"#fff", "stroke-width":2}, svg);
+      if (r.attempts > 1) el("circle", {cx:px, cy:py, r:10, fill:"none", stroke:"#1B2430", "stroke-width":1.3}, svg);
+    } else el("path", {d:`M${px-6},${py-6}L${px+6},${py+6}M${px-6},${py+6}L${px+6},${py-6}`, stroke:"#D64545", "stroke-width":2.8, "stroke-linecap":"round"}, svg);
+    items.push({x:px, y:py, text: r.status === "ok" ? `${r.client}: ${r.file} from ${r.served_by} in ${(r.ttc_ms/1000).toFixed(1)} s, ${r.mbps} Mbps${r.attempts > 1 ? `, after ${r.attempts} tries` : ""}` : `${r.client}: failed after ${r.attempts} tries`});
   }
-  if (!rows.length) el("text",{x:(PADL+CW)/2,y:H/2,"text-anchor":"middle","font-size":14,fill:"#4A5866"},svg,"No finished downloads yet");
-  axisX(svg, d, H, B);
-  hover($("reqChart"), svg, items);
-  $("reqKey").innerHTML = S.servers.map(s => `<span><span class="sw" style="background:${colorOf(s.name)}"></span>from ${s.name}</span>`).join("") +
-    `<span><span class="sw" style="background:#fff;border:1.5px solid #1B2430"></span>ring: needed a retry</span><span class="tone-bad">✕ failed</span>`;
+  if (!rows.length) el("text", {x:(PADL+CW)/2, y:H/2, "text-anchor":"middle", "font-size":14, fill:"#4A5866"}, svg, "No finished downloads yet");
+  axisX(svg, d, H, B); hover($("reqChart"), svg, items);
+  setHTML($("reqKey"), S.servers.map(x => `<span><i style="background:${SRVC[x.name]};height:10px;width:10px;border-radius:50%"></i>from ${x.name}</span>`).join("")
+    + `<span><i style="background:#fff;border:1.5px solid #1B2430;height:10px;width:10px;border-radius:50%"></i>needed a retry</span><span style="color:var(--bad);font-weight:700">✕ failed</span>`);
 }
 
-/* ================================================================
-   LOG + DECISIONS
-   ================================================================ */
-function renderLog(){
-  const evs = (S.events || []).slice(-100).reverse();
-  setHTML($("log"), evs.map(e => `<div class="ev ${e.kind} ${/DOWN|killed/.test(e.text) ? "isdown" : ""}"><time>${clock(e.t)}</time><span class="t">${esc(e.text)}</span></div>`).join("") || `<div class="empty">Nothing yet.</div>`);
-  const rows = S.decisions || [];
-  setHTML($("decRows"), rows.length ? rows.slice(0,12).map(d => `<tr>
-    <td class="num">${clock(d.t)}</td><td>${esc(d.client)}</td>
-    <td><span class="sq" style="background:${colorOf(d.server)}"></span><b>${esc(d.server)}</b></td>
-    <td>${esc(route(d.path))}</td><td class="num" style="color:var(--ink2)">${esc(String(d.loads||"").replace(/=UP\((\d+)\)/g, " $1").replace(/=DOWN/g, " down"))}</td></tr>`).join("")
-    : `<tr><td colspan="5" class="empty">No decisions yet. Every new download appears here.</td></tr>`);
-}
-
-/* ================================================================
-   SWITCH RULES
-   ================================================================ */
-let flowSw = 1, flowSeen = {}, flowBusy = false;
-function selectSwitch(n){
-  flowSw = n;
-  document.querySelectorAll("[data-sw]").forEach(b => b.setAttribute("aria-selected", +b.dataset.sw === n));
-  $("flowMeta").textContent = "Loading…";
-  loadFlows(true);
-}
-function describeRule(r, F){
-  const m = Object.fromEntries(r.match.filter(t => t.includes("=")).map(t => t.split("=")));
-  const name = ip => F.hosts[ip] || ip;
-  const outs = [...r.actions.matchAll(/output:(\d+)/g)].map(x => F.ports[x[1]] || `port ${x[1]}`), to = outs.join(", ");
-  if (r.priority === 0) return {kind:"miss", label:"ask the controller", text:"Anything no other rule matches is sent to the controller. This is how it hears about new downloads and server heartbeats."};
-  if (r.match.includes("ipv6") && /drop/.test(r.actions)) return {kind:"miss", label:"ignore", text:"Throw away IPv6 noise (this project doesn't use IPv6)."};
-  if (/ip_dst/.test(r.actions) && S && m.nw_dst === S.vip){
-    const srvIp = (/set_field:([\d.]+)->ip_dst/.exec(r.actions)||[])[1];
-    return {kind:"nat", label:"address swap", text:`${name(m.nw_src)}'s request to the shared address goes to ${name(srvIp)} instead. Next hop: ${to}.`};
+/* ---- comparison table ---- */
+function renderCompare(){
+  const rows = (S.requests||[]).filter(r => r.file !== "missing.bin");
+  if (!rows.length){ setHTML($("cmp"), `<div class="empty">No finished downloads yet.</div>`); return; }
+  const groups = {};
+  for (const r of rows){
+    const k = `${r.lb}|${r.route}|${(r.cond||[]).join(",")}`;
+    (groups[k] = groups[k] || {lb:r.lb, route:r.route, cond:r.cond||[], rows:[]}).rows.push(r);
   }
-  if (/ip_src/.test(r.actions)) return {kind:"nat", label:"address swap back", text:`${name(m.nw_src)}'s reply to ${name(m.nw_dst)} is relabelled as coming from the shared address. Next hop: ${to}.`};
-  if (r.priority === 20) return {kind:"path", label:"one download's route", text:`Traffic of one download, ${name(m.nw_src)} to ${name(m.nw_dst)}: next hop ${to}.`};
-  if (r.priority === 10) return {kind:"route", label:"normal route", text:`Anything for ${name(m.nw_dst)}: next hop ${to}.`};
-  return {kind:"miss", label:`priority ${r.priority}`, text:r.actions};
+  const G = Object.values(groups).map(g => {
+    const ok = g.rows.filter(r => r.status === "ok"), t = ok.map(r => r.ttc_ms).filter(v => v != null), m = ok.map(r => r.mbps).filter(v => v != null);
+    return Object.assign(g, {n:g.rows.length, ok:ok.length, pct: 100*ok.length/g.rows.length,
+      ttc: t.length ? t.reduce((a,b)=>a+b,0)/t.length : null, mbps: m.length ? m.reduce((a,b)=>a+b,0)/m.length : null,
+      retries: g.rows.reduce((a,r) => a + Math.max(0, (r.attempts||1)-1), 0)});
+  });
+  const many = G.length > 1, best = (f, lo) => { const v = G.map(g => g[f]).filter(x => x != null); return v.length ? (lo ? Math.min(...v) : Math.max(...v)) : null; };
+  const bt = best("ttc", true), bm = best("mbps"), bp = best("pct");
+  setHTML($("cmp"), `<table class="cmp"><thead><tr><th>Controller setting</th><th>Network</th><th class="n">Done</th><th class="n">Avg time</th><th class="n">Avg speed</th><th class="n">Retries</th></tr></thead><tbody>` +
+    G.map(g => `<tr><td><b>${esc(LB_NAME[g.lb] || g.lb)}</b><br><span style="color:var(--ink3)">${esc(PATH_NAME[g.route] || g.route)}</span></td>
+      <td>${g.cond.length ? g.cond.map(c => `<span class="cond">${esc(c)}</span>`).join("") : `<span class="cond ok">normal</span>`}</td>
+      <td class="n ${many && g.pct === bp ? "best" : ""}">${g.ok}/${g.n}</td>
+      <td class="n ${many && g.ttc === bt ? "best" : ""}">${ms(g.ttc)}</td>
+      <td class="n ${many && g.mbps === bm ? "best" : ""}">${g.mbps != null ? g.mbps.toFixed(2) + " Mbps" : "–"}</td>
+      <td class="n">${g.retries}</td></tr>`).join("") + `</tbody></table>`);
 }
-async function loadFlows(force){
-  if (flowBusy || (!force && $("p-rules").classList.contains("hidden"))) return;
-  flowBusy = true;
-  try {
-    const sw = flowSw, F = await (await fetch(`/api/flows?sw=${sw}`, {cache:"no-store"})).json();
-    if (sw !== flowSw) return;
-    if (F.error){ $("flowMeta").innerHTML = `<span class="tone-bad">Couldn't read s${sw}'s rules: ${esc(F.error)}</span>`; $("flowRows").innerHTML = ""; return; }
-    const keyOf = r => `${r.priority}|${r.cookie}|${r.match.join(",")}`;
-    const prev = flowSeen[sw], keys = new Set(F.rules.map(keyOf));
-    const added = prev ? F.rules.filter(r => !prev.has(keyOf(r))).length : 0, removed = prev ? [...prev].filter(k => !keys.has(k)).length : 0;
-    $("flowRows").innerHTML = F.rules.map(r => {
-      const d = describeRule(r, F), fresh = prev && !prev.has(keyOf(r));
-      return `<tr class="${fresh ? "fresh" : ""}"><td><span class="kind ${d.kind}">${esc(d.label)}</span></td><td class="what">${esc(d.text)}</td>
-        <td class="r num">${r.priority}</td><td class="code">${esc(r.match.join(", ") || "everything")}</td><td class="code">${esc(r.actions.replace(/,(?=set_field|output)/g, ", "))}</td>
-        <td class="r num">${Number(r.n_packets).toLocaleString()}</td><td class="r num">${r.idle_timeout ? r.idle_timeout + " s unused" : "never"}</td></tr>`;
-    }).join("") || `<tr><td colspan="7" class="empty">No rules.</td></tr>`;
-    flowSeen[sw] = keys;
-    $("flowMeta").innerHTML = `<b>s${sw}</b> has <b>${F.rules.length} rules</b>${S && S.mode === "sim" ? " (practice mode)" : ""}.` + (added || removed ? ` Since the last look: ${added} new, ${removed} expired.` : "");
-  } catch(e){ $("flowMeta").textContent = "Couldn't load the rules."; }
-  finally { flowBusy = false; }
-}
-setInterval(() => loadFlows(false), 1500);
 
-/* ================================================================
-   RESULTS
-   ================================================================ */
-let resultsLoaded = false;
+/* ---- controller timeline ---- */
+function plain(e){
+  const t = e.text;
+  if (e.kind === "health") return /DOWN/.test(t) ? ["bad","server", t.replace("[HEALTH] ", "").replace("is DOWN", "marked down:").replace(/\(no report.*\)/, "no heartbeat for 3 s, new clients go elsewhere")]
+                                                 : ["good","server", t.replace("[HEALTH] ", "").replace(/is UP.*/, "is back: heartbeats received")];
+  if (e.kind === "link") return /DOWN/.test(t) ? ["bad","link", t.replace("[LINK] ", "").replace(/is DOWN.*/, "is cut: old rules deleted, downloads moved to the other route")]
+                                               : ["good","link", t.replace("[LINK] ", "").replace(/is UP.*/, "is back: new downloads may use it again")];
+  if (e.kind === "monitor") return [/no longer/.test(t) ? "good" : "mon", "load", t.replace("[MONITOR] ", "")];
+  if (e.kind === "reroute") return ["rr", "reroute", t.replace("[REROUTE] ", "")];
+  if (e.kind === "decision") return $("tlDec").checked ? ["act", "choice", t] : null;
+  if (e.kind === "action" || e.kind === "scenario") return ["act", e.kind === "scenario" ? "test" : "you", t];
+  if (e.kind === "ctrl" && /ready|START/.test(t)) return ["act", "controller", t.replace("[START] ", "started: ")];
+  if (e.kind === "warn" || e.kind === "error") return ["bad", e.kind, t];
+  return null;
+}
+function renderTimeline(){
+  const evs = (S.events||[]).filter(e => e.t >= S.chart_since - 1).map(e => [e, plain(e)]).filter(x => x[1]).slice(-60).reverse();
+  setHTML($("tl"), evs.length ? evs.map(([e, [k, tag, txt]]) => `<li><time>${clock(e.t)}</time><span><span class="k ${k}">${esc(tag)}</span>${esc(txt)}</span></li>`).join("")
+    : `<li><span></span><span class="empty" style="display:block">Nothing yet. Crash a server, cut a link or start the flood.</span></li>`);
+}
+
+$("tlDec").onchange = () => { $("tl")._h = null; renderTimeline(); };
+/* ---- terminal copy ---- */
+let termN = -1;
+function renderTerm(){
+  const L = S.terminal || [], box = $("term");
+  const key = L.length ? L[L.length-1].t + "|" + L.length : "0";
+  if (key === termN) return; termN = key;
+  const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+  box.innerHTML = L.length ? L.map(l => {
+    const who = l.who === "you" || l.who === "output" ? "" : `<span class="${l.who}">[${esc(l.who)}]</span> `;
+    return `<span class="t">${clock(l.t)}</span> ${who}<span class="${l.who}">${esc(l.text)}</span>`;
+  }).join("\n") : `<span class="t">Waiting for activity. Click a button above, or type a command at mininet&gt; in the Ubuntu terminal.</span>`;
+  if ($("follow").checked && (atEnd || true)) box.scrollTop = box.scrollHeight;
+  $("termLead").innerHTML = S.terminal_echo === false ? "Terminal echo is off (<code>--quiet-terminal</code>); this copy still shows what would be printed."
+    : "The same lines as the Ubuntu terminal running <code>demo.py</code>: your clicks as mininet&gt; commands, the controller's decisions, and the clients' output.";
+}
+
+/* ---- measured experiments ---- */
 function bars(rows, field, fmt, colorFn){
   const vals = rows.map(r => r[field]).filter(v => v != null), max = Math.max(...vals, 1e-9);
-  return `<div class="bars">` + rows.map(r => {
-    const v = r[field], w = v == null ? 0 : 100 * v / max;
-    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val" style="${w >= 35 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`;
-  }).join("") + `</div>`;
+  return `<div class="bars">` + rows.map(r => { const v = r[field], w = v == null ? 0 : 100*v/max;
+    return `<span>${esc(r.label)}</span><div class="track"><div class="fill" style="width:${w}%;background:${colorFn(r)}"></div><span class="val" style="${w >= 40 ? "color:#fff" : `left:calc(${w}% + 8px)`}">${v == null ? "no data" : fmt(v)}</span></div>`; }).join("") + `</div>`;
 }
 async function loadResults(){
   let R; try { R = await (await fetch("/api/results")).json(); } catch(e){ R = {}; }
-  resultsLoaded = true;
-  if (!R.rows){ $("resCards").innerHTML = `<p class="empty">No measured results yet. In the VM, run <code>sudo python3 tests/run_experiments.py</code>, then <code>python3 tests/make_graphs.py</code>.</p>`; return; }
-  $("resLead").textContent = `Measured by the automated experiment runner (batch ${R.batch}${R.reps ? `, ${R.reps} runs of each setting` : ""}). Conditions were identical; only the controller's rules changed.`;
+  if (!R.rows){ $("resLead").innerHTML = `No measured results yet. In the VM run <code>sudo python3 tests/run_experiments.py</code>, then <code>python3 tests/make_graphs.py</code>.`; return; }
+  $("resLead").textContent = `Batch ${R.batch}${R.reps ? `, ${R.reps} runs of each setting` : ""}. Same requests and conditions every time; only the controller's rules changed.`;
   const get = (sc, cfg) => { const r = R.rows.find(x => x.scenario === sc && x.config === cfg); if (!r) return null;
     const n = k => r[k] === "" || r[k] == null ? null : +r[k];
     return {key:cfg, label:cfg, req:n("requests"), ok:n("completed"), extra:n("extra_attempts"), mbps:n("mean_throughput_mbps"), ttc:n("mean_time_to_content_ms"), maxttc:n("max_time_to_content_ms")}; };
@@ -1179,65 +1272,45 @@ async function loadResults(){
   const col = r => ({static:"#9AA6B2", round_robin:"#5B4BC4", least_loaded:"#2A78D6", path_delay:"#9AA6B2", path_congestion:"#2A78D6"}[r.key] || "#1B2430");
   const cards = [];
   const conc = ["static","round_robin","least_loaded"].map(c => get("concurrent", c)).filter(Boolean).map(nameLb);
-  if (conc.length){
-    const s = conc.find(r => r.key==="static"), l = conc.find(r => r.key==="least_loaded");
-    cards.push(`<div class="res"><h3>Three clients at once</h3><p class="claim">${s && l && s.mbps ? `<b>${(l.mbps/s.mbps).toFixed(1)}×</b> faster downloads with “Least busy server” than “Always srv1”` : ""}</p>
-      <div class="metric">Average speed per download (higher is better)</div>${bars(conc,"mbps",v=>v.toFixed(1)+" Mbps",col)}
-      <div class="metric">Average wait for a 5 MB file (lower is better)</div>${bars(conc,"ttc",v=>(v/1000).toFixed(1)+" s",col)}</div>`);
-  }
+  if (conc.length){ const a = conc.find(r => r.key === "static"), b = conc.find(r => r.key === "least_loaded");
+    cards.push(`<div class="rcard"><h3>Three clients at once</h3><p class="claim">${a && b && a.mbps ? `<b>${(b.mbps/a.mbps).toFixed(1)}×</b> faster with “Least busy server” than “Always srv1”` : ""}</p>
+      <div class="metric">Average speed per download (higher is better)</div>${bars(conc, "mbps", v => v.toFixed(1) + " Mbps", col)}
+      <div class="metric">Average wait for 5 MB (lower is better)</div>${bars(conc, "ttc", v => (v/1000).toFixed(1) + " s", col)}</div>`); }
   const cong = ["path_delay","path_congestion"].map(c => get("congestion", c)).filter(Boolean).map(r => (r.label = r.key === "path_delay" ? "Shortest route only" : "Avoid busy links", r));
-  if (cong.length){
-    const a = cong.find(r=>r.key==="path_delay"), b = cong.find(r=>r.key==="path_congestion");
-    cards.push(`<div class="res"><h3>Fast route jammed by background traffic</h3><p class="claim">${a && b && b.maxttc ? `<b>${(a.maxttc/b.maxttc).toFixed(1)}×</b> shorter longest wait when the controller avoids busy links` : ""}</p>
-      <div class="metric">Longest wait for a file (lower is better)</div>${bars(cong,"maxttc",v=>(v/1000).toFixed(1)+" s",col)}
-      <div class="metric">Downloads that failed and had to retry</div>${bars(cong,"extra",v=>String(v),col)}</div>`);
-  }
+  if (cong.length){ const a = cong.find(r => r.key === "path_delay"), b = cong.find(r => r.key === "path_congestion");
+    cards.push(`<div class="rcard"><h3>Fast route jammed</h3><p class="claim">${a && b && b.maxttc ? `<b>${(a.maxttc/b.maxttc).toFixed(1)}×</b> shorter longest wait when busy links are avoided` : ""}</p>
+      <div class="metric">Longest wait (lower is better)</div>${bars(cong, "maxttc", v => (v/1000).toFixed(1) + " s", col)}
+      <div class="metric">Retries needed</div>${bars(cong, "extra", v => String(v), col)}</div>`); }
   const sf = ["static","least_loaded"].map(c => get("serverfail", c)).filter(Boolean).map(nameLb);
-  if (sf.length){
-    sf.forEach(r => r.pct = r.req ? 100*r.ok/r.req : 0);
-    cards.push(`<div class="res"><h3>A server crashes mid-run</h3><p class="claim">${sf.map(r => `${r.label}: <b>${r.ok} of ${r.req}</b> finished`).join(". ")}</p>
-      <div class="metric">Downloads finished</div>${bars(sf,"pct",v=>v.toFixed(0)+"%",col)}
-      <p class="hint">“Always srv1” keeps sending clients to the crashed server. “Least busy server” stops within 3 seconds, as soon as the heartbeats stop.</p></div>`);
-  }
-  const lf = get("linkfail","least_loaded");
-  if (lf) cards.push(`<div class="res"><h3>Fast link cut, then repaired</h3><p class="claim"><b>${lf.ok} of ${lf.req}</b> downloads finished, <b>${lf.extra}</b> retries</p>
-      <div class="sumgrid"><div><div class="v num">${lf.mbps?.toFixed(1)}<small>Mbps</small></div><div class="k">average speed</div></div><div><div class="v num">${(lf.maxttc/1000).toFixed(1)}<small>s</small></div><div class="k">longest wait</div></div></div>
-      <p class="hint">The switch reports the cut, the controller deletes the old rules and reinstalls every download on the slow route, including ones already running.</p></div>`);
+  if (sf.length){ sf.forEach(r => r.pct = r.req ? 100*r.ok/r.req : 0);
+    cards.push(`<div class="rcard"><h3>A server crashes mid-run</h3><p class="claim">${sf.map(r => `${r.label}: <b>${r.ok} of ${r.req}</b>`).join(" · ")}</p>
+      <div class="metric">Downloads finished</div>${bars(sf, "pct", v => v.toFixed(0) + "%", col)}</div>`); }
+  const lf = get("linkfail", "least_loaded");
+  if (lf) cards.push(`<div class="rcard"><h3>Fast link cut, then repaired</h3><p class="claim"><b>${lf.ok} of ${lf.req}</b> finished, <b>${lf.extra}</b> retries, ${lf.mbps?.toFixed(1)} Mbps average</p>
+      <div class="metric">Downloads finished</div>${bars([{label:"Least busy server", key:"least_loaded", pct: lf.req ? 100*lf.ok/lf.req : 0}], "pct", v => v.toFixed(0) + "%", col)}</div>`);
   $("resCards").innerHTML = cards.join("");
-  const nice = f => f.split("/").pop().replace(/\.png$/,"").replace(/^\d+[ab]?_/,"").replace(/_/g," ");
-  $("gallery").innerHTML = (R.graphs||[]).map(g => `<a href="/${g}" target="_blank" rel="noopener"><img src="/${g}" alt="${esc(nice(g))}" loading="lazy">${esc(nice(g))}</a>`).join("");
+  const nice = f => f.split("/").pop().replace(/\.png$/, "").replace(/^\d+[ab]?_/, "").replace(/_/g, " ");
+  $("gallery").innerHTML = (R.graphs||[]).map(g => `<button data-g="/${g}" data-t="${esc(nice(g))}"><img src="/${g}" alt="${esc(nice(g))}" loading="lazy">${esc(nice(g))}</button>`).join("");
 }
+loadResults();
+$("gallery").addEventListener("click", e => { const b = e.target.closest("button[data-g]"); if (!b) return;
+  $("lbI").src = b.dataset.g; $("lbI").alt = b.dataset.t; $("lbT").textContent = b.dataset.t; $("lb").showModal(); });
+$("lbX").onclick = () => $("lb").close();
+$("lb").addEventListener("click", e => { if (e.target === $("lb")) $("lb").close(); });
+// section bar: highlight the section in view
+const secs = ["s-demo","s-evidence","s-network","s-term","s-results"].map(id => document.getElementById(id));
+const navA = [...document.querySelectorAll(".jump a")];
+const obs = new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting){ const i = secs.indexOf(e.target); navA.forEach((a, j) => a.classList.toggle("here", i === j)); } },
+  {rootMargin:"-45% 0px -50% 0px"});
+secs.forEach(x => obs.observe(x));
 
-/* ================================================================
-   TABS, HEADER, REFRESH
-   ================================================================ */
-let tab = "time";
-function showTab(name){
-  tab = name;
-  document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
-  for (const t of ["time","rules","log","results"]) $("p-"+t).classList.toggle("hidden", t !== name);
-  if (name === "rules") loadFlows(true);
-  if (name === "results" && !resultsLoaded) loadResults();
-  if (S) renderTab();
-}
-function renderTab(){ if (tab === "time"){ drawUtil(); drawRequests(); } else if (tab === "log") renderLog(); }
-function renderHeader(){
-  const l = $("live");
-  l.className = "live " + (S.restarting ? "busy" : !S.controller_online ? "off" : S.mode === "sim" ? "sim" : "");
-  $("liveText").textContent = S.restarting ? "Controller restarting" : !S.controller_online ? "Controller offline" : S.mode === "sim" ? "Practice mode" : "Live network";
-  $("rulesText").textContent = `${LB_NAME[S.lb_policy] || S.lb_policy}, ${PATH_NAME[S.path_policy] || S.path_policy}`;
-  $("rulesBtn").disabled = S.restarting;
-  $("simNote").classList.toggle("hidden", S.mode !== "sim");
-}
 async function refresh(){
-  let next;
-  try { next = await (await fetch("/api/state", {cache:"no-store"})).json(); }
-  catch(e){ const l = $("live"); l.className = "live off"; $("liveText").textContent = "Dashboard stopped"; return; }
-  S = next;
-  onState(); renderHeader(); renderGuide(); renderStory(); renderStrip(); renderTab();
+  try { S = await (await fetch("/api/state", {cache:"no-store"})).json(); }
+  catch(e){ $("live").className = "live off"; $("live").querySelector("span").textContent = "Dashboard not reachable"; return; }
+  onState(); renderTop(); renderSockets(); renderDecisions(); renderResults();
+  drawUtil(); drawReqs(); renderCompare(); renderTimeline(); renderTerm();
 }
-refresh();
-setInterval(refresh, 1000);
+setInterval(refresh, 700); refresh();
 </script>
 </body>
 </html>

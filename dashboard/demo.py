@@ -1438,12 +1438,12 @@ def make_handler(backend):
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             path = self.path.split("?")[0]
-            if path in ("/", "/d1"):
-                self.send_file(os.path.join(HERE, "d1.html"), "text/html; charset=utf-8")
-            elif path in ("/d2", "/d2.html"):
-                self.send_file(os.path.join(HERE, "d2.html"), "text/html; charset=utf-8")
-            elif path in ("/full", "/index.html"):
+            if path == "/":
                 self.send_file(os.path.join(HERE, "index.html"), "text/html; charset=utf-8")
+            elif path in ("/d1", "/d2", "/full", "/index.html", "/d1.html", "/d2.html"):
+                self.send_response(302)      # everything is on the one page now
+                self.send_header("Location", "/")
+                self.end_headers()
             elif path == "/api/state":
                 self.send_json(backend.state())
             elif path == "/api/flows":
@@ -1716,11 +1716,10 @@ def main():
 
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(backend))
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    print(f"\n  Dashboard ({backend.mode}): http://localhost:{args.port}      (D1 page)")
-    print(f"                       http://localhost:{args.port}/d2   (D2 page: failures, congestion, comparison)")
+    print(f"\n  Dashboard ({backend.mode}): http://localhost:{args.port}")
     if args.host == "0.0.0.0":
         for ip in lan_addresses():
-            print(f"  From another computer (e.g. your Mac): http://{ip}:{args.port}  and  http://{ip}:{args.port}/d2")
+            print(f"  From another computer (e.g. your Mac): http://{ip}:{args.port}")
     elif args.host not in ("127.0.0.1", "localhost"):
         print(f"  Also at http://{args.host}:{args.port}")
     else:

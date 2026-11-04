@@ -108,11 +108,10 @@ sudo python3 dashboard/demo.py        # then open http://localhost:8080
 python3 dashboard/demo.py --sim       # rehearse without Mininet
 ```
 
-The main page (`/`) is the D1 demo: two buttons (three clients at once, a missing file) and
-panels for the socket messages, the controller's choice, the address-swap rules in s1 and the test
-results. The D2 page (`/d2`) adds server crashes, link cuts, the congestion flood, policy changes,
-guided tests, live link load, a copy of the terminal and a comparison of the results. The older
-full dashboard is still at `/full`.
+One page covers D1 and D2: requests, concurrency and the `ERR 404` case; server crashes, link
+cuts, the congestion flood and policy changes; guided tests; socket messages, the controller's
+choices and the OpenFlow rules of s1–s4; live link load and controller events; a copy of the terminal;
+and the results compared by policy and network condition.
 See [dashboard/README.md](dashboard/README.md).
 
 ## Running the experiments

@@ -6,8 +6,7 @@ scenario from the browser.
 
 ![Animated network during the congested-path scenario](preview.png)
 
-*The “Spread the load” demo in practice mode: each client is sent to a different server, and the
-story under the map says why.*
+*Practice mode: srv1 stopped and the flood jamming the fast route, so the controller sends h1–h3 to srv2 and srv3 over the slow route.*
 
 ## Start it
 
@@ -21,14 +20,9 @@ sudo python3 dashboard/demo.py
 Open **http://localhost:8080** in the VM's browser. Startup takes about 15 seconds (controller,
 switches, then the three servers reporting UP).
 
-Two pages:
-
-| Page | What it shows |
-|---|---|
-| `http://localhost:8080/` | **D1 demo.** Step 1 runs three clients at once, step 2 asks for a missing file (`ERR 404`). Below the map: socket messages (TCP + UDP heartbeats), the controller's choice with the loads it saw, the address-swap rules in s1, and the test results. |
-| `http://localhost:8080/d2` | **D2 demo.** Everything on the D1 page, plus: stop/start each server, cut/restore each link, the UDP flood that jams the fast route, a policy switch (server choice and route choice), the four guided tests, rules for any switch s1–s4, live link load, what the controller noticed (server down, link cut, congestion, reroutes), a copy of the terminal, and results grouped by policy and network condition next to the measured experiments. Pause (or P), Step ▸ (or →) and ⅒×–2× speeds control only the animation. |
-| `http://localhost:8080/full` | The older all-in-one dashboard. | The terminal keeps the usual `mininet>` prompt as a
-backup; type `exit` there to stop everything. Everything the pages do is printed there as it happens:
+Everything for D1 and D2 is on this one page. The bar under the title jumps between its five
+sections (it only scrolls; there are no other pages). The terminal keeps the usual `mininet>` prompt as a
+backup; type `exit` there to stop everything. Everything the page does is printed there as it happens:
 each click as the equivalent `mininet>` command, the controller's decisions, server health, link
 cuts, congestion (`[MONITOR]`), moved downloads (`[REROUTE]`) and the clients' output. Practice mode
 (`--sim`) prints the same kind of lines.
@@ -55,20 +49,6 @@ mode in UTM.
 Every session's logs and CSVs are saved in `results/demo/<date_time>/`: one log per controller start,
 `decisions.csv`, `h1.csv`…`h3.csv`, server logs and flood output.
 
-## D1 page controls
-
-- **Three clients at once**, **One client at a time** (h1, h2 or h3, with a choice of file) and
-  **Ask for a missing file** (from any client).
-- **Pause** (or the P key) freezes the map; **1× ½× ¼× ⅒×** slow the animation down. Both change only the
-  drawing: the real network keeps running at full speed.
-- **Open rule log** (in *Rules in switch s1*) opens a pop-up with every address-swap rule s1 held this
-  session: when it was installed, client, port and server, packets and bytes each way, and when the switch
-  removed it, with the raw OpenFlow rules on request. It is also saved as `s1_rules.log` and `s1_rules.csv`
-  in the session folder (*Download CSV* in the pop-up).
-- While the dashboard runs, the controller keeps each address-swap rule for **40 s** after its download
-  (`VIP_IDLE_TIMEOUT=40`), so the rules can be read and checked with `ovs-ofctl`. Hand runs and the
-  experiment runner keep the normal 15 s.
-
 ## Terminal ⇄ dashboard
 
 The VM terminal and the page show the same activity:
@@ -84,49 +64,60 @@ The VM terminal and the page show the same activity:
 
 ## What's on the page
 
-The page is built so someone who has never seen SDN can follow it:
+Each panel carries a small tag naming the rubric item it shows (D1 or D2).
 
-- **Guided demos** (left): four demos in the suggested order, *Spread the load*, *Cut the fast
-  link*, *Jam the fast route* and *Crash a server*. Press **Play**; while it runs, the card says what to
-  watch for (worded for the current controller rules). Finished demos get a tick.
-- **Try it yourself** (under the demos, folded away): send downloads, crash or restart a server, cut or
-  repair a link, start background traffic. **Fix everything** puts the network back to normal.
-- **Controller rules** (top right): click to choose how the controller picks a server (*Least busy
-  server*, *Take turns*, *Always srv1*) and a route (*Avoid busy links*, *Shortest route only*). The
-  technical names (`least_loaded`, `congestion`, …) are shown under each choice.
-- **The network, live** (centre), drawn like a metro map:
-  - File data moves as dots from server to client, in the server's colour.
-  - Each server's heartbeat (its UDP load report) travels to the controller every second.
-  - On every new download the controller is asked "which server?" (PACKET_IN), installs rules on
-    each switch on the route (FLOW_MOD), and s1 shows the address swap, e.g. `shared address
-    10.0.0.100 → srv2`.
-  - Links show how busy they are and turn red at 70% or when cut; reroutes are announced on the map.
-  - Point at anything for details.
-- **What just happened**: every decision and failure explained in one plain sentence, newest first,
-  e.g. "h1 asked for a file. The controller sent it to srv2, because it had the fewest downloads (0),
-  using the slow route, because the fast route is jammed."
-- **Server cards**: running or crashed, downloads now, last heartbeat, and totals for the session.
-- **Details** (tabs at the bottom):
-  - *Over time*: how busy each route is, and how long each download took, with your actions marked.
-  - *Switch rules*: the real OpenFlow table of s1–s4 from `ovs-ofctl dump-flows`, each rule explained
-    ("address swap", "one download's route", "ask the controller").
-  - *Activity log*: the controller's own log lines and its decision table.
-  - *Measured results*: the comparison from `tests/run_experiments.py` and its graphs.
+**1 · Run the demo** — the steps (left) and the live map (right, stays in view while you scroll the steps).
 
-## Suggested demo (about 10 minutes)
+| Step | What it does |
+|---|---|
+| 1 Three clients at once | h1, h2, h3 each download 1–10 × 5 MB from `10.0.0.100` at the same time |
+| 2 One client at a time | one client, a file of your choice |
+| 3 Ask for a missing file | `GET missing.bin` → `ERR 404`, nothing crashes |
+| 4 Crash a server | stop/start srv1, srv2, srv3; after 3 s without heartbeats the controller marks it down |
+| 5 Cut a link | cut/restore s1–s2, s2–s4, s1–s3, s3–s4; running downloads move to the other route |
+| 6 Jam the fast route | UDP flood from `gen` to `sink` at 15/25/40 Mbps |
+| 7 Change the controller's rules | server choice (least loaded / round robin / static) and route choice (congestion / delay); restarts the controller |
+| 8 Guided tests | the four automated scenarios, with live progress and Stop |
+| Fix everything · Clear results | links up, servers running, flood off · start a fresh comparison |
 
-1. **Spread the load.** Each client lands on a different server; point at "What just happened".
-2. **Cut the fast link.** Run *Cut the fast link*. At 6 s s1–s2 turns red, the connection moves to s1–s3–s4, the slow
-   path line rises on the chart, and no request fails.
-3. **Jam the fast route.** Run *Jam the fast route*. The flood fills the fast path to 100%; h1 is sent through
-   s3. Then set the route rule to *Shortest route only* and run it again: h1 now goes into the congested path and
-   waits much longer, with retries.
-4. **Crash a server.** With *Least busy server*, run *Crash a server*: srv1's process is killed at 6 s; within
-   3 s the controller logs `[HEALTH] srv1 is DOWN` (no load reports) and new requests go to srv2 and srv3. Set *Always srv1* and run it again: requests keep going to the dead srv1
-   and fail.
-5. **Measured results** tab. Close with the measured comparison from the automated runs.
+The map shows file data, OpenFlow messages (PACKET_IN, FLOW_MOD), heartbeats, the address swap at s1,
+how busy each link is (red above 70%), cut links, the flood, reroutes and servers being marked down.
+Point at anything for details; click a link or a server to cut/restore or stop/start it, or a switch to
+see its rules. **Pause** (P), **Step ▸** (→) and **⅒× ¼× ½× 1× 2×** change only the animation.
 
-Use **Fix everything** between demos, and **Clear the charts** for a clean timeline.
+**2 · Messages, choices, rules**
+- *Socket messages*: each `GET` and its `OK`/`ERR` reply, open connections, UDP heartbeats.
+- *Controller's choice*: which server and route each download got, the loads it saw, and why
+  ("slow route, because s1–s2 is cut").
+- *Rules in switch s1–s4*: the real OpenFlow tables in plain words, with the raw `ovs-ofctl` output and
+  the s1 rule log pop-up (also saved as `s1_rules.log` / `s1_rules.csv`, *Download CSV*).
+
+**3 · Link load & events** — the fast and slow route's load over the last 2 minutes with the 70% line
+and your actions marked, and *What the controller noticed*: servers down/up, links cut/back,
+congestion, moved downloads (optionally every server choice).
+
+**4 · Terminal** — a copy of the lines printed in the VM terminal (see above), including commands
+typed at `mininet>`.
+
+**5 · Results & comparison** — requests served, average response time and throughput, retries and
+failures, errors handled; every request on a chart; a table grouping requests by controller setting
+and network condition (best values in green); and the measured experiments with their graphs (click a
+graph to enlarge it).
+
+While the dashboard runs, the controller keeps each address-swap rule for **40 s** after its download
+(`VIP_IDLE_TIMEOUT=40`) so the rules can be read; hand runs and the experiment runner keep 15 s.
+
+## Suggested demo (about 12 minutes)
+
+1. **Step 1** (×1): three clients, three servers. Show the socket messages, the controller's choice and s1's rules.
+2. **Step 3**: the `ERR 404` reply.
+3. **Step 5**: start step 1 (×3), then cut s1–s2. The downloads move to s1–s3–s4 (map, s3 rules, events).
+4. **Step 6**: start the flood, then step 1. New downloads avoid the busy route.
+5. **Step 4**: stop srv1 during step 1 (×3). After 3 s it is marked down and nobody is sent to it.
+6. **Step 7**: Clear results, run step 1 under *Always srv1*, then under *Least busy server*. Read the comparison table.
+7. **Results**: close with the measured experiments.
+
+Use **Fix everything** between steps. **Pause** and **⅒×** help when explaining the packets.
 
 ## Rehearsal without Mininet
 
@@ -147,7 +138,7 @@ estimates; a banner says so. Works on any computer with Python 3, including the 
 - The controller writes a JSON snapshot every second when `LB_STATE_JSON` is set (only `demo.py`
   sets it, so hand runs and the experiment runner are unchanged). It holds server state, per-link
   utilisation and the path each live connection is using.
-- The OpenFlow tab runs `ovs-ofctl -O OpenFlow13 dump-flows sN` in the VM each time it refreshes, so it
+- The rules panel runs `ovs-ofctl -O OpenFlow13 dump-flows sN` in the VM each time it refreshes, so it
   shows exactly what is in the switch. The animation is driven by the same state: connection paths
   come from the controller, link load from its port statistics, decisions from its decisions CSV.
   Packet dots are a visual rate indicator, not a packet-by-packet capture.
